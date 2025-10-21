@@ -52,7 +52,8 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   }
 
   /** Exchange authorization code for tokens (state already validated in Auth) */
-  public function exchange_code(string $code): array {
+  public function exchange_code(string $code, string $state): array {
+    // $state is validated in Auth; accepted here to comply with the interface
     $client_id     = class_exists('SESLP_Helpers') ? SESLP_Helpers::get_client_id(self::SLUG) : '';
     $client_secret = class_exists('SESLP_Helpers') ? SESLP_Helpers::get_client_secret(self::SLUG) : '';
     $token_url     = (string)($this->cfg['token_url'] ?? 'https://www.linkedin.com/oauth/v2/accessToken');
@@ -78,11 +79,11 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
       return ['error' => 'http_error', 'message' => $resp->get_error_message()];
     }
 
-    $code = wp_remote_retrieve_response_code($resp);
+    $http = wp_remote_retrieve_response_code($resp);
     $json = json_decode((string) wp_remote_retrieve_body($resp), true);
 
-    if ($code !== 200 || !is_array($json)) {
-      return ['error' => 'invalid_token_response', 'http_code' => $code, 'raw' => $json];
+    if ($http !== 200 || !is_array($json)) {
+      return ['error' => 'invalid_token_response', 'http_code' => $http, 'raw' => $json];
     }
 
     $access_token = (string)($json['access_token'] ?? '');
@@ -95,7 +96,6 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     return [
       'access_token' => $access_token,
       'expires_in'   => $expires_in,
-      // LinkedIn’s OAuth here does not return id_token by default
     ];
   }
 
