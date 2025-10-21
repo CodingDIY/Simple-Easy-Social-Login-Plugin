@@ -142,6 +142,10 @@ final class SESLP_Plugin {
     //   $w = new SESLP_Provider_Weibo();
     //   return $w->get_auth_url();
     // }
+    if ($provider === 'linkedin' && class_exists('SESLP_Provider_Linkedin')) {
+      $li = new SESLP_Provider_Linkedin();
+      return $li->get_auth_url();
+    }
 
     return add_query_arg(['social_login' => $provider], home_url('/'));
   }
