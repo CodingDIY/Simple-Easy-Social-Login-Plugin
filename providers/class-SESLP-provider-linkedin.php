@@ -45,10 +45,6 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
     $final = $auth_base . '?' . $query;
 
-    if (class_exists('SESLP_Logger')) {
-      SESLP_Logger::debug('LinkedIn auth URL', ['url' => $final]);
-    }
-
     return $final;
   }
 
@@ -58,9 +54,6 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     $base = trailingslashit(home_url());
     $uri  = add_query_arg(['social_login' => self::SLUG], $base);
 
-    if (class_exists('SESLP_Logger')) {
-      SESLP_Logger::debug('LinkedIn redirect URI', ['uri' => $uri]);
-    }
     return $uri;
   }
 
