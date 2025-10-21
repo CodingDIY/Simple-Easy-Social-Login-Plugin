@@ -525,7 +525,7 @@ final class SESLP_Auth {
   private function handle_linkedin_callback(): void {
     $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
     SESLP_Logger::debug('LinkedIn callback received', [
-      'state' => $state,
+      'state'        => $state,
       'code_present' => isset($_GET['code']) ? 1 : 0,
     ]);
 
@@ -542,9 +542,15 @@ final class SESLP_Auth {
       exit;
     }
 
-    $prov = new SESLP_Provider_Linkedin();
+    if (!class_exists('SESLP_Provider_Linkedin')) {
+      SESLP_Logger::error('LinkedIn provider class missing');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'provider_missing', home_url('/'))));
+      exit;
+    }
 
-    $tokens = $prov->exchange_code($code);
+    $prov   = new SESLP_Provider_Linkedin();
+    $tokens = $prov->exchange_code($code, $state); // pass state to satisfy the interface
+
     if (!empty($tokens['error'])) {
       SESLP_Logger::error('LinkedIn token exchange failed', $tokens);
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'token_exchange_failed', home_url('/'))));
@@ -552,7 +558,8 @@ final class SESLP_Auth {
     }
 
     $access_token = (string)($tokens['access_token'] ?? '');
-    $profile = $prov->fetch_userinfo($access_token);
+    $profile      = $prov->fetch_userinfo($access_token);
+
     if (!empty($profile['error'])) {
       SESLP_Logger::error('LinkedIn userinfo fetch failed', $profile);
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'userinfo_failed', home_url('/'))));
@@ -567,12 +574,12 @@ final class SESLP_Auth {
         'user_id' => (int)$user->ID,
         'email'   => SESLP_Logger::mask_email($email),
       ]);
-      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      wp_safe_redirect(SESLP_Redirect::after_login_url($user));
       exit;
     }
 
     SESLP_Logger::error('Unknown error after linkedin callback');
-    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    wp_safe_redirect(add_query_arg('seslp_err', 'unknown_error', wp_login_url()));
     exit;
   }
 }
