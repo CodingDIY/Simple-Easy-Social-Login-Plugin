@@ -35,15 +35,6 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
     $state = class_exists('SESLP_State') ? SESLP_State::generate(self::SLUG) : wp_create_nonce('seslp_'.$client_id);
 
-    // $args = [
-    //   'response_type' => 'code',
-    //   'client_id'     => $client_id,
-    //   'redirect_uri'  => $this->get_redirect_uri(),
-    //   'state'         => $state,
-    //   'scope'         => $scope_str,
-    // ];
-
-    // return add_query_arg($args, $auth_base);
     $query = http_build_query([
       'response_type' => 'code',
       'client_id'     => $client_id,
@@ -62,10 +53,6 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   }
 
   /** Compute the redirect/callback URI (?social_login=linkedin) */
-  // public function get_redirect_uri(): string {
-  //   return add_query_arg(['social_login' => self::SLUG], home_url('/'));
-  // }
-  // TODO: REPLACE the whole method with this
   public function get_redirect_uri(): string {
     // Force a trailing slash base URL and log the final redirect URI for debugging
     $base = trailingslashit(home_url());
