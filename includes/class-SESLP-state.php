@@ -79,6 +79,16 @@ final class SESLP_State {
   public static function generate(string $provider): string {
     $state = wp_generate_password(12, false);
     set_transient('seslp_state_' . $provider . '_' . $state, time(), 10 * MINUTE_IN_SECONDS);
+
+    // Debug log for traceability (masked)
+    if (class_exists('SESLP_Logger')) {
+      SESLP_Logger::debug('State created', [
+        'provider' => $provider,
+        'state'    => SESLP_Logger::mask_generic($state, 4, 4),
+        'ttl'      => '10min',
+      ]);
+    }
+
     return $state;
   }
 }
