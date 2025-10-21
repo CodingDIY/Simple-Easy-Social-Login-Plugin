@@ -1,0 +1,209 @@
+
+/* =============================
+   Simple Easy Social Login — Front Styles
+   - Uses CSS variables and aligns with WordPress login defaults
+   ============================= */
+
+:root {
+  /* Social brand colors */
+  --seslp-google-bg: #4285f4;
+  --seslp-google-bg-hover: #357ae8;
+  --seslp-facebook-bg: #3b5998;
+  --seslp-facebook-bg-hover: #2a4373;
+  --seslp-naver-bg: #2DB400;
+  --seslp-naver-bg-hover: #259a00;
+  --seslp-kakao-bg: #FEE500;
+  --seslp-kakao-bg-hover: #e6d300;
+  --seslp-kakao-text: #3c1e1e;
+  --seslp-line-bg: #00C300;
+  --seslp-line-bg-hover: #00a300;
+  --seslp-weibo-bg: #E6162D;
+  --seslp-weibo-bg-hover: #b81c22;
+  --seslp-error-red: #d63638;
+  --seslp-error-red-bg: #fff5f5;
+
+  /* WordPress login defaults (approx) */
+  --wp-body-text: #3c434a;           /* login body text */
+  --wp-border: #c3c4c7;              /* field/button border */
+  --wp-border-soft: #d7d7d7;         /* softer divider */
+  --wp-surface: #ffffff;             /* white card */
+  --wp-focus: #2271b1;               /* primary focus/outline */
+  --wp-focus-shadow: rgba(34, 113, 177, 0.25);
+  --wp-muted: #646970;               /* subtle text */
+}
+
+/* Container below login fields */
+.login .seslp-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Base button */
+.seslp-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--wp-border);
+  border-radius: 4px;
+  background: var(--wp-surface);
+  text-decoration: none;
+  line-height: 1.2;
+  color: var(--wp-body-text);
+}
+
+/* Full width on login screen */
+.login .seslp-btn { width: auto; }
+
+/* Logo box */
+.seslp-btn .seslp-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex: 0 0 24px;
+  display: inline-block;
+}
+
+/* Label */
+.seslp-btn .seslp-label {
+  font-size: 14px;
+}
+
+/* Hover/Focus state uses WP style focus */
+.seslp-btn:hover { border-color: var(--wp-border-soft); }
+.seslp-btn:focus { outline: 0; }
+.seslp-btn:focus-visible {
+  box-shadow: 0 0 0 1px var(--wp-focus), 0 0 0 3px var(--wp-focus-shadow);
+}
+
+/* --- Provider Theming -------------------------------- */
+/* Default themed button turns solid brand color with white text on hover/focus */
+.seslp-btn.seslp-google:hover,
+.seslp-btn.seslp-google:focus-visible { background: var(--seslp-google-bg); color: #fff; border-color: var(--seslp-google-bg-hover); }
+.seslp-btn.seslp-facebook:hover,
+.seslp-btn.seslp-facebook:focus-visible { background: var(--seslp-facebook-bg); color: #fff; border-color: var(--seslp-facebook-bg-hover); }
+.seslp-btn.seslp-naver:hover,
+.seslp-btn.seslp-naver:focus-visible { background: var(--seslp-naver-bg); color: #fff; border-color: var(--seslp-naver-bg-hover); }
+.seslp-btn.seslp-line:hover,
+.seslp-btn.seslp-line:focus-visible { background: var(--seslp-line-bg); color: #fff; border-color: var(--seslp-line-bg-hover); }
+.seslp-btn.seslp-weibo:hover,
+.seslp-btn.seslp-weibo:focus-visible { background: var(--seslp-weibo-bg); color: #fff; border-color: var(--seslp-weibo-bg-hover); }
+
+/* Kakao uses dark text on yellow */
+.seslp-btn.seslp-kakao:hover,
+.seslp-btn.seslp-kakao:focus-visible {
+  background: var(--seslp-kakao-bg);
+  color: var(--seslp-kakao-text);
+  border-color: var(--seslp-kakao-bg-hover);
+}
+
+/* Optional: make logos readable on colored hover backgrounds by adding white chip */
+.seslp-btn:hover .seslp-logo,
+.seslp-btn:focus-visible .seslp-logo {
+  background: transparent; /* keep logo image clean; adjust if needed */
+}
+
+/* Spacing from remember-me group */
+.login form .seslp-buttons { margin-bottom: 8px; }
+
+/* Error helper (for future inline notices) */
+.seslp-error { 
+  color: var(--seslp-error-red); 
+  font-size: 13px; 
+}
+
+/* Inline error (placed above the buttons) */
+.seslp-logins .seslp-inline-error {
+  margin: 8px 0 10px;        /* compact spacing */
+  padding: 6px 10px;         /* subtle padding */
+  border: 1px solid var(--wp--preset--color--contrast-3, #dcdcde); /* WP-ish neutral border */
+  background: var(--wp--preset--color--base-2, #f6f7f7);           /* light gray bg (WP login vibe) */
+  border-radius: 3px;
+}
+.seslp-logins .seslp-inline-error {
+  box-sizing: border-box;
+  opacity: 1;
+  max-height: 80px; /* enough for 1~2 lines */
+  transition:
+    opacity .35s ease,
+    max-height .35s ease,
+    margin .35s ease,
+    padding .35s ease,
+    border-width .35s ease;
+}
+
+.seslp-logins .seslp-inline-error small {
+  display: block;
+  line-height: 1.4;
+  color: var(--wp--preset--color--contrast, #1d2327); /* WP default text color */
+  font-size: 12px; /* slightly smaller than body */
+}
+
+/* When we need error emphasis (optional) */
+.seslp-logins .seslp-inline-error.is-error {
+  border-color: var(--seslp-error-red, #d63638);
+  background: var(--seslp-error-red-bg);
+  /* opacity: 1;
+  transition: opacity 0.35s ease; */
+}
+/* .seslp-logins .seslp-inline-error.is-error.is-dismissed {
+  opacity: 0;
+} */
+.seslp-logins .seslp-inline-error.is-error.is-dismissed {
+  opacity: 0;
+  max-height: 0;
+  margin: 0;
+  padding: 0;
+  border-width: 0;
+  overflow: hidden;
+}
+.seslp-logins .seslp-inline-error.is-error small {
+  color: var(--seslp-error-red, #d63638);
+}
+
+/* Icons-only layout for social buttons */
+.seslp-logins .seslp-buttons.layout-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.seslp-logins .seslp-buttons.layout-icons .seslp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+/* .seslp-logins .seslp-buttons.layout-icons .seslp-btn:hover,
+.seslp-logins .seslp-buttons.layout-icons .seslp-btn:focus {
+  background: var(--wp-preset-color-base-2, #f6f7f7);
+  border-radius: 4px;
+} */
+.seslp-logins .seslp-buttons.layout-icons .seslp-label { display: none; }
+.seslp-logins .seslp-buttons.layout-icons .seslp-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border: 1px solid var(--wp-border, #c3c4c7);
+  border-radius: 8px;
+}
+
+.seslp-logins .seslp-buttons.layout-icons .seslp-logo:hover,
+.seslp-logins .seslp-buttons.layout-icons .seslp-logo:focus {
+  background: var(--wp-preset-color-base-2, #f6f7f7);
+}
+
+/* Disabled social button (when provider not configured) */
+/* .seslp-btn.is-disabled {
+  opacity: .5;
+  pointer-events: none;
+  cursor: not-allowed;
+} */

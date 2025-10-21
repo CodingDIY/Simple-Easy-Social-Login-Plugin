@@ -1,0 +1,586 @@
+<?php
+/**
+ * Auth router & callbacks
+ * - Moves start/callback routing out of main plugin class
+ */
+
+declare(strict_types=1);
+if (!defined('ABSPATH')) exit;
+
+final class SESLP_Auth {
+  /** Register front-end router */
+  public function register(): void {
+    add_action('template_redirect', [$this, 'maybe_route_auth']);
+  }
+
+  /** Router — handles /?social_login={provider}&code=... */
+  public function maybe_route_auth(): void {
+    if (empty($_GET['social_login'])) return;
+    $provider = sanitize_key((string) $_GET['social_login']);
+
+    SESLP_Logger::debug('Auth route triggered', [
+      'provider' => $provider,
+      'has_code' => isset($_GET['code']) ? 1 : 0,
+    ]);
+
+    // Only handle callbacks here (start flow links go directly to provider auth URLs)
+    if (!isset($_GET['code'])) return;
+
+    if ($provider === 'google') {
+      $this->handle_google_callback();
+      return;
+    }
+    if ($provider === 'facebook') {
+      $this->handle_facebook_callback();
+      return;
+    }
+    if ($provider === 'naver') {
+      $this->handle_naver_callback();
+      return;
+    }
+    if ($provider === 'kakao') {
+      $this->handle_kakao_callback();
+      return;
+    }
+    if ($provider === 'line') {
+      $this->handle_line_callback();
+      return;
+    }
+    if ($provider === 'weibo') {
+      $this->handle_weibo_callback();
+      return;
+    }
+  }
+
+  /** Handle Google OAuth callback: exchange code -> token -> userinfo -> sign in */
+  private function handle_google_callback(): void {
+    // Validate state
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    SESLP_Logger::debug('Google callback received', [
+      'state' => $state,
+      'code_present' => isset($_GET['code']) ? 1 : 0,
+    ]);
+    if (!SESLP_State::validate('google', $state)) {
+      SESLP_Logger::warning('Invalid state (google)', ['state' => $state]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+      exit;
+    }
+
+    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (google)');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
+      exit;
+    }
+
+    $opts = get_option('seslp_options', []);
+    $cid  = trim((string)($opts['providers']['google']['client_id'] ?? ''));
+    $sec  = trim((string)($opts['providers']['google']['client_secret'] ?? ''));
+
+    if ($cid === '' || $sec === '') {
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'google_keys_missing', home_url('/'))));
+      exit;
+    }
+
+    // Exchange code for tokens
+    $token_resp = wp_remote_post('https://oauth2.googleapis.com/token', [
+      'timeout' => 15,
+      'body' => [
+        'code'          => $code,
+        'client_id'     => $cid,
+        'client_secret' => $sec,
+        'redirect_uri'  => (new SESLP_Provider_Google())->get_redirect_uri(),
+        'grant_type'    => 'authorization_code',
+      ],
+    ]);
+
+    if (is_wp_error($token_resp)) {
+      SESLP_Logger::error('Token request failed (google)', [
+        'error' => $token_resp->get_error_message(),
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'token_request_failed', home_url('/'))));
+      exit;
+    }
+    $token_body = json_decode(wp_remote_retrieve_body($token_resp), true);
+    SESLP_Logger::debug('Token response (google)', [
+      'has_access_token' => isset($token_body['access_token']) ? 1 : 0,
+    ]);
+    $access     = (string)($token_body['access_token'] ?? '');
+    if ($access === '') {
+      SESLP_Logger::error('No access_token in response (google)');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'no_access_token', home_url('/'))));
+      exit;
+    }
+
+    // Fetch userinfo
+    $ui_resp = wp_remote_get('https://www.googleapis.com/oauth2/v3/userinfo', [
+      'headers' => ['Authorization' => 'Bearer ' . $access],
+      'timeout' => 15,
+    ]);
+    if (is_wp_error($ui_resp)) {
+      SESLP_Logger::error('Userinfo request failed (google)', [
+        'error' => $ui_resp->get_error_message(),
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'userinfo_failed', home_url('/'))));
+      exit;
+    }
+    $ui = json_decode(wp_remote_retrieve_body($ui_resp), true);
+    $email = sanitize_email((string)($ui['email'] ?? ''));
+    $sub   = sanitize_text_field((string)($ui['sub'] ?? ''));
+    $name  = sanitize_text_field((string)($ui['name'] ?? ''));
+
+    if ($email === '' || $sub === '') {
+      SESLP_Logger::warning('Invalid userinfo (google)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'sub_present'   => $sub !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_userinfo', home_url('/'))));
+      exit;
+    }
+
+    // Link or create WP user
+    $profile = [
+      'id'      => $sub,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($ui['picture'] ?? ''),
+    ];
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'google');
+    if ($user && $user->ID) {
+      SESLP_Logger::info('Login success (google)', [
+        'user_id' => (int) $user->ID,
+        'email'   => $email,
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+    SESLP_Logger::error('Unknown error after google callback');
+    wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'unknown_error', home_url('/'))));
+    exit;
+  }
+  
+  /** Handle Facebook OAuth callback: exchange code -> token -> userinfo -> sign in */
+  private function handle_facebook_callback(): void {
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+
+    SESLP_Logger::debug('Facebook callback received', [
+      'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
+      'code_present' => $code !== '' ? 1 : 0,
+    ]);
+
+    if (!SESLP_State::validate('facebook', $state)) {
+      SESLP_Logger::warning('Invalid state (facebook)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+      exit;
+    }
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (facebook)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
+      exit;
+    }
+
+    if (!class_exists('SESLP_Provider_Facebook')) {
+      wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+      exit;
+    }
+
+    $fb    = new SESLP_Provider_Facebook();
+    $token = $fb->exchange_code($code, $state);
+    SESLP_Logger::debug('Token response (facebook)', [ 'has_access_token' => (int) !empty($token['access_token']) ]);
+
+    $access = (string)($token['access_token'] ?? '');
+    if ($access === '') {
+      wp_safe_redirect( add_query_arg('seslp_err', 'no_access_token', wp_login_url()) );
+      exit;
+    }
+
+    $raw = $fb->fetch_userinfo($access);
+    $ui  = $fb->normalize_userinfo($raw);
+
+    $email = sanitize_email((string)($ui['email'] ?? ''));
+    $fid   = sanitize_text_field((string)($ui['id'] ?? ''));
+    $name  = sanitize_text_field((string)($ui['name'] ?? ''));
+
+    if ($email === '' || $fid === '') {
+      SESLP_Logger::warning('Invalid userinfo (facebook)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'id_present'    => $fid   !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_userinfo', wp_login_url()) );
+      exit;
+    }
+
+    $profile = [
+      'id'      => $fid,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($ui['picture'] ?? ''),
+    ];
+
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'facebook');
+    if ($user && isset($user->ID)) {
+      SESLP_Logger::info('Login success (facebook)', [
+        'user_id' => (int) $user->ID,
+        'email'   => SESLP_Logger::mask_email($email),
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+
+    SESLP_Logger::error('Unknown error after facebook callback');
+    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    exit;
+  }
+
+  /** Handle Naver OAuth callback: exchange code -> token -> userinfo -> sign in */
+  private function handle_naver_callback(): void {
+    // Validate state
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    SESLP_Logger::debug('Naver callback received', [
+      'state' => $state,
+      'code_present' => isset($_GET['code']) ? 1 : 0,
+    ]);
+    if (!SESLP_State::validate('naver', $state)) {
+      SESLP_Logger::warning('Invalid state (naver)', ['state' => $state]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+      exit;
+    }
+
+    // Read auth code
+    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (naver)');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
+      exit;
+    }
+
+    // Credentials
+    $opts = get_option('seslp_options', []);
+    $cid  = trim((string)($opts['providers']['naver']['client_id'] ?? ''));
+    $sec  = trim((string)($opts['providers']['naver']['client_secret'] ?? ''));
+    if ($cid === '' || $sec === '') {
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'naver_keys_missing', home_url('/'))));
+      exit;
+    }
+
+    // Exchange code -> token
+    $token_resp = wp_remote_post('https://nid.naver.com/oauth2.0/token', [
+      'timeout' => 15,
+      'body' => [
+        'grant_type'    => 'authorization_code',
+        'client_id'     => $cid,
+        'client_secret' => $sec,
+        'code'          => $code,
+        'state'         => $state,
+        'redirect_uri'  => (new SESLP_Provider_Naver())->get_redirect_uri(),
+      ],
+    ]);
+    if (is_wp_error($token_resp)) {
+      SESLP_Logger::error('Token request failed (naver)', [
+        'error' => $token_resp->get_error_message(),
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'token_request_failed', home_url('/'))));
+      exit;
+    }
+    $token_body = json_decode(wp_remote_retrieve_body($token_resp), true);
+    SESLP_Logger::debug('Token response (naver)', [
+      'has_access_token' => isset($token_body['access_token']) ? 1 : 0,
+    ]);
+    $access     = (string)($token_body['access_token'] ?? '');
+    if ($access === '') {
+      SESLP_Logger::error('No access_token in response (naver)');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'no_access_token', home_url('/'))));
+      exit;
+    }
+
+    // Fetch user info
+    $ui_resp = wp_remote_get('https://openapi.naver.com/v1/nid/me', [
+      'headers' => ['Authorization' => 'Bearer ' . $access],
+      'timeout' => 15,
+    ]);
+    if (is_wp_error($ui_resp)) {
+      SESLP_Logger::error('Userinfo request failed (naver)', [
+        'error' => $ui_resp->get_error_message(),
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'userinfo_failed', home_url('/'))));
+      exit;
+    }
+    $ui_raw = json_decode(wp_remote_retrieve_body($ui_resp), true);
+    $resp   = is_array($ui_raw) ? ($ui_raw['response'] ?? []) : [];
+
+    $email = sanitize_email((string)($resp['email'] ?? ''));
+    $nid   = sanitize_text_field((string)($resp['id'] ?? ''));
+    $name  = sanitize_text_field((string)($resp['nickname'] ?? ($resp['name'] ?? '')));
+
+    if ($email === '' || $nid === '') {
+      SESLP_Logger::warning('Invalid userinfo (naver)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'id_present'    => $nid !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_userinfo', home_url('/'))));
+      exit;
+    }
+
+    // Link or create WP user
+    $profile = [
+      'id'      => $nid,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($resp['profile_image'] ?? ''),
+    ];
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'naver');
+    if ($user && $user->ID) {
+      SESLP_Logger::info('Login success (naver)', [
+        'user_id' => (int) $user->ID,
+        'email'   => $email,
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+    SESLP_Logger::error('Unknown error after naver callback');
+    wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'unknown_error', home_url('/'))));
+    exit;
+  }
+
+  /** Handle Kakao OAuth callback: exchange code -> token -> userinfo -> sign in */
+  private function handle_kakao_callback(): void {
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+
+    SESLP_Logger::debug('Kakao callback received', [
+      'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
+      'code_present' => $code !== '' ? 1 : 0,
+    ]);
+
+    if (!SESLP_State::validate('kakao', $state)) {
+      SESLP_Logger::warning('Invalid state (kakao)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+      exit;
+    }
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (kakao)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
+      exit;
+    }
+
+    if (!class_exists('SESLP_Provider_Kakao')) {
+      wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+      exit;
+    }
+
+    $kk    = new SESLP_Provider_Kakao();
+    $token = $kk->exchange_code($code, $state);
+    SESLP_Logger::debug('Token response (kakao)', [ 'has_access_token' => (int) !empty($token['access_token']) ]);
+
+    $access = (string)($token['access_token'] ?? '');
+    if ($access === '') {
+      wp_safe_redirect( add_query_arg('seslp_err', 'no_access_token', wp_login_url()) );
+      exit;
+    }
+
+    $raw = $kk->fetch_userinfo($access);
+    $ui  = $kk->normalize_userinfo($raw);
+
+    $email = sanitize_email((string)($ui['email'] ?? ''));
+    $kid   = sanitize_text_field((string)($ui['id'] ?? ''));
+    $name  = sanitize_text_field((string)($ui['name'] ?? ''));
+
+    if ($email === '' || $kid === '') {
+      SESLP_Logger::warning('Invalid userinfo (kakao)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'id_present'    => $kid   !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_userinfo', wp_login_url()) );
+      exit;
+    }
+
+    $profile = [
+      'id'      => $kid,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($ui['picture'] ?? ''),
+    ];
+
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'kakao');
+    if ($user && isset($user->ID)) {
+      SESLP_Logger::info('Login success (kakao)', [
+        'user_id' => (int) $user->ID,
+        'email'   => SESLP_Logger::mask_email($email),
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+
+    SESLP_Logger::error('Unknown error after kakao callback');
+    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    exit;
+  }
+
+  /** Handle Line OAuth callback: exchange code -> token -> userinfo -> sign in */
+  private function handle_line_callback(): void {
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+
+    SESLP_Logger::debug('Line callback received', [
+      'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
+      'code_present' => $code !== '' ? 1 : 0,
+    ]);
+
+    if (!SESLP_State::validate('line', $state)) {
+      SESLP_Logger::warning('Invalid state (line)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+      exit;
+    }
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (line)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
+      exit;
+    }
+
+    if (!class_exists('SESLP_Provider_Line')) {
+      wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+      exit;
+    }
+
+    $ln    = new SESLP_Provider_Line();
+    $token = $ln->exchange_code($code, $state);
+    SESLP_Logger::debug('Token response (line)', [ 'has_access_token' => (int) !empty($token['access_token']) ]);
+
+    $access = (string)($token['access_token'] ?? '');
+    if ($access === '') {
+      wp_safe_redirect( add_query_arg('seslp_err', 'no_access_token', wp_login_url()) );
+      exit;
+    }
+
+    $raw = $ln->fetch_userinfo($access);
+    $ui  = $ln->normalize_userinfo($raw);
+
+    $email = sanitize_email((string)($ui['email'] ?? ''));
+    $lid   = sanitize_text_field((string)($ui['id'] ?? ''));
+    $name  = sanitize_text_field((string)($ui['name'] ?? ''));
+
+    // If email missing but id_token is present, try verifying id_token
+    if ($email === '' && !empty($token['id_token'])) {
+      $email = $ln->fetch_email_from_id_token((string)$token['id_token']);
+    }
+
+    if ($email === '' || $lid === '') {
+      SESLP_Logger::warning('Invalid userinfo (line)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'id_present'    => $lid   !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_userinfo', wp_login_url()) );
+      exit;
+    }
+
+    $profile = [
+      'id'      => $lid,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($ui['picture'] ?? ''),
+    ];
+
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'line');
+    if ($user && isset($user->ID)) {
+      SESLP_Logger::info('Login success (line)', [
+        'user_id' => (int) $user->ID,
+        'email'   => SESLP_Logger::mask_email($email),
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+
+    SESLP_Logger::error('Unknown error after line callback');
+    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    exit;
+  }
+
+  /** Handle Weibo OAuth callback: exchange code -> token(uid) -> userinfo -> sign in */
+  private function handle_weibo_callback(): void {
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+
+    SESLP_Logger::debug('Weibo callback received', [
+      'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
+      'code_present' => $code !== '' ? 1 : 0,
+    ]);
+
+    if (!SESLP_State::validate('weibo', $state)) {
+      SESLP_Logger::warning('Invalid state (weibo)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+      exit;
+    }
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (weibo)');
+      wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
+      exit;
+    }
+
+    if (!class_exists('SESLP_Provider_Weibo')) {
+      wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+      exit;
+    }
+
+    $wb    = new SESLP_Provider_Weibo();
+    $token = $wb->exchange_code($code, $state);
+    SESLP_Logger::debug('Token response (weibo)', [
+      'has_access_token' => (int)!empty($token['access_token'] ?? ''),
+      'has_uid'          => (int)!empty($token['uid'] ?? ''),
+    ]);
+
+    $access = (string)($token['access_token'] ?? '');
+    $uid    = (string)($token['uid'] ?? '');
+    if ($access === '' || $uid === '') {
+      wp_safe_redirect( add_query_arg('seslp_err', 'no_access_token', wp_login_url()) );
+      exit;
+    }
+
+    // Fetch user profile (requires uid)
+    $raw = $wb->fetch_userinfo_with_uid($access, $uid);
+    $ui  = $wb->normalize_userinfo($raw);
+
+    // Email may require privileged scope; try best-effort
+    $email = sanitize_email((string)($ui['email'] ?? ''));
+    if ($email === '') {
+      $email = sanitize_email($wb->fetch_email($access));
+    }
+
+    $wid  = sanitize_text_field((string)($ui['id'] ?? ''));
+    $name = sanitize_text_field((string)($ui['name'] ?? ''));
+
+    if ($email === '' || $wid === '') {
+      SESLP_Logger::warning('Invalid userinfo (weibo)', [
+        'email_present' => $email !== '' ? 1 : 0,
+        'id_present'    => $wid   !== '' ? 1 : 0,
+      ]);
+      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_userinfo', wp_login_url()) );
+      exit;
+    }
+
+    $profile = [
+      'id'      => $wid,
+      'email'   => $email,
+      'name'    => $name,
+      'picture' => (string)($ui['picture'] ?? ''),
+    ];
+
+    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'weibo');
+    if ($user && isset($user->ID)) {
+      SESLP_Logger::info('Login success (weibo)', [
+        'user_id' => (int)$user->ID,
+        'email'   => SESLP_Logger::mask_email($email),
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+
+    SESLP_Logger::error('Unknown error after weibo callback');
+    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    exit;
+  }
+}

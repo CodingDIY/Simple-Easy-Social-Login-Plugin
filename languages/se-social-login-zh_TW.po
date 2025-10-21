@@ -1,0 +1,189 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
+
+msgid "Simple Easy Social Login"
+msgstr "簡易社交登入"
+
+msgid "SE Social Login"
+msgstr "SE 社交登入"
+
+msgid "Simple Easy Social Login – Setting"
+msgstr "簡易社交登入 – 設定"
+
+msgid "Setting"
+msgstr "設定"
+
+msgid "Providers"
+msgstr "提供方"
+
+msgid "Enter OAuth credentials for each provider."
+msgstr "請輸入每個提供方的OAuth憑證。"
+
+msgid "%s Client ID"
+msgstr "%s 客戶端 ID"
+
+msgid "%s Client Secret"
+msgstr "%s 客戶端密鑰"
+
+msgid "Client ID"
+msgstr "客戶端 ID"
+
+msgid "Client Secret"
+msgstr "客戶端密鑰"
+
+msgid "App ID"
+msgstr "應用 ID"
+
+msgid "App Secret"
+msgstr "應用密鑰"
+
+msgid "REST API Key"
+msgstr "REST API Key"
+
+msgid "Channel ID"
+msgstr "頻道 ID"
+
+msgid "Channel Secret"
+msgstr "頻道密鑰"
+
+msgid "App Key"
+msgstr "應用 Key"
+
+msgid "Login"
+msgstr "登入"
+
+msgid "Post-login Redirect"
+msgstr "登入後重新導向"
+
+msgid "Redirect to"
+msgstr "重新導向到"
+
+msgid "Dashboard (wp-admin)"
+msgstr "儀表板 (wp-admin)"
+
+msgid "Profile page (wp-admin/profile.php)"
+msgstr "個人資料頁面 (wp-admin/profile.php)"
+
+msgid "Front page (home) — Default"
+msgstr "首頁 (主頁) — 預設"
+
+msgid "Custom URL"
+msgstr "自定義 URL"
+
+msgid "When 'Custom URL' is selected, users are redirected to this address after login."
+msgstr "選擇「自定義 URL」時，使用者在登入後將被重新導向到此地址。"
+
+msgid "Debug Logging"
+msgstr "偵錯日誌"
+
+msgid "Enable logging"
+msgstr "啟用日誌記錄"
+
+msgid "On"
+msgstr "開啟"
+
+msgid "Off"
+msgstr "關閉"
+
+msgid "Writes to wp-content/SESLP-debug.log when enabled."
+msgstr "啟用時寫入 wp-content/SESLP-debug.log。"
+
+msgid "Logger Timezone"
+msgstr "日誌時區"
+
+msgid "Choose timestamp format for debug logs."
+msgstr "選擇偵錯日誌的時間戳格式。"
+
+msgid "UI"
+msgstr "UI"
+
+msgid "Login buttons layout"
+msgstr "登入按鈕佈局"
+
+msgid "List (logo + text, vertical)"
+msgstr "清單 (標誌 + 文字，縱向)"
+
+msgid "Icons only (horizontal)"
+msgstr "僅圖標 (橫向)"
+
+msgid "When icons-only is selected, only provider logos are shown in a horizontal row."
+msgstr "選擇僅圖標時，只顯示提供方標誌，並橫向排列。"
+
+msgid "Save Changes"
+msgstr "儲存更改"
+
+msgid "Social Login with:"
+msgstr "使用以下方式社交登入:"
+
+msgid "This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider)."
+msgstr "此電子郵件已在本站註冊。請使用原始關聯的方法（使用者名稱/密碼或相同的社交提供方）登入。"
+
+msgid "Your session has expired or the login attempt was invalid. Please try again."
+msgstr "您的工作階段已過期或登入嘗試無效。請重試。"
+
+msgid "An unknown error occurred. Please try again."
+msgstr "發生未知錯誤。請重試。"
+
+msgid "Failed to obtain access token from the provider. Please try again."
+msgstr "未能從提供方獲取訪問權杖。請重試。"
+
+msgid "Failed to fetch your profile information from the provider. Please try again."
+msgstr "未能從提供方獲取您的個人資料資訊。請重試。"
+
+msgid "Need help? Follow %s"
+msgstr "需要幫助嗎？請參考 %s"
+
+msgid "this documentation page"
+msgstr "此文件頁面"
+
+msgid "Settings saved."
+msgstr "設定已儲存。"
+
+msgid "Data removal"
+msgstr "資料移除"
+
+msgid "Delete plugin data on uninstall"
+msgstr "解除安裝時刪除外掛資料"
+
+msgid "If checked, plugin options, transients, and user meta created by this plugin will be removed when you uninstall."
+msgstr "如果勾選，解除安裝時將刪除此外掛建立的選項、暫存與使用者中繼資料。"
+
+msgid "Deep clean"
+msgstr "徹底清除"
+
+msgid "Also drop custom tables / logs"
+msgstr "同時刪除自訂資料表/日誌"
+
+msgid "Drops tables like seslp_login_logs if present. Irreversible."
+msgstr "若存在，將刪除 seslp_login_logs 等資料表。此操作不可逆。"
+
+msgid "Uninstall Options"
+msgstr "解除安裝選項"
+
+msgid "UTC"
+msgstr "世界協調時間 (UTC)"
+
+msgid "WordPress Local"
+msgstr "WordPress 本地時間"
+
+msgid "Both"
+msgstr "兩者皆有"
+
+msgid "This feature is available on %s and above."
+msgstr "此功能僅適用於%s以上的方案。"
+
+msgid "This section is available on %s."
+msgstr "此部分僅限於%s方案使用。"
+
+msgid "See plans"
+msgstr "查看方案"

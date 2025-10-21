@@ -1,0 +1,12 @@
+.seslp-no-padding-left { padding-left: 0; }
+.seslp-section-title { margin-top: 2rem; }
+.seslp-radio-label { display: block; margin: 4px 0; }
+.seslp-inline-label { margin-right: 12px; }
+.seslp-hidden { display: none; }
+
+#seslp-redirect-table {
+  fieldset {
+    display: flex;
+    flex-direction: column;
+  }
+}

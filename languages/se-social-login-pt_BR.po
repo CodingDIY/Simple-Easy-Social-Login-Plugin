@@ -1,0 +1,189 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.7\n"
+
+msgid "Simple Easy Social Login"
+msgstr "Login Social Simples e Fácil"
+
+msgid "SE Social Login"
+msgstr "SE Login Social"
+
+msgid "Simple Easy Social Login – Setting"
+msgstr "Login Social Simples e Fácil – Configuração"
+
+msgid "Setting"
+msgstr "Configuração"
+
+msgid "Providers"
+msgstr "Provedores"
+
+msgid "Enter OAuth credentials for each provider."
+msgstr "Insira as credenciais OAuth para cada provedor."
+
+msgid "%s Client ID"
+msgstr "ID do Cliente %s"
+
+msgid "%s Client Secret"
+msgstr "Segredo do Cliente %s"
+
+msgid "Client ID"
+msgstr "ID do Cliente"
+
+msgid "Client Secret"
+msgstr "Segredo do Cliente"
+
+msgid "App ID"
+msgstr "ID do App"
+
+msgid "App Secret"
+msgstr "Segredo do App"
+
+msgid "REST API Key"
+msgstr "Chave REST API"
+
+msgid "Channel ID"
+msgstr "ID do Canal"
+
+msgid "Channel Secret"
+msgstr "Segredo do Canal"
+
+msgid "App Key"
+msgstr "Chave do App"
+
+msgid "Login"
+msgstr "Entrar"
+
+msgid "Post-login Redirect"
+msgstr "Redirecionamento após login"
+
+msgid "Redirect to"
+msgstr "Redirecionar para"
+
+msgid "Dashboard (wp-admin)"
+msgstr "Painel (wp-admin)"
+
+msgid "Profile page (wp-admin/profile.php)"
+msgstr "Página de perfil (wp-admin/profile.php)"
+
+msgid "Front page (home) — Default"
+msgstr "Página inicial (home) — Padrão"
+
+msgid "Custom URL"
+msgstr "URL personalizada"
+
+msgid "When 'Custom URL' is selected, users are redirected to this address after login."
+msgstr "Quando 'URL personalizada' é selecionada, os usuários são redirecionados para este endereço após o login."
+
+msgid "Debug Logging"
+msgstr "Registro de Depuração"
+
+msgid "Enable logging"
+msgstr "Ativar registro"
+
+msgid "On"
+msgstr "Ativado"
+
+msgid "Off"
+msgstr "Desativado"
+
+msgid "Writes to wp-content/SESLP-debug.log when enabled."
+msgstr "Quando ativado, grava em wp-content/SESLP-debug.log."
+
+msgid "Logger Timezone"
+msgstr "Fuso horário do registro"
+
+msgid "Choose timestamp format for debug logs."
+msgstr "Escolha o formato de data/hora para os registros de depuração."
+
+msgid "UI"
+msgstr "UI"
+
+msgid "Login buttons layout"
+msgstr "Layout dos botões de login"
+
+msgid "List (logo + text, vertical)"
+msgstr "Lista (logo + texto, vertical)"
+
+msgid "Icons only (horizontal)"
+msgstr "Apenas ícones (horizontal)"
+
+msgid "When icons-only is selected, only provider logos are shown in a horizontal row."
+msgstr "Quando apenas ícones é selecionado, apenas os logotipos dos provedores são exibidos em uma linha horizontal."
+
+msgid "Save Changes"
+msgstr "Salvar alterações"
+
+msgid "Social Login with:"
+msgstr "Login social com:"
+
+msgid "This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider)."
+msgstr "Este e-mail já está registrado neste site. Faça login com o método originalmente vinculado (nome de usuário/senha ou o mesmo provedor social)."
+
+msgid "Your session has expired or the login attempt was invalid. Please try again."
+msgstr "Sua sessão expirou ou a tentativa de login foi inválida. Por favor, tente novamente."
+
+msgid "An unknown error occurred. Please try again."
+msgstr "Ocorreu um erro desconhecido. Por favor, tente novamente."
+
+msgid "Failed to obtain access token from the provider. Please try again."
+msgstr "Falha ao obter o token de acesso do provedor. Por favor, tente novamente."
+
+msgid "Failed to fetch your profile information from the provider. Please try again."
+msgstr "Falha ao buscar suas informações de perfil do provedor. Por favor, tente novamente."
+
+msgid "Need help? Follow %s"
+msgstr "Precisa de ajuda? Consulte %s"
+
+msgid "this documentation page"
+msgstr "esta página de documentação"
+
+msgid "Settings saved."
+msgstr "Configurações salvas."
+
+msgid "Data removal"
+msgstr "Remoção de dados"
+
+msgid "Delete plugin data on uninstall"
+msgstr "Excluir dados do plugin ao desinstalar"
+
+msgid "If checked, plugin options, transients, and user meta created by this plugin will be removed when you uninstall."
+msgstr "Se marcado, ao desinstalar serão removidas as opções, transients e metadados de usuário criados por este plugin."
+
+msgid "Deep clean"
+msgstr "Limpeza completa"
+
+msgid "Also drop custom tables / logs"
+msgstr "Excluir também tabelas/registros personalizados"
+
+msgid "Drops tables like seslp_login_logs if present. Irreversible."
+msgstr "Exclui tabelas como seslp_login_logs se existirem. Irreversível."
+
+msgid "Uninstall Options"
+msgstr "Opções de desinstalação"
+
+msgid "UTC"
+msgstr "UTC"
+
+msgid "WordPress Local"
+msgstr "Horário local do WordPress"
+
+msgid "Both"
+msgstr "Ambos"
+
+msgid "This feature is available on %s and above."
+msgstr "Este recurso está disponível no plano %s ou superior."
+
+msgid "This section is available on %s."
+msgstr "Esta seção está disponível no plano %s."
+
+msgid "See plans"
+msgstr "Ver planos"

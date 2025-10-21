@@ -1,0 +1,176 @@
+msgid "Simple Easy Social Login"
+msgstr ""
+
+msgid "SE Social Login"
+msgstr ""
+
+msgid "Simple Easy Social Login – Setting"
+msgstr ""
+
+msgid "Setting"
+msgstr ""
+
+msgid "Providers"
+msgstr ""
+
+msgid "Enter OAuth credentials for each provider."
+msgstr ""
+
+msgid "%s Client ID"
+msgstr ""
+
+msgid "%s Client Secret"
+msgstr ""
+
+msgid "Client ID"
+msgstr ""
+
+msgid "Client Secret"
+msgstr ""
+
+msgid "App ID"
+msgstr ""
+
+msgid "App Secret"
+msgstr ""
+
+msgid "REST API Key"
+msgstr ""
+
+msgid "Channel ID"
+msgstr ""
+
+msgid "Channel Secret"
+msgstr ""
+
+msgid "App Key"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Post-login Redirect"
+msgstr ""
+
+msgid "Redirect to"
+msgstr ""
+
+msgid "Dashboard (wp-admin)"
+msgstr ""
+
+msgid "Profile page (wp-admin/profile.php)"
+msgstr ""
+
+msgid "Front page (home) — Default"
+msgstr ""
+
+msgid "Custom URL"
+msgstr ""
+
+msgid "When 'Custom URL' is selected, users are redirected to this address after login."
+msgstr ""
+
+msgid "Debug Logging"
+msgstr ""
+
+msgid "Enable logging"
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Writes to wp-content/SESLP-debug.log when enabled."
+msgstr ""
+
+msgid "Logger Timezone"
+msgstr ""
+
+msgid "Choose timestamp format for debug logs."
+msgstr ""
+
+msgid "UI"
+msgstr ""
+
+msgid "Login buttons layout"
+msgstr ""
+
+msgid "List (logo + text, vertical)"
+msgstr ""
+
+msgid "Icons only (horizontal)"
+msgstr ""
+
+msgid "When icons-only is selected, only provider logos are shown in a horizontal row."
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Social Login with:"
+msgstr ""
+
+msgid "This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider)."
+msgstr ""
+
+msgid "Your session has expired or the login attempt was invalid. Please try again."
+msgstr ""
+
+msgid "An unknown error occurred. Please try again."
+msgstr ""
+
+msgid "Failed to obtain access token from the provider. Please try again."
+msgstr ""
+
+msgid "Failed to fetch your profile information from the provider. Please try again."
+msgstr ""
+
+msgid "Need help? Follow %s"
+msgstr ""
+
+msgid "this documentation page"
+msgstr ""
+
+msgid "Settings saved."
+msgstr ""
+
+msgid "Data removal"
+msgstr ""
+
+msgid "Delete plugin data on uninstall"
+msgstr ""
+
+msgid "If checked, plugin options, transients, and user meta created by this plugin will be removed when you uninstall."
+msgstr ""
+
+msgid "Deep clean"
+msgstr ""
+
+msgid "Also drop custom tables / logs"
+msgstr ""
+
+msgid "Drops tables like seslp_login_logs if present. Irreversible."
+msgstr ""
+
+msgid "Uninstall Options"
+msgstr ""
+
+msgid "UTC"
+msgstr ""
+
+msgid "WordPress Local"
+msgstr ""
+
+msgid "Both"
+msgstr ""
+
+msgid "This feature is available on %s and above."
+msgstr ""
+
+msgid "This section is available on %s."
+msgstr ""
+
+msgid "See plans"
+msgstr ""
