@@ -112,17 +112,60 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     ];
   }
 
-  /** Fetch user profile (name/id/avatar) */
+  /** Fetch user info */
   public function fetch_userinfo(string $access_token): array {
+    // If OpenID Connect scopes are present, use the OIDC userinfo endpoint first.
+    $scopes   = $this->cfg['scopes'] ?? [];
+    $has_oidc = is_array($scopes) && in_array('openid', $scopes, true);
+
+    if ($has_oidc) {
+      $resp = wp_remote_get('https://api.linkedin.com/v2/userinfo', [
+        'timeout' => 20,
+        'headers' => [
+          'Authorization' => 'Bearer ' . $access_token,
+        ],
+      ]);
+
+      if (is_wp_error($resp)) {
+        return ['error' => 'http_error', 'message' => $resp->get_error_message()];
+      }
+
+      $code = wp_remote_retrieve_response_code($resp);
+      $json = json_decode((string) wp_remote_retrieve_body($resp), true);
+
+      if ($code === 200 && is_array($json)) {
+        // OIDC claims mapping
+        $id     = sanitize_text_field((string)($json['sub'] ?? ''));
+        $name   = sanitize_text_field(trim((string)($json['name'] ?? (($json['given_name'] ?? '') . ' ' . ($json['family_name'] ?? '')))));
+        $email  = sanitize_email((string)($json['email'] ?? ''));
+        $avatar = esc_url_raw((string)($json['picture'] ?? ''));
+
+        return [
+          'id'      => $id,
+          'email'   => $email,
+          'name'    => $name !== '' ? $name : $id,
+          'picture' => $avatar,
+        ];
+      }
+
+      // If OIDC call fails/denied, fall back to legacy v2 endpoints.
+    }
+
+    return $this->fetch_userinfo_legacy($access_token);
+  }
+
+  /** Legacy v2/me + v2/emailAddress flow (requires r_liteprofile & r_emailaddress) */
+  private function fetch_userinfo_legacy(string $access_token): array {
     $me_url = (string)($this->cfg['userinfo_url'] ?? 'https://api.linkedin.com/v2/me');
 
+    // Request localized names and profile picture (highest available)
     $resp = wp_remote_get(add_query_arg([
-      // Request localized first/last name and profile picture
       'projection' => '(id,localizedFirstName,localizedLastName,profilePicture(displayImage~:playableStreams))'
     ], $me_url), [
       'timeout' => 20,
       'headers' => [
-        'Authorization' => 'Bearer ' . $access_token,
+        'Authorization'             => 'Bearer ' . $access_token,
+        'X-Restli-Protocol-Version' => '2.0.0',
       ],
     ]);
 
@@ -137,7 +180,7 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
       return ['error' => 'invalid_userinfo_response', 'http_code' => $code, 'raw' => $json];
     }
 
-    // Fetch email separately
+    // Fetch email via legacy endpoint (existing method)
     $email = $this->fetch_email($access_token);
 
     return $this->normalize_userinfo($json, is_string($email) ? $email : '');
