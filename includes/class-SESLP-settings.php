@@ -60,9 +60,8 @@ final class SESLP_Settings {
     }, 'seslp-settings');
 
     $providers = SESLP_Providers_Registry::list();
-    // Remove deprecated Weibo, add LinkedIn
-    $providers = array_diff($providers, ['weibo']);
-    $providers[] = 'linkedin';
+    $providers = array_values(array_diff($providers, ['weibo'])); // remove Weibo
+    if (!in_array('linkedin', $providers, true)) $providers[] = 'linkedin'; // add LinkedIn
     
     foreach ($providers as $prov) {
       add_settings_field("seslp_{$prov}_client_id",
