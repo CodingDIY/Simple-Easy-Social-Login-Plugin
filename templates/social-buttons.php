@@ -10,6 +10,8 @@ if (!defined('ABSPATH')) exit;
 
 // Providers
 $providers = SESLP_Providers_Registry::list();
+$providers = array_diff($providers, ['weibo']); // remove Weibo
+$providers[] = 'linkedin'; // add LinkedIn
 
 // Plugin base URL
 $base_url = SESLP_Plugin::instance()->url;
