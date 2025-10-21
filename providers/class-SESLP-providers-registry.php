@@ -27,6 +27,12 @@ final class SESLP_Providers_Registry {
         'userinfo_url' => 'https://graph.facebook.com/v18.0/me',
         'scopes'       => ['email','public_profile'],
       ],
+      'linkedin' => [
+        'auth_url'      => 'https://www.linkedin.com/oauth/v2/authorization',
+        'token_url'     => 'https://www.linkedin.com/oauth/v2/accessToken',
+        'userinfo_url'  => 'https://api.linkedin.com/v2/me',
+        'scopes'        => ['r_liteprofile', 'r_emailaddress'],
+      ],
       'naver' => [
         'auth_url'      => 'https://nid.naver.com/oauth2.0/authorize',
         'token_url'     => 'https://nid.naver.com/oauth2.0/token',
@@ -44,12 +50,6 @@ final class SESLP_Providers_Registry {
         'token_url'     => 'https://api.line.me/oauth2/v2.1/token',
         'userinfo_url'  => 'https://api.line.me/v2/profile',
         'scopes'        => ['profile','openid','email'],
-      ],
-      'weibo' => [
-        'auth_url'      => 'https://api.weibo.com/oauth2/authorize',
-        'token_url'     => 'https://api.weibo.com/oauth2/access_token',
-        'userinfo_url'  => 'https://api.weibo.com/2/users/show.json',
-        'scopes'        => ['email'],
       ],
     ];
   }
@@ -97,7 +97,7 @@ final class SESLP_Providers_Registry {
       'facebook' => ['id' => 'App ID',        'secret' => 'App Secret'],
       'kakao'    => ['id' => 'REST API Key'], // secret same as base
       'line'     => ['id' => 'Channel ID',    'secret' => 'Channel Secret'],
-      'weibo'    => ['id' => 'App Key',       'secret' => 'App Secret'],
+      // 'weibo'    => ['id' => 'App Key',       'secret' => 'App Secret'],
       // google, naver use base labels
     ];
   }
