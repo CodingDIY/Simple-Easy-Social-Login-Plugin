@@ -167,9 +167,9 @@
 .seslp-logins .seslp-buttons.layout-icons {
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 4px;
   flex-direction: row;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 }
 .seslp-logins .seslp-buttons.layout-icons .seslp-btn {
   display: inline-flex;
