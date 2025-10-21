@@ -31,7 +31,7 @@ final class SESLP_Providers_Registry {
         'auth_url'      => 'https://www.linkedin.com/oauth/v2/authorization',
         'token_url'     => 'https://www.linkedin.com/oauth/v2/accessToken',
         'userinfo_url'  => 'https://api.linkedin.com/v2/me',
-        'scopes'        => ['r_liteprofile', 'r_emailaddress'],
+        'scopes'        => ['openid','profile','email'], 
       ],
       'naver' => [
         'auth_url'      => 'https://nid.naver.com/oauth2.0/authorize',
