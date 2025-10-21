@@ -47,8 +47,19 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   }
 
   /** Compute the redirect/callback URI (?social_login=linkedin) */
+  // public function get_redirect_uri(): string {
+  //   return add_query_arg(['social_login' => self::SLUG], home_url('/'));
+  // }
+  // TODO: REPLACE the whole method with this
   public function get_redirect_uri(): string {
-    return add_query_arg(['social_login' => self::SLUG], home_url('/'));
+    // Force a trailing slash base URL and log the final redirect URI for debugging
+    $base = trailingslashit(home_url());
+    $uri  = add_query_arg(['social_login' => self::SLUG], $base);
+
+    if (class_exists('SESLP_Logger')) {
+      SESLP_Logger::debug('LinkedIn redirect URI', ['uri' => $uri]);
+    }
+    return $uri;
   }
 
   /** Exchange authorization code for tokens (state already validated in Auth) */
