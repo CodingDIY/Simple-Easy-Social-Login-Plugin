@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: Social Login with GOOGLE, FACEBOOK, NAVER, KAKAO, LINE and WEIBO
- * Description: Boost your WordPress site with a simple, easy, and lightweight social login solution. Instantly connect users through Google, Facebook, Naver, Kakao, Line, and Weibo. While keeping only the essential features for speed and reliability, this plugin offers detailed setup guides and full documentation on the official website — making social login integration effortless for everyone.
+ * Plugin Name: Social Login with GOOGLE, FACEBOOK, NAVER, KAKAO, LINE and LINKEDIN
+ * Description: Boost your WordPress site with a simple, easy, and lightweight social login solution. Instantly connect users through Google, Facebook, Naver, Kakao, Line, and LinkedIn. While keeping only the essential features for speed and reliability, this plugin offers detailed setup guides and full documentation on the official website — making social login integration effortless for everyone.
  * Author: Selfcoding
  * Version: 1.0
  * Text Domain: se-social-login
@@ -28,7 +28,7 @@ foreach ([
   'providers/class-SESLP-provider-facebook.php',
   'providers/class-SESLP-provider-kakao.php',
   'providers/class-SESLP-provider-line.php',
-  'providers/class-SESLP-provider-weibo.php',
+  // 'providers/class-SESLP-provider-weibo.php',
   'includes/class-SESLP-user-linker.php',
   'includes/class-SESLP-avatar.php',
   'includes/class-SESLP-redirect.php',
@@ -94,7 +94,7 @@ final class SESLP_Plugin {
           'naver'    => ['client_id' => '', 'client_secret' => ''],
           'kakao'    => ['client_id' => '', 'client_secret' => ''],
           'line'     => ['client_id' => '', 'client_secret' => ''],
-          'weibo'    => ['client_id' => '', 'client_secret' => ''],
+          // 'weibo'    => ['client_id' => '', 'client_secret' => ''],
         ],
         'ui' => [
           'show_on_login'   => 1,
@@ -137,10 +137,10 @@ final class SESLP_Plugin {
       $l = new SESLP_Provider_Line();
       return $l->get_auth_url();
     }
-    if ($provider === 'weibo' && class_exists('SESLP_Provider_Weibo')) {
-      $w = new SESLP_Provider_Weibo();
-      return $w->get_auth_url();
-    }
+    // if ($provider === 'weibo' && class_exists('SESLP_Provider_Weibo')) {
+    //   $w = new SESLP_Provider_Weibo();
+    //   return $w->get_auth_url();
+    // }
 
     return add_query_arg(['social_login' => $provider], home_url('/'));
   }
