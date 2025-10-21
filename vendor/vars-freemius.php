@@ -21,10 +21,11 @@ $can_max_features = $is_max;
 $provider_allowed = [
   'google'   => true,                  // Free
   'facebook' => true,                  // Free
+  'linkedin' => true,                  // Free (added)
   'naver'    => $can_pro_features,     // Pro
   'kakao'    => $can_pro_features,     // Pro
   'line'     => $can_pro_features,     // Pro
-  'weibo'    => $can_max_features,     // Max
+  // 'weibo'  => $can_max_features,    // Removed (deprecated)
 ];
 
 // Provider list (filtered)
