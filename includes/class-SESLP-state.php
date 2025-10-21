@@ -59,4 +59,26 @@ final class SESLP_State {
 
     return $valid;
   }
+
+  /**
+ * Generate and persist an OAuth2 CSRF state token.
+ *
+ * Why:
+ * - OAuth redirect flows must include a unique, unguessable "state" value to prevent CSRF.
+ *
+ * How:
+ * - Uses wp_generate_password(12, false) to create a short, URL-safe random string
+ *   (no special characters to avoid encoding issues in query strings).
+ * - Stores the token in a transient scoped by provider + state for quick lookup.
+ * - Lifetime is 10 minutes, which is typically enough to complete the consent flow.
+ * - The token should be validated and cleared in SESLP_State::validate().
+ *
+ * @param string $provider Provider slug (e.g., 'linkedin', 'google', ...)
+ * @return string          The generated state token to send with the auth request
+ */
+  public static function generate(string $provider): string {
+    $state = wp_generate_password(12, false);
+    set_transient('seslp_state_' . $provider . '_' . $state, time(), 10 * MINUTE_IN_SECONDS);
+    return $state;
+  }
 }
