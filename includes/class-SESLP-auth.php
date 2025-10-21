@@ -499,88 +499,21 @@ final class SESLP_Auth {
     exit;
   }
 
-  /** Handle Weibo OAuth callback: exchange code -> token(uid) -> userinfo -> sign in */
+  /* Replace the entire Weibo callback with a safe no-op redirect */
   private function handle_weibo_callback(): void {
-    // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
-    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+    // Weibo provider has been deprecated/removed due to ICP constraints.
+    // If this legacy path is reached (old bookmarks/links), redirect safely with a friendly flag.
+    SESLP_Logger::notice('Weibo callback reached after provider removal; redirecting safely.');
 
-    SESLP_Logger::debug('Weibo callback received', [
-      'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
-      'code_present' => $code !== '' ? 1 : 0,
-    ]);
+    $redirect = add_query_arg(
+      [
+        'seslp_notice' => 'provider_removed',
+        'provider'     => 'weibo',
+      ],
+      wp_login_url()
+    );
 
-    if (!SESLP_State::validate('weibo', $state)) {
-      SESLP_Logger::warning('Invalid state (weibo)');
-      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-      exit;
-    }
-    if ($code === '') {
-      SESLP_Logger::warning('Missing code (weibo)');
-      wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
-      exit;
-    }
-
-    if (!class_exists('SESLP_Provider_Weibo')) {
-      wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
-      exit;
-    }
-
-    $wb    = new SESLP_Provider_Weibo();
-    $token = $wb->exchange_code($code, $state);
-    SESLP_Logger::debug('Token response (weibo)', [
-      'has_access_token' => (int)!empty($token['access_token'] ?? ''),
-      'has_uid'          => (int)!empty($token['uid'] ?? ''),
-    ]);
-
-    $access = (string)($token['access_token'] ?? '');
-    $uid    = (string)($token['uid'] ?? '');
-    if ($access === '' || $uid === '') {
-      wp_safe_redirect( add_query_arg('seslp_err', 'no_access_token', wp_login_url()) );
-      exit;
-    }
-
-    // Fetch user profile (requires uid)
-    $raw = $wb->fetch_userinfo_with_uid($access, $uid);
-    $ui  = $wb->normalize_userinfo($raw);
-
-    // Email may require privileged scope; try best-effort
-    $email = sanitize_email((string)($ui['email'] ?? ''));
-    if ($email === '') {
-      $email = sanitize_email($wb->fetch_email($access));
-    }
-
-    $wid  = sanitize_text_field((string)($ui['id'] ?? ''));
-    $name = sanitize_text_field((string)($ui['name'] ?? ''));
-
-    if ($email === '' || $wid === '') {
-      SESLP_Logger::warning('Invalid userinfo (weibo)', [
-        'email_present' => $email !== '' ? 1 : 0,
-        'id_present'    => $wid   !== '' ? 1 : 0,
-      ]);
-      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_userinfo', wp_login_url()) );
-      exit;
-    }
-
-    $profile = [
-      'id'      => $wid,
-      'email'   => $email,
-      'name'    => $name,
-      'picture' => (string)($ui['picture'] ?? ''),
-    ];
-
-    $user = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'weibo');
-    if ($user && isset($user->ID)) {
-      SESLP_Logger::info('Login success (weibo)', [
-        'user_id' => (int)$user->ID,
-        'email'   => SESLP_Logger::mask_email($email),
-      ]);
-      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
-      exit;
-    }
-
-    SESLP_Logger::error('Unknown error after weibo callback');
-    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
+    wp_safe_redirect($redirect);
     exit;
   }
 }
