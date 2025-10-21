@@ -30,6 +30,10 @@ final class SESLP_Auth {
       $this->handle_google_callback();
       return;
     }
+    if ($provider === 'linkedin') { 
+      $this->handle_linkedin_callback(); 
+      return; 
+    }
     if ($provider === 'facebook') {
       $this->handle_facebook_callback();
       return;
@@ -514,6 +518,61 @@ final class SESLP_Auth {
     );
 
     wp_safe_redirect($redirect);
+    exit;
+  }
+
+  /* LinkedIn callback */
+  private function handle_linkedin_callback(): void {
+    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    SESLP_Logger::debug('LinkedIn callback received', [
+      'state' => $state,
+      'code_present' => isset($_GET['code']) ? 1 : 0,
+    ]);
+
+    if (!SESLP_State::validate('linkedin', $state)) {
+      SESLP_Logger::warning('Invalid state (linkedin)', ['state' => $state]);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+      exit;
+    }
+
+    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    if ($code === '') {
+      SESLP_Logger::warning('Missing code (linkedin)');
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
+      exit;
+    }
+
+    $prov = new SESLP_Provider_Linkedin();
+
+    $tokens = $prov->exchange_code($code);
+    if (!empty($tokens['error'])) {
+      SESLP_Logger::error('LinkedIn token exchange failed', $tokens);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'token_exchange_failed', home_url('/'))));
+      exit;
+    }
+
+    $access_token = (string)($tokens['access_token'] ?? '');
+    $profile = $prov->fetch_userinfo($access_token);
+    if (!empty($profile['error'])) {
+      SESLP_Logger::error('LinkedIn userinfo fetch failed', $profile);
+      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'userinfo_failed', home_url('/'))));
+      exit;
+    }
+
+    $email = $profile['email'] ?? '';
+    $user  = (new SESLP_User_Linker())->link_or_create_and_sign_in($profile, 'linkedin');
+
+    if ($user && isset($user->ID)) {
+      SESLP_Logger::info('Login success (linkedin)', [
+        'user_id' => (int)$user->ID,
+        'email'   => SESLP_Logger::mask_email($email),
+      ]);
+      wp_safe_redirect( SESLP_Redirect::after_login_url($user) );
+      exit;
+    }
+
+    SESLP_Logger::error('Unknown error after linkedin callback');
+    wp_safe_redirect( add_query_arg('seslp_err', 'unknown_error', wp_login_url()) );
     exit;
   }
 }
