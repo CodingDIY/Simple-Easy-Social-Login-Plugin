@@ -29,6 +29,7 @@ foreach ([
   'providers/class-SESLP-provider-kakao.php',
   'providers/class-SESLP-provider-line.php',
   // 'providers/class-SESLP-provider-weibo.php',
+  'providers/class-SESLP-provider-linkedin.php',
   'includes/class-SESLP-user-linker.php',
   'includes/class-SESLP-avatar.php',
   'includes/class-SESLP-redirect.php',
