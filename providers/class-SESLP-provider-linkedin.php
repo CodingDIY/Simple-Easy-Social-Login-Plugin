@@ -35,15 +35,30 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
     $state = class_exists('SESLP_State') ? SESLP_State::generate(self::SLUG) : wp_create_nonce('seslp_'.$client_id);
 
-    $args = [
+    // $args = [
+    //   'response_type' => 'code',
+    //   'client_id'     => $client_id,
+    //   'redirect_uri'  => $this->get_redirect_uri(),
+    //   'state'         => $state,
+    //   'scope'         => $scope_str,
+    // ];
+
+    // return add_query_arg($args, $auth_base);
+    $query = http_build_query([
       'response_type' => 'code',
       'client_id'     => $client_id,
       'redirect_uri'  => $this->get_redirect_uri(),
       'state'         => $state,
       'scope'         => $scope_str,
-    ];
+    ], '', '&', PHP_QUERY_RFC3986);
 
-    return add_query_arg($args, $auth_base);
+    $final = $auth_base . '?' . $query;
+
+    if (class_exists('SESLP_Logger')) {
+      SESLP_Logger::debug('LinkedIn auth URL', ['url' => $final]);
+    }
+
+    return $final;
   }
 
   /** Compute the redirect/callback URI (?social_login=linkedin) */
