@@ -14,10 +14,17 @@ class SESLP_Guides {
   private const GUIDE_DIR_LEGACY  = 'assets/guide';
   private const FALLBACK_LOCALE   = 'en-US';
 
-  /** Register submenu under Settings (or change parent to your top-level slug). */
+  /** Register submenu under plugin top-level if available; otherwise under Settings. */
   public static function register_menu(): void {
+    // Prefer the plugin's own top-level menu if its slug is available.
+    $parent_slug = 'options-general.php';
+    if (class_exists('SESLP_Plugin') && defined('SESLP_SLUG')) {
+      // SESLP_Plugin::SLUG delegates to SESLP_SLUG from constants.php
+      $parent_slug = SESLP_Plugin::SLUG ?: $parent_slug;
+    }
+
     add_submenu_page(
-      'options-general.php',
+      $parent_slug,
       __('Guide', SESLP_Plugin::TD),
       __('Guide', SESLP_Plugin::TD),
       'manage_options',
