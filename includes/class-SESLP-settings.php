@@ -16,12 +16,14 @@ final class SESLP_Settings {
   }
 
   public static function add_settings_menu(): void {
+    $settings_slug = defined('SESLP_SETTINGS_SLUG') ? SESLP_SETTINGS_SLUG : 'seslp-settings';
+
     // 1) Top-level menu
     add_menu_page(
       __( 'Simple Easy Social Login', SESLP_Plugin::TD ),  // Page title
       __( 'SE Social Login', SESLP_Plugin::TD ),           // Menu title (top-level label)
       'manage_options',                                    // Capability
-      'seslp-settings',                                    // Menu slug
+      $settings_slug,                                      // Menu slug
       [ self::class, 'render_settings_page' ],             // Callback
       'dashicons-unlock',                                  // Icon
       65                                                   // Position (below Settings, above Tools typically)
@@ -32,11 +34,11 @@ final class SESLP_Settings {
     remove_submenu_page( 'seslp-settings', 'seslp-settings' );
 
     add_submenu_page(
-      'seslp-settings',                                             // Parent slug (this top-level menu)
+      $settings_slug,                                               // Parent slug (this top-level menu)
       __( 'Simple Easy Social Login – Setting', SESLP_Plugin::TD ), // Page title for the tab
       __( 'Setting', SESLP_Plugin::TD ),                            // Submenu label
       'manage_options',
-      'seslp-settings',                                             // Same slug → same page callback
+      $settings_slug,                                               // Same slug → same page callback
       [ self::class, 'render_settings_page' ]
     );
   }

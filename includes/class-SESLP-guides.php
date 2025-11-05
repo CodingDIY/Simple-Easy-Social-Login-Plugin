@@ -17,11 +17,7 @@ class SESLP_Guides {
   /** Register submenu under plugin top-level if available; otherwise under Settings. */
   public static function register_menu(): void {
     // Attach Guide under the main plugin menu
-    $parent_slug = 'seslp-settings';
-    if (class_exists('SESLP_Plugin') && defined('SESLP_SLUG')) {
-      // SESLP_Plugin::SLUG delegates to SESLP_SLUG from constants.php
-      $parent_slug = SESLP_Plugin::SLUG ?: $parent_slug;
-    }
+    $parent_slug = defined('SESLP_SETTINGS_SLUG') ? SESLP_SETTINGS_SLUG : 'seslp-settings';
 
     add_submenu_page(
       $parent_slug,
