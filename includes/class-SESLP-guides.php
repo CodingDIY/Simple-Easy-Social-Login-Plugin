@@ -16,8 +16,8 @@ class SESLP_Guides {
 
   /** Register submenu under plugin top-level if available; otherwise under Settings. */
   public static function register_menu(): void {
-    // Prefer the plugin's own top-level menu if its slug is available.
-    $parent_slug = 'options-general.php';
+    // Attach Guide under the main plugin menu
+    $parent_slug = 'seslp-settings';
     if (class_exists('SESLP_Plugin') && defined('SESLP_SLUG')) {
       // SESLP_Plugin::SLUG delegates to SESLP_SLUG from constants.php
       $parent_slug = SESLP_Plugin::SLUG ?: $parent_slug;
@@ -29,12 +29,12 @@ class SESLP_Guides {
       __('Guide', SESLP_Plugin::TD),
       'manage_options',
       'seslp-guide',
-      [self::class, 'render_page']
+      [self::class, 'render_guide_page']
     );
   }
 
   /** Entry point for the page. Loads template and passes data. */
-  public static function render_page(): void {
+  public static function render_guide_page(): void {
     if (!current_user_can('manage_options')) {
       wp_die(esc_html__('You do not have sufficient permissions to access this page.', SESLP_Plugin::TD));
     }

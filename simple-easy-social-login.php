@@ -159,8 +159,14 @@ add_action('plugins_loaded', static function () {
   if (class_exists('SESLP_Assets')) { (new SESLP_Assets())->register(); }
   if (class_exists('SESLP_UI')) { (new SESLP_UI())->register(); }
   if (class_exists('SESLP_Auth')) { (new SESLP_Auth())->register(); }
-  if (class_exists('SESLP_Guides')) { add_action('admin_menu', ['SESLP_Guides', 'register_menu']); }
+  // if (class_exists('SESLP_Guides')) { add_action('admin_menu', ['SESLP_Guides', 'register_menu']); }
 });
+
+add_action('admin_menu', static function () {
+  if (class_exists('SESLP_Guides')) {
+    SESLP_Guides::register_menu();
+  }
+}, 99);
 
 /** Lifecycle */
 register_activation_hook(__FILE__, ['SESLP_Plugin', 'activate']);
