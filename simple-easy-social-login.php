@@ -36,7 +36,8 @@ foreach ([
   'includes/class-SESLP-assets.php',
   'includes/class-SESLP-settings.php',
   'includes/class-SESLP-ui.php',
-  'includes/class-SESLP-auth.php'
+  'includes/class-SESLP-auth.php',
+  'includes/class-SESLP-guides.php',
 ] as $__rel) {
   $p = $__seslp_dir . $__rel;
   if (file_exists($p)) {
@@ -158,6 +159,7 @@ add_action('plugins_loaded', static function () {
   if (class_exists('SESLP_Assets')) { (new SESLP_Assets())->register(); }
   if (class_exists('SESLP_UI')) { (new SESLP_UI())->register(); }
   if (class_exists('SESLP_Auth')) { (new SESLP_Auth())->register(); }
+  if (class_exists('SESLP_Guides')) { add_action('admin_menu', ['SESLP_Guides', 'register_menu']); }
 });
 
 /** Lifecycle */
