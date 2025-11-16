@@ -174,3 +174,18 @@ msgstr ""
 
 msgid "See plans"
 msgstr ""
+
+msgid "Guide"
+msgstr ""
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+msgid "SESLP Guide"
+msgstr ""
+
+msgid "Guide not found"
+msgstr ""
+
+msgid "Please add a localized Markdown file under assets/md/{locale}.md"
+msgstr ""

@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.7\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Simple Easy Social Login"
 msgstr "简易社交登录"
@@ -187,3 +187,18 @@ msgstr "此部分仅适用于%s版本。"
 
 msgid "See plans"
 msgstr "查看方案"
+
+msgid "Guide"
+msgstr "指南"
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "您没有访问此页面的权限。"
+
+msgid "SESLP Guide"
+msgstr "SESLP 使用指南"
+
+msgid "Guide not found"
+msgstr "未找到指南"
+
+msgid "Please add a localized Markdown file under assets/md/{locale}.md"
+msgstr "请在 assets/md/{locale}.md 添加对应语言的 Markdown 文件"

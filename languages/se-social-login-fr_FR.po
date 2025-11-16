@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.7\n"
+"X-Generator: Poedit 3.8\n"
 
 msgid "Simple Easy Social Login"
 msgstr "Connexion Sociale Simple et Facile"
@@ -187,3 +187,18 @@ msgstr "Cette section est disponible avec le plan %s."
 
 msgid "See plans"
 msgstr "Voir les plans"
+
+msgid "Guide"
+msgstr "Guide"
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "Vous n’avez pas les autorisations nécessaires pour accéder à cette page."
+
+msgid "SESLP Guide"
+msgstr "Guide SESLP"
+
+msgid "Guide not found"
+msgstr "Guide introuvable."
+
+msgid "Please add a localized Markdown file under assets/md/{locale}.md"
+msgstr "Veuillez ajouter un fichier Markdown localisé dans assets/md/{locale}.md"

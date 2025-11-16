@@ -1,8 +1,20 @@
-.seslp-no-padding-left { padding-left: 0; }
-.seslp-section-title { margin-top: 2rem; }
-.seslp-radio-label { display: block; margin: 4px 0; }
-.seslp-inline-label { margin-right: 12px; }
-.seslp-hidden { display: none; }
+/* Settings page styles */
+.seslp-no-padding-left { 
+  padding-left: 0; 
+}
+.seslp-section-title { 
+  margin-top: 2rem; 
+}
+.seslp-radio-label { 
+  display: block; 
+  margin: 4px 0; 
+}
+.seslp-inline-label { 
+  margin-right: 12px; 
+}
+.seslp-hidden { 
+  display: none; 
+}
 
 #seslp-redirect-table {
   fieldset {
@@ -11,8 +23,69 @@
   }
 }
 
-.seslp-guide-wrap .seslp-guide-content { max-width: 980px; }
-.seslp-guide-content pre { background:#f6f8fa; padding:10px; overflow:auto; border-radius:6px; }
-.seslp-guide-content code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-.seslp-guide-content table { border-collapse: collapse; width:100%; margin:12px 0;}
-.seslp-guide-content th, .seslp-guide-content td { border:1px solid #e3e3e3; padding:8px; text-align:left; }
+/* Guide page styles */
+.seslp-guide-wrap .seslp-guide-content { 
+  /* max-width: 980px; */
+  font-size: 14px;
+  line-height: 1.5;
+}
+.seslp-guide-wrap .seslp-guide-content p {
+  font-size: inherit;
+  margin: 0.5em 1em 0 0;
+}
+.seslp-guide-wrap .seslp-guide-content h4 {
+  font-size: 1.1em;
+  margin: 1.5em 0 1.33em 0;
+}
+.seslp-guide-content pre { 
+  background: #f6f8fa; 
+  padding: 10px; 
+  overflow: auto; 
+  border-radius: 6px; 
+}
+.seslp-guide-content code { 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; 
+}
+.seslp-guide-content table { 
+  border-collapse: collapse; 
+  width: 100%; 
+  margin: 12px 0;
+}
+.seslp-guide-content th, .seslp-guide-content td { 
+  border: 1px solid #e3e3e3; 
+  padding: 8px; 
+  text-align: left; 
+}
+.seslp-guide-wrap .seslp-guide-content blockquote {
+  margin: 1em 0;
+  padding-left: 4px;
+  border-left: 4px solid #ddd;
+  background: transparent;
+}
+.seslp-guide-wrap .seslp-guide-content blockquote ul {
+  padding-left: 0;
+}
+.seslp-guide-wrap .seslp-guide-content ul {
+  list-style: disc;
+  margin: 0.5em 0 1em 1.25em;
+  padding-left: 1em;
+}
+.seslp-guide-wrap .seslp-guide-content ol {
+  list-style: decimal;
+  margin: 0 0 1em 1.25em;
+  padding-left: 0;
+}
+.seslp-guide-wrap .seslp-guide-content details[open] {
+  margin-bottom: 1.5em;
+}
+.seslp-guide-wrap .seslp-guide-content details > summary {
+  font-size: 1.05em;
+  font-weight: 600;
+  cursor: pointer;
+  margin: .5em 0;
+  padding-left: 4px;
+  border-left: 4px solid #333;
+}
+.seslp-guide-wrap .seslp-guide-content details[open] > summary {
+  margin-bottom: .25em;
+}
