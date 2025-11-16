@@ -41,6 +41,12 @@ class SESLP_Guides {
     $css_ver  = file_exists($css_path) ? (string) filemtime($css_path) : SESLP_Plugin::VERSION;
     wp_enqueue_style('seslp-admin', $plugin->url . $css_rel, [], $css_ver);
 
+    // Enqueue admin JS (needed for <details> accordion)
+    $js_rel  = 'assets/js/admin-settings.js';
+    $js_path = $plugin->dir . $js_rel;
+    $js_ver  = file_exists($js_path) ? (string) filemtime($js_path) : SESLP_Plugin::VERSION;
+    wp_enqueue_script('seslp-admin-js', $plugin->url . $js_rel, [], $js_ver, true);
+
     $plugin_root = $plugin->dir;
     $locale_full = get_user_locale() ?: get_locale(); // e.g., ko_KR
     $locale_norm = str_replace('_', '-', $locale_full); // ko-KR
