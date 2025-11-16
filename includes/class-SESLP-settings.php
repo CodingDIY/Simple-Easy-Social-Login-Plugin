@@ -99,10 +99,18 @@ final class SESLP_Settings {
   }
 
   public static function enqueue_admin_assets(string $hook): void {
-    // Load only on our settings screen (works for both top-level and submenu routes)
-    if (!isset($_GET['page']) || $_GET['page'] !== 'seslp-settings') {
+    // Load on all SESLP admin pages: settings, pricing, account, etc.
+    if (!isset($_GET['page'])) {
       return;
     }
+
+    $page = sanitize_key((string) $_GET['page']);
+
+    // seslp-settings, seslp-settings-pricing, seslp-settings-account ...
+    if (strpos($page, 'seslp-settings') !== 0) {
+      return;
+    }
+
     $plugin  = SESLP_Plugin::instance();
     $css_rel = 'assets/css/admin-settings.css';
     $js_rel  = 'assets/js/admin-settings.js';

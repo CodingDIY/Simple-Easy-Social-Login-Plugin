@@ -88,4 +88,12 @@
 }
 .seslp-guide-wrap .seslp-guide-content details[open] > summary {
   margin-bottom: .25em;
+  padding: 6px 0 6px 4px;
+  background-color: #ddd;
+}
+
+/* Freemius pricing styling */
+.fs-packages {
+  width: auto !important;
+  justify-content: center;
 }
