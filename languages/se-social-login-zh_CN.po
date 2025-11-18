@@ -202,3 +202,6 @@ msgstr "未找到指南"
 
 msgid "Please add a localized Markdown file under assets/md/{locale}.md"
 msgstr "请在 assets/md/{locale}.md 添加对应语言的 Markdown 文件"
+
+msgid "Shortcode"
+msgstr "短代码"

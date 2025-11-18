@@ -293,6 +293,21 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
 
     <br>
 
+    <h2 class="seslp-section-title"><?php echo esc_html__('Shortcode', SESLP_Plugin::TD); ?></h2>
+
+    <table id="seslp-shortcode-table" class="form-table" role="presentation">
+      <tbody>
+        <tr>
+          <th scope="row"><?php echo esc_html__('Shortcode', SESLP_Plugin::TD); ?></th>
+          <td>
+            <code>[se_social_login]</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <br>
+
     <hr>
 
     <h2 class="seslp-section-title"><?php echo esc_html__('Uninstall Options', SESLP_Plugin::TD); ?></h2>

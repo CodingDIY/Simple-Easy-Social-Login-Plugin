@@ -202,3 +202,6 @@ msgstr "No se encontró la guía."
 
 msgid "Please add a localized Markdown file under assets/md/{locale}.md"
 msgstr "Añade un archivo Markdown localizado en assets/md/{locale}.md"
+
+msgid "Shortcode"
+msgstr "Código corto"

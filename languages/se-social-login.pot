@@ -189,3 +189,6 @@ msgstr ""
 
 msgid "Please add a localized Markdown file under assets/md/{locale}.md"
 msgstr ""
+
+msgid "Shortcode"
+msgstr ""
