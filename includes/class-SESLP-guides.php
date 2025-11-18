@@ -59,6 +59,24 @@ class SESLP_Guides {
     $markdown = $md_file ? (string) @file_get_contents($md_file) : self::not_found_message();
     $html     = self::markdown_to_html($markdown, $plugin_root);
 
+    // Force guide links to open in a new tab with safe rel attribute.
+    $html = preg_replace_callback(
+      '/<a\s+([^>]*href="[^"]+"[^>]*)>/i',
+      static function (array $m): string {
+        $attrs = $m[1];
+
+        if (stripos($attrs, 'target=') === false) {
+          $attrs .= ' target="_blank"';
+        }
+        if (stripos($attrs, 'rel=') === false) {
+          $attrs .= ' rel="noopener"';
+        }
+
+        return '<a ' . trim($attrs) . '>'; 
+      },
+      $html
+    );
+
     // Sanitize
     $allowed  = self::kses_allowed_tags();
     $html     = wp_kses($html, $allowed);

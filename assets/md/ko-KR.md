@@ -179,6 +179,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 ### 1) 앱 생성 및 제품 추가
 
 (1) **Meta for Developers** 접속 → 로그인
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) **Create App** → 일반(Consumer 등) 유형 선택 → 앱 생성
 

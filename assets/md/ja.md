@@ -190,6 +190,7 @@
 #### 1) アプリ作成と製品追加
 
 (1) **Meta for Developers** にアクセス → ログイン
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) **Create App** → 一般タイプ (Consumer など) を選択 → アプリ作成
 

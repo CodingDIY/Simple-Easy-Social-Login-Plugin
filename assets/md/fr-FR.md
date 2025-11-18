@@ -179,6 +179,7 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 #### 1) Créer l’application et ajouter un produit
 
 (1) Connectez-vous à **Meta for Developers**
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) Cliquez sur **Créer une application** → Type général (Consumer) → Créez
 

@@ -178,6 +178,7 @@
 #### 1) 创建应用并添加产品
 
 (1) 打开 **Meta for Developers** → 登录
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) 点击 **Create App** → 选择类型（如 Consumer）→ 创建应用
 

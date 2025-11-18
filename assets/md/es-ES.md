@@ -177,6 +177,7 @@ Explique claramente en la pantalla de consentimiento para qué se solicita el pe
 #### 1) Crear aplicación y agregar producto
 
 (1) Ingrese a **Meta for Developers** → Inicie sesión
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) Haga clic en **Crear aplicación** → Tipo general (por ejemplo, Consumidor) → Crear
 

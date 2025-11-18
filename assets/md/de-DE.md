@@ -182,6 +182,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 #### 1) App erstellen und Produkt hinzufügen
 
 (1) Gehen Sie zu **Meta for Developers** → Anmelden
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) Klicken Sie auf **App erstellen** → Wählen Sie „Consumer“ (oder allgemein) → App erstellen
 

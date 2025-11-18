@@ -178,6 +178,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 #### 1) Criar aplicativo e adicionar produto
 
 (1) Vá para **Meta for Developers** → Faça login
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) **Criar App** → Tipo geral (Consumer) → Criar
 

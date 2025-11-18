@@ -178,6 +178,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 #### 1) Create App and Add Product
 
 (1) Go to **Meta for Developers** → Log in
+[https://developers.facebook.com/](https://developers.facebook.com/)
 
 (2) Click **Create App** → Select a general type (e.g., Consumer) → Create app
 
