@@ -6,7 +6,9 @@
  *
  * @var SESLP_Plugin $this
  */
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 // Providers
 $providers = SESLP_Providers_Registry::list();
@@ -15,18 +17,19 @@ $providers = SESLP_Providers_Registry::list();
 $base_url = SESLP_Plugin::instance()->url;
 
 $opts = get_option('seslp_options', []);
-$layout = isset($opts['ui']['layout']) ? $opts['ui']['layout'] : 'list';
+$opts = is_array($opts) ? $opts : [];
+$layout = isset($opts['ui']['layout']) && is_string($opts['ui']['layout'])
+    ? sanitize_key($opts['ui']['layout'])
+    : 'list';
 
-// Local helper: check if provider credentials exist.
-$is_configured = function (string $prov): bool {
-  $opts = get_option('seslp_options', []);
-  // 1) unified options first: seslp_options[providers][{prov}][client_id|client_secret]
-  $cfg = isset($opts['providers'][$prov]) && is_array($opts['providers'][$prov]) ? $opts['providers'][$prov] : [];
+// Local helper: check if provider credentials exist (uses cached helpers first, legacy fallback second).
+$is_configured = static function (string $prov): bool {
+  $prov = sanitize_key($prov);
 
-  $id     = isset($cfg['client_id'])     ? trim((string) $cfg['client_id'])     : '';
-  $secret = isset($cfg['client_secret']) ? trim((string) $cfg['client_secret']) : '';
+  $id     = SESLP_Helpers::get_client_id($prov);
+  $secret = SESLP_Helpers::get_client_secret($prov);
 
-  // 2) fallback to legacy flat options (e.g., seslp_weibo_client_id / _client_secret)
+  // Fallback to legacy flat options (e.g., seslp_weibo_client_id / _client_secret)
   if ($id === '' || $secret === '') {
     $legacy_id     = trim((string) get_option('seslp_' . $prov . '_client_id', ''));
     $legacy_secret = trim((string) get_option('seslp_' . $prov . '_client_secret', ''));
