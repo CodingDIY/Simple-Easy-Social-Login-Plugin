@@ -3,39 +3,53 @@
  * Freemius plan-based variables
  * Used globally for gating features in settings-page.php and others.
  */
-if (!defined('ABSPATH')) exit;
+
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 // Initialize Freemius instance
 $fs = function_exists('simple_easy_social_login_freemius') ? simple_easy_social_login_freemius() : null;
 
 // Detect current plan
-$is_free  = $fs ? (bool) $fs->is_free_plan() : true;
-$is_pro   = $fs ? (bool) $fs->is_plan('pro') : false;
-$is_max   = $fs ? (bool) $fs->is_plan('max') : false;
+$is_free = !$fs || (bool) $fs->is_free_plan();
+$is_pro  = $fs ? (bool) $fs->is_plan('pro') : false;
+$is_max  = $fs ? (bool) $fs->is_plan('max') : false;
 
-// Feature switches by plan
-$can_pro_features = $is_pro || $is_max;
-$can_max_features = $is_max;
-
-// Provider availability per plan
-$provider_allowed = [
-  'google'   => true,                  // Free
-  'facebook' => true,                  // Free
-  'linkedin' => true,                  // Free (added)
-  'naver'    => $can_pro_features,     // Pro
-  'kakao'    => $can_pro_features,     // Pro
-  'line'     => $can_pro_features,     // Pro
-  // 'weibo'  => $can_max_features,    // Removed (deprecated)
+$current_plan = [
+  'free' => $is_free,
+  'pro'  => $is_pro,
+  'max'  => $is_max,
 ];
 
+// Provider availability per plan
+$provider_plan = [
+  'google'   => 'free',
+  'facebook' => 'free',
+  'linkedin' => 'free',
+  'naver'    => 'pro',
+  'kakao'    => 'pro',
+  'line'     => 'pro',
+  // 'weibo'  => 'max', (deprecated)
+];
+
+$provider_allowed = [];
+foreach ($provider_plan as $provider => $required_plan) {
+  $required_plan = strtolower((string) $required_plan);
+  $is_allowed = !isset($current_plan[$required_plan]) ? false : (bool) $current_plan[$required_plan];
+  $provider_allowed[strtolower((string) $provider)] = $is_allowed;
+}
+
+$provider_allowed = apply_filters('seslp_provider_allowed', $provider_allowed, $current_plan);
+
 // Provider list (filtered)
+$providers = [];
+
 if (class_exists('SESLP_Providers_Registry')) {
   $providers_all = SESLP_Providers_Registry::list();
-  $providers = array_values(array_filter($providers_all, function($p) use ($provider_allowed) {
+  $providers = array_values(array_filter($providers_all, function ($p) use ($provider_allowed) {
     $p = strtolower((string) $p);
-    return isset($provider_allowed[$p]) && $provider_allowed[$p] === true;
+    return isset($provider_allowed[$p]) && true === $provider_allowed[$p];
   }));
   unset($providers_all);
-} else {
-  $providers = [];
 }
