@@ -11,6 +11,12 @@ if (!defined('ABSPATH')) exit;
 <div class="wrap seslp-guide-wrap">
   <h1><?php echo esc_html( $page_title ); ?></h1>
   <div class="seslp-guide-content">
-    <?php echo $guide_html; ?>
+    <?php
+    if ( ! empty( $guide_html ) ) {
+      echo wp_kses_post( $guide_html );
+    } else {
+      echo '<p>' . esc_html__( 'Guide content is not available.', SESLP_Plugin::TD ) . '</p>';
+    }
+    ?>
   </div>
 </div>
