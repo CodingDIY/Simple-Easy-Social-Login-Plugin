@@ -24,7 +24,7 @@ final class SESLP_UI {
 
   /** Output on core login/register screens (conditioned by option) */
   public function render_buttons_on_login(): void {
-    $opts         = get_option('seslp_options', []);
+    $opts         = SESLP_Helpers::get_options();
     $should_show  = (bool) ($opts['ui']['show_on_login'] ?? 1);
 
     // Allow filters to control whether buttons are shown on wp-login.php

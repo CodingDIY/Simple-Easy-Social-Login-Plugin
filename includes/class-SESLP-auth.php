@@ -83,7 +83,7 @@ final class SESLP_Auth {
       exit;
     }
 
-    $opts = get_option('seslp_options', []);
+    $opts = SESLP_Helpers::get_options();
     $cid  = trim((string)($opts['providers']['google']['client_id'] ?? ''));
     $sec  = trim((string)($opts['providers']['google']['client_secret'] ?? ''));
 
@@ -267,7 +267,7 @@ final class SESLP_Auth {
     }
 
     // Credentials
-    $opts = get_option('seslp_options', []);
+    $opts = SESLP_Helpers::get_options();
     $cid  = trim((string)($opts['providers']['naver']['client_id'] ?? ''));
     $sec  = trim((string)($opts['providers']['naver']['client_secret'] ?? ''));
     if ($cid === '' || $sec === '') {

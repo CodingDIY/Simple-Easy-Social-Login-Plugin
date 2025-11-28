@@ -102,12 +102,7 @@ final class SESLP_Settings {
   }
 
   private static function render_input(string $provider, string $key, bool $password = false): void {
-    // Cache options to avoid repeated get_option() calls per page load.
-    static $opts = null;
-
-    if ($opts === null) {
-      $opts = get_option('seslp_options', []);
-    }
+    $opts = SESLP_Helpers::get_options();
 
     $val  = $opts['providers'][$provider][$key] ?? '';
     $name = "seslp_options[providers][{$provider}][{$key}]";

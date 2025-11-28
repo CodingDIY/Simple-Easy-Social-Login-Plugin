@@ -45,13 +45,14 @@ final class SESLP_Provider_Facebook implements SESLP_Provider_Interface {
       return '#';
     }
 
-    $auth_base = $this->get_config_string(
+    $auth_base = SESLP_Helpers::get_config_string(
+      $this->cfg,
       'auth_url',
       'https://www.facebook.com/v18.0/dialog/oauth'
     );
 
     // FB uses comma-separated scopes
-    $scope_str = implode(',', $this->get_scopes());
+    $scope_str = implode(',', SESLP_Helpers::get_scopes($this->cfg, ['email', 'public_profile']));
 
     // CSRF state
     if (!class_exists('SESLP_State')) {
@@ -88,7 +89,8 @@ final class SESLP_Provider_Facebook implements SESLP_Provider_Interface {
       return [];
     }
 
-    $token_url = $this->get_config_string(
+    $token_url = SESLP_Helpers::get_config_string(
+      $this->cfg,
       'token_url',
       'https://graph.facebook.com/v18.0/oauth/access_token'
     );
@@ -128,7 +130,8 @@ final class SESLP_Provider_Facebook implements SESLP_Provider_Interface {
     }
 
     // Request name, email and a square profile picture URL
-    $userinfo_url = $this->get_config_string(
+    $userinfo_url = SESLP_Helpers::get_config_string(
+      $this->cfg,
       'userinfo_url',
       'https://graph.facebook.com/v18.0/me'
     );
@@ -168,30 +171,5 @@ final class SESLP_Provider_Facebook implements SESLP_Provider_Interface {
       'name'    => $name,
       'picture' => $pic,
     ];
-  }
-
-  /** Get a config value as a sanitized string */
-  private function get_config_string(string $key, string $default): string {
-    $value = $this->cfg[$key] ?? $default;
-    $value = is_string($value) ? $value : (string) $value;
-
-    return sanitize_text_field($value);
-  }
-
-  /** Retrieve and sanitize scopes with a safe fallback */
-  private function get_scopes(): array {
-    $scopes = $this->cfg['scopes'] ?? ['email', 'public_profile'];
-
-    if (!is_array($scopes)) {
-      $scopes = [$scopes];
-    }
-
-    $scopes = array_filter(array_map('sanitize_text_field', $scopes));
-
-    if ($scopes === []) {
-      $scopes = ['email', 'public_profile'];
-    }
-
-    return $scopes;
   }
 }

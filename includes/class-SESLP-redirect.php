@@ -14,7 +14,7 @@ final class SESLP_Redirect {
    * Default: front page.
    */
   public static function after_login_url(?WP_User $user = null): string {
-    $opts = get_option('seslp_options', []);
+    $opts = SESLP_Helpers::get_options();
     $mode = isset($opts['redirect']['mode']) ? (string) $opts['redirect']['mode'] : 'front';
 
     // Default fallback: front page

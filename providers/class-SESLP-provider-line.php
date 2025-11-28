@@ -43,7 +43,7 @@ final class SESLP_Provider_Line implements SESLP_Provider_Interface {
 
     $auth_base = (string)($this->cfg['auth_url'] ?? 'https://access.line.me/oauth2/v2.1/authorize');
     // Line scopes are space-separated. For email we need openid + email; profile gives name/picture.
-    $scope_str = implode(' ', $this->get_scopes());
+    $scope_str = implode(' ', SESLP_Helpers::get_scopes($this->cfg, ['profile','openid','email']));
 
     // CSRF state
     if (!class_exists('SESLP_State')) {
@@ -77,7 +77,7 @@ final class SESLP_Provider_Line implements SESLP_Provider_Interface {
       return [];
     }
 
-    $token_url = $this->get_config_string('token_url', 'https://api.line.me/oauth2/v2.1/token');
+    $token_url = SESLP_Helpers::get_config_string($this->cfg, 'token_url', 'https://api.line.me/oauth2/v2.1/token');
 
     $body = [
       'grant_type'   => 'authorization_code',
@@ -110,7 +110,7 @@ final class SESLP_Provider_Line implements SESLP_Provider_Interface {
       return [];
     }
 
-    $userinfo_url = $this->get_config_string('userinfo_url', 'https://api.line.me/v2/profile');
+    $userinfo_url = SESLP_Helpers::get_config_string($this->cfg, 'userinfo_url', 'https://api.line.me/v2/profile');
 
     $resp = wp_remote_get($userinfo_url, [
       'timeout' => 15,
@@ -147,7 +147,7 @@ final class SESLP_Provider_Line implements SESLP_Provider_Interface {
       return '';
     }
 
-    $verify_url = $this->get_config_string('verify_url', 'https://api.line.me/oauth2/v2.1/verify');
+    $verify_url = SESLP_Helpers::get_config_string($this->cfg, 'verify_url', 'https://api.line.me/oauth2/v2.1/verify');
     $resp = wp_remote_post($verify_url, [
       'timeout' => 15,
       'headers' => [ 'Content-Type' => 'application/x-www-form-urlencoded' ],
@@ -162,19 +162,5 @@ final class SESLP_Provider_Line implements SESLP_Provider_Interface {
     $data = json_decode(wp_remote_retrieve_body($resp), true);
     $email = (string)($data['email'] ?? '');
     return sanitize_email($email);
-  }
-
-  /** Get a config value as a sanitized string */
-  private function get_config_string(string $key, string $default): string {
-    $value = $this->cfg[$key] ?? $default;
-    return sanitize_text_field(is_string($value) ? $value : (string)$value);
-  }
-
-  /** Retrieve and sanitize scopes with a safe fallback */
-  private function get_scopes(): array {
-    $scopes = $this->cfg['scopes'] ?? ['profile','openid','email'];
-    $scopes = is_array($scopes) ? $scopes : [$scopes];
-    $scopes = array_filter(array_map('sanitize_text_field', $scopes));
-    return $scopes ?: ['profile','openid','email'];
   }
 }

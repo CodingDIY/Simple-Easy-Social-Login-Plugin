@@ -43,8 +43,8 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
       return '#';
     }
 
-    $auth_base = $this->get_config_string('auth_url', 'https://accounts.google.com/o/oauth2/v2/auth');
-    $scopes    = $this->get_scopes();
+    $auth_base = SESLP_Helpers::get_config_string($this->cfg, 'auth_url', 'https://accounts.google.com/o/oauth2/v2/auth');
+    $scopes    = SESLP_Helpers::get_scopes($this->cfg, ['openid','email','profile']);
     $scope_str = implode(' ', $scopes); // Google uses space-separated scopes
 
     // CSRF state
@@ -83,7 +83,7 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
       return [];
     }
 
-    $token_url = $this->get_config_string('token_url', 'https://oauth2.googleapis.com/token');
+    $token_url = SESLP_Helpers::get_config_string($this->cfg, 'token_url', 'https://oauth2.googleapis.com/token');
 
     $resp = wp_remote_post($token_url, [
       'timeout' => 15,
@@ -119,7 +119,7 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
     if ($access_token === '') {
       return [];
     }
-    $userinfo_url = $this->get_config_string('userinfo_url', 'https://www.googleapis.com/oauth2/v3/userinfo');
+    $userinfo_url = SESLP_Helpers::get_config_string($this->cfg, 'userinfo_url', 'https://www.googleapis.com/oauth2/v3/userinfo');
     $resp = wp_remote_get($userinfo_url, [
       'timeout' => 15,
       'headers' => ['Authorization' => 'Bearer ' . $access_token],
@@ -143,19 +143,5 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
       'name'    => $name,
       'picture' => $picture,
     ];
-  }
-
-  /** Get a config value as a sanitized string */
-  private function get_config_string(string $key, string $default): string {
-    $value = $this->cfg[$key] ?? $default;
-    return sanitize_text_field(is_string($value) ? $value : (string)$value);
-  }
-
-  /** Retrieve and sanitize scopes with a safe fallback */
-  private function get_scopes(): array {
-    $scopes = $this->cfg['scopes'] ?? ['openid','email','profile'];
-    $scopes = is_array($scopes) ? $scopes : [$scopes];
-    $scopes = array_filter(array_map('sanitize_text_field', $scopes));
-    return $scopes ?: ['openid','email','profile'];
   }
 }

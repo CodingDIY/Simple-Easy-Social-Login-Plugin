@@ -28,6 +28,11 @@ if (!class_exists('SESLP_Helpers')) {
       return self::$options_cache;
     }
 
+    /** Public accessor for plugin options (cached per-request) */
+    public static function get_options(): array {
+      return self::options();
+    }
+
     /** Read any provider option from unified options array */
     public static function get_provider_option(string $provider, string $key, string $default = ''): string {
       $provider = sanitize_key($provider);
@@ -51,6 +56,27 @@ if (!class_exists('SESLP_Helpers')) {
     /** Convenience: get provider client_secret */
     public static function get_client_secret(string $provider): string {
       return self::get_provider_option($provider, 'client_secret', '');
+    }
+
+    /** Get a sanitized config value from a provider config array */
+    public static function get_config_string(array $config, string $key, string $default): string {
+      $value = $config[$key] ?? $default;
+      $value = is_string($value) ? $value : (string) $value;
+
+      return sanitize_text_field($value);
+    }
+
+    /** Retrieve and sanitize scopes with a safe fallback */
+    public static function get_scopes(array $config, array $fallback): array {
+      $scopes = $config['scopes'] ?? $fallback;
+
+      if (!is_array($scopes)) {
+        $scopes = [$scopes];
+      }
+
+      $scopes = array_filter(array_map('sanitize_text_field', $scopes));
+
+      return $scopes === [] ? $fallback : $scopes;
     }
   }
 }
