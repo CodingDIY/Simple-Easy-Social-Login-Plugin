@@ -5,9 +5,14 @@
  * - Uses WP transients for temporary storage (10 minutes default)
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_State {
+  private const KEY_PREFIX   = 'seslp_state_';
+  private const DEFAULT_TTL  = 10 * MINUTE_IN_SECONDS;
+
   /**
    * Create and store a state token for a given provider.
    *
@@ -15,13 +20,15 @@ final class SESLP_State {
    * @return string Generated state token
    */
   public static function create(string $provider): string {
-    $state = wp_generate_uuid4();
-    set_transient('seslp_state_' . $provider . '_' . $state, time(), 10 * MINUTE_IN_SECONDS);
+    $state = self::generate_token();
+    $ttl   = self::get_ttl($provider);
+
+    self::store($provider, $state, $ttl);
 
     SESLP_Logger::debug('State created', [
       'provider' => $provider,
       'state'    => SESLP_Logger::mask_generic($state, 4, 4),
-      'ttl'      => '10min',
+      'ttl'      => $ttl . 's',
     ]);
 
     return $state;
@@ -41,11 +48,13 @@ final class SESLP_State {
       ]);
       return false;
     }
-    $key = 'seslp_state_' . $provider . '_' . $state;
+
+    $key   = self::build_key($provider, $state);
     $valid = (bool) get_transient($key);
 
     if ($valid) {
-      delete_transient($key); // one-time use
+      // one-time use
+      delete_transient($key);
       SESLP_Logger::debug('State validated', [
         'provider' => $provider,
         'state'    => SESLP_Logger::mask_generic($state, 4, 4),
@@ -61,34 +70,59 @@ final class SESLP_State {
   }
 
   /**
- * Generate and persist an OAuth2 CSRF state token.
- *
- * Why:
- * - OAuth redirect flows must include a unique, unguessable "state" value to prevent CSRF.
- *
- * How:
- * - Uses wp_generate_password(12, false) to create a short, URL-safe random string
- *   (no special characters to avoid encoding issues in query strings).
- * - Stores the token in a transient scoped by provider + state for quick lookup.
- * - Lifetime is 10 minutes, which is typically enough to complete the consent flow.
- * - The token should be validated and cleared in SESLP_State::validate().
- *
- * @param string $provider Provider slug (e.g., 'linkedin', 'google', ...)
- * @return string          The generated state token to send with the auth request
- */
+   * Generate and persist an OAuth2 CSRF state token.
+   *
+   * @deprecated Use SESLP_State::create() instead. This method remains for backward compatibility.
+   *
+   * @param string $provider
+   * @return string
+   */
   public static function generate(string $provider): string {
-    $state = wp_generate_password(12, false);
-    set_transient('seslp_state_' . $provider . '_' . $state, time(), 10 * MINUTE_IN_SECONDS);
+    return self::create($provider);
+  }
 
-    // Debug log for traceability (masked)
-    if (class_exists('SESLP_Logger')) {
-      SESLP_Logger::debug('State created', [
-        'provider' => $provider,
-        'state'    => SESLP_Logger::mask_generic($state, 4, 4),
-        'ttl'      => '10min',
-      ]);
-    }
+  /**
+   * Store a state token as a transient.
+   *
+   * @param string $provider
+   * @param string $state
+   * @param int    $ttl
+   */
+  private static function store(string $provider, string $state, int $ttl): void {
+    set_transient(self::build_key($provider, $state), time(), $ttl);
+  }
 
-    return $state;
+  /**
+   * Build the transient key for a provider/state pair.
+   *
+   * @param string $provider
+   * @param string $state
+   * @return string
+   */
+  private static function build_key(string $provider, string $state): string {
+    return self::KEY_PREFIX . $provider . '_' . $state;
+  }
+
+  /**
+   * Generate the raw state token string.
+   *
+   * @return string
+   */
+  private static function generate_token(): string {
+    // Short, URL-safe random string (no special chars)
+    return wp_generate_password(12, false);
+  }
+
+  /**
+   * Get TTL (in seconds) for a given provider.
+   * Allows customization via `seslp_state_ttl` filter.
+   *
+   * @param string $provider
+   * @return int
+   */
+  private static function get_ttl(string $provider): int {
+    $ttl = (int) apply_filters('seslp_state_ttl', self::DEFAULT_TTL, $provider);
+
+    return ($ttl > 0) ? $ttl : self::DEFAULT_TTL;
   }
 }
