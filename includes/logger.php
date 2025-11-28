@@ -9,6 +9,10 @@ if (!defined('ABSPATH')) exit;
 
 final class SESLP_Logger {
   private const FILE = 'SESLP-debug.log';
+  private const OPTION_FALLBACK = 'seslp_options';
+
+  /** Cache plugin options per-request */
+  private static array $options_cache = [];
 
   /**
    * Write a log entry (no-op when disabled)
@@ -18,37 +22,25 @@ final class SESLP_Logger {
    * @param array  $context optional structured context (json-encoded)
    */
   public static function log(string $level, string $message, array $context = []): void {
-    $opts = get_option('seslp_options', []);
+    // $opts = get_option('seslp_options', []);
+    $opts  = self::options();
+    $debug = self::debug_settings($opts);
 
     // Honor enable switch (default: off)
-    $enabled = !empty($opts['debug']['enabled']);
-    if (!$enabled) return;
+    if (empty($debug['enabled'])) return;
+    // $enabled = !empty($opts['debug']['enabled']);
+    // if (!$enabled) return;
 
-    // Timezone mode (default UTC)
-    $tz_mode = $opts['debug']['timezone'] ?? 'UTC';
+    // // Timezone mode (default UTC)
+    // $tz_mode = $opts['debug']['timezone'] ?? 'UTC';
 
+    $tz_mode   = self::normalize_timezone_mode($debug['timezone'] ?? 'UTC');
     $now_utc   = new DateTimeImmutable('now', new DateTimeZone('UTC'));
     $now_local = new DateTimeImmutable('now', wp_timezone());
-
-    if ($tz_mode === 'local') {
-      $timestamp = $now_local->format('Y-m-d H:i:s T');
-    } elseif ($tz_mode === 'both') {
-      $timestamp = sprintf(
-        '%s UTC | %s %s',
-        $now_utc->format('Y-m-d H:i:s'),
-        $now_local->format('Y-m-d H:i:s'),
-        $now_local->format('T')
-      );
-    } else {
-      // default UTC
-      $timestamp = $now_utc->format('Y-m-d H:i:s') . ' UTC';
-    }
+    $timestamp = self::format_timestamp($tz_mode, $now_utc, $now_local);
 
     // Sanitize/Mask sensitive values in context before writing
     $context = self::safe_context($context);
-    // // TEMP: fingerprint to verify which logger.php is loaded
-    // $context['_logger_src']   = __FILE__;
-    // $context['_logger_mtime'] = @filemtime(__FILE__);
 
     // Build one-line entry
     $line = sprintf(
@@ -56,7 +48,7 @@ final class SESLP_Logger {
       $timestamp,
       strtoupper($level),
       $message,
-      $context ? json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''
+      $context ? wp_json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : ''
     );
 
     $path = WP_CONTENT_DIR . '/' . self::FILE;
@@ -174,5 +166,61 @@ final class SESLP_Logger {
   /** Token masker */
   public static function mask_token(string $s): string {
     return self::mask_generic($s, 3, 2);
+  }
+
+  /**
+   * Load plugin options once and normalize the result.
+   */
+  private static function options(): array {
+    if (self::$options_cache) return self::$options_cache;
+
+    $key = defined('SESLP_OPT_KEY') ? SESLP_OPT_KEY : self::OPTION_FALLBACK;
+    $raw = get_option($key, []);
+
+    self::$options_cache = is_array($raw) ? $raw : [];
+
+    return self::$options_cache;
+  }
+
+  /**
+   * Extract debug settings as a normalized array.
+   */
+  private static function debug_settings(array $opts): array {
+    $debug = $opts['debug'] ?? [];
+
+    return is_array($debug) ? $debug : [];
+  }
+
+  /**
+   * Normalize timezone mode to supported values.
+   */
+  private static function normalize_timezone_mode(string $mode): string {
+    $mode = sanitize_key($mode);
+
+    if (in_array($mode, ['local', 'both'], true)) {
+      return $mode;
+    }
+
+    return 'utc';
+  }
+
+  /**
+   * Build the timestamp string according to the configured mode.
+   */
+  private static function format_timestamp(string $mode, DateTimeImmutable $nowUtc, DateTimeImmutable $nowLocal): string {
+    if ($mode === 'local') {
+      return $nowLocal->format('Y-m-d H:i:s T');
+    }
+
+    if ($mode === 'both') {
+      return sprintf(
+        '%s UTC | %s %s',
+        $nowUtc->format('Y-m-d H:i:s'),
+        $nowLocal->format('Y-m-d H:i:s'),
+        $nowLocal->format('T')
+      );
+    }
+
+    return $nowUtc->format('Y-m-d H:i:s') . ' UTC';
   }
 }
