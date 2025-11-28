@@ -60,6 +60,16 @@ final class SESLP_Plugin {
   /** Singleton */
   private static ?SESLP_Plugin $instance = null;
 
+  /** Map of provider slugs to their concrete classes. */
+  private const PROVIDER_CLASSES = [
+    'google'   => 'SESLP_Provider_Google',
+    'naver'    => 'SESLP_Provider_Naver',
+    'facebook' => 'SESLP_Provider_Facebook',
+    'kakao'    => 'SESLP_Provider_Kakao',
+    'line'     => 'SESLP_Provider_Line',
+    'linkedin' => 'SESLP_Provider_Linkedin',
+  ];
+
   /** Delegate to global constants from includes/constants.php (single source of truth) */
   public const SLUG    = SESLP_SLUG;
   public const TD      = SESLP_TD;
@@ -76,7 +86,8 @@ final class SESLP_Plugin {
     $this->dir  = plugin_dir_path($this->file);
     $this->url  = plugin_dir_url($this->file);
 
-    add_action('plugins_loaded', [$this, 'load_textdomain']);
+    // Load textdomain immediately when the plugin instance is created
+    $this->load_textdomain();
   }
 
   /** Public singleton accessor */
@@ -118,37 +129,19 @@ final class SESLP_Plugin {
   /** Public helper for templates: returns the provider-specific auth URL */
   public function auth_url(string $provider): string {
     $provider = sanitize_key($provider);
-    
-    if ($provider === 'google' && class_exists('SESLP_Provider_Google')) {
-      $g = new SESLP_Provider_Google();
-      return $g->get_auth_url();
-    }
-    if ($provider === 'naver' && class_exists('SESLP_Provider_Naver')) {
-      $n = new SESLP_Provider_Naver();
-      return $n->get_auth_url();
-    }
-    if ($provider === 'facebook' && class_exists('SESLP_Provider_Facebook')) {
-      $f = new SESLP_Provider_Facebook();
-      return $f->get_auth_url();
-    }
-    if ($provider === 'kakao' && class_exists('SESLP_Provider_Kakao')) {
-      $k = new SESLP_Provider_Kakao();
-      return $k->get_auth_url();
-    }
-    if ($provider === 'line' && class_exists('SESLP_Provider_Line')) {
-      $l = new SESLP_Provider_Line();
-      return $l->get_auth_url();
-    }
-    // if ($provider === 'weibo' && class_exists('SESLP_Provider_Weibo')) {
-    //   $w = new SESLP_Provider_Weibo();
-    //   return $w->get_auth_url();
-    // }
-    if ($provider === 'linkedin' && class_exists('SESLP_Provider_Linkedin')) {
-      $li = new SESLP_Provider_Linkedin();
-      return $li->get_auth_url();
+    $auth_url = esc_url_raw(add_query_arg(['social_login' => $provider], home_url('/')));
+    $provider_class = self::PROVIDER_CLASSES[$provider] ?? null;
+
+    if ($provider_class && class_exists($provider_class)) {
+      $instance = new $provider_class();
+
+      if ($instance instanceof SESLP_Provider_Interface) {
+        /** @var string $auth_url */
+        $auth_url = $instance->get_auth_url();
+      }
     }
 
-    return add_query_arg(['social_login' => $provider], home_url('/'));
+    return (string) apply_filters('seslp_auth_url', $auth_url, $provider);
   }
 }
 
@@ -159,7 +152,6 @@ add_action('plugins_loaded', static function () {
   if (class_exists('SESLP_Assets')) { (new SESLP_Assets())->register(); }
   if (class_exists('SESLP_UI')) { (new SESLP_UI())->register(); }
   if (class_exists('SESLP_Auth')) { (new SESLP_Auth())->register(); }
-  // if (class_exists('SESLP_Guides')) { add_action('admin_menu', ['SESLP_Guides', 'register_menu']); }
 });
 
 add_action('admin_menu', static function () {
