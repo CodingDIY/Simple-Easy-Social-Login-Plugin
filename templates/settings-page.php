@@ -9,11 +9,12 @@
  */
 if (!defined('ABSPATH')) exit;
 
-// Get options array
-$opts = get_option('seslp_options', []);
-$redir = $opts['redirect'] ?? [];
-$mode  = isset($redir['mode']) ? (string)$redir['mode'] : 'front';
-$custom= isset($redir['custom_url']) ? (string)$redir['custom_url'] : '';
+// Get options array (normalized)
+$raw_opts = get_option('seslp_options', []);
+$opts     = is_array($raw_opts) ? $raw_opts : [];
+$redir    = $opts['redirect'] ?? [];
+$mode     = isset($redir['mode']) ? (string) $redir['mode'] : 'front';
+$custom   = isset($redir['custom_url']) ? (string) $redir['custom_url'] : '';
 
 // Labels sourced from central registry (single source of truth)
 $base_labels_raw     = SESLP_Providers_Registry::base_labels();
@@ -68,9 +69,13 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
         $id_label     = $label_overrides[$prov]['id']     ?? $base_labels['id'];
         $secret_label = $label_overrides[$prov]['secret'] ?? $base_labels['secret'];
 
-        // Read current values from the unified options array
-        $id_val     = $opts['providers'][$prov]['client_id']     ?? '';
-        $secret_val = $opts['providers'][$prov]['client_secret'] ?? '';
+        // Read current values via helpers to reuse option cache and normalization
+        $id_val     = method_exists('SESLP_Helpers', 'get_client_id')
+          ? SESLP_Helpers::get_client_id($prov)
+          : '';
+        $secret_val = method_exists('SESLP_Helpers', 'get_client_secret')
+          ? SESLP_Helpers::get_client_secret($prov)
+          : '';
 
         // Build input names that keep the unified structure
         $name_id     = "seslp_options[providers][{$prov}][client_id]";
@@ -113,9 +118,16 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
           <th scope="row"></th>
           <td>
             <?php
-              // Build provider-specific docs URL using base domain constant fallback
+              // Build provider-specific docs URL using base domain constant
               $prov_slug = strtolower((string) $prov);
-              $doc_url   = $docs_base . '/docs/plugins/se-social-login/' . $prov_slug;
+
+              /** Allow overrides for provider-specific documentation links */
+              $doc_url = (string) apply_filters(
+                'seslp_provider_docs_url',
+                $docs_base . '/docs/plugins/se-social-login/' . $prov_slug,
+                $prov,
+                $docs_base
+              );
             ?>
             <p class="description">
               <?php
