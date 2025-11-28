@@ -4,7 +4,9 @@
  * - Computes the URL to send users to after social login
  */
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_Redirect {
   /**
@@ -15,36 +17,55 @@ final class SESLP_Redirect {
     $opts = get_option('seslp_options', []);
     $mode = isset($opts['redirect']['mode']) ? (string) $opts['redirect']['mode'] : 'front';
 
-    // Default to front page
-    $url = home_url('/');
+    // Default fallback: front page
+    $fallback = home_url('/');
 
-    switch ($mode) {
-      case 'dashboard':
-        $url = admin_url();
-        break;
+    // Compute base URL from mode
+    $url = self::compute_mode_url($mode, $opts, $fallback);
 
-      case 'profile':
-        $url = admin_url('profile.php');
-        break;
+    // Allow other code to adjust redirect URL
+    $url = (string) apply_filters('seslp_after_login_url', $url, $user, $mode, $opts);
 
-      case 'custom':
-        $raw  = trim((string)($opts['redirect']['custom_url'] ?? ''));
-        $safe = $raw !== '' ? esc_url_raw($raw) : '';
-        $url  = $safe !== '' ? $safe : home_url('/');
-        break;
-
-      case 'front':
-      default:
-        $url = home_url('/');
-        break;
-    }
+    // Final safety check: ensure URL is a valid redirect, otherwise use fallback
+    $url = wp_validate_redirect($url, $fallback);
 
     SESLP_Logger::debug('Redirect decision', [
-      'mode'    => $mode,
-      'user_id' => $user ? (int)$user->ID : null,
-      'url'     => $url,
+      'mode'     => $mode,
+      'user_id'  => $user ? (int) $user->ID : null,
+      'url'      => $url,
+      'fallback' => $fallback,
     ]);
 
     return $url;
+  }
+
+  /**
+   * Compute base redirect URL for a given mode.
+   *
+   * @param string   $mode
+   * @param array    $opts
+   * @param string   $fallback
+   * @return string
+   */
+  private static function compute_mode_url(string $mode, array $opts, string $fallback): string {
+    switch ($mode) {
+      case 'dashboard':
+        return admin_url();
+
+      case 'profile':
+        return admin_url('profile.php');
+
+      case 'custom':
+        $raw = trim((string) ($opts['redirect']['custom_url'] ?? ''));
+        if ($raw === '') {
+          return $fallback;
+        }
+        $safe = esc_url_raw($raw);
+        return $safe !== '' ? $safe : $fallback;
+
+      case 'front':
+      default:
+        return $fallback;
+    }
   }
 }
