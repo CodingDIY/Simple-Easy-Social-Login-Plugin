@@ -16,43 +16,27 @@ if (!defined('ABSPATH')) exit;
 
 // ==== Plugin identity ====
 // Slug used for assets enqueue prefixes, option names suffixes, etc.
-const SESLP_SLUG        = 'simple-easy-social-login';
+const SESLP_SLUG = 'simple-easy-social-login';
 // Text domain (keep in sync with plugin header + .pot)
-const SESLP_TD          = 'se-social-login';
+const SESLP_TD = 'se-social-login';
 // Version (bump on release; use for cache-busting if needed)
-const SESLP_VERSION     = '1.0.0';
-// Facebook slug
-const FB_SLUG           = 'facebook';
-// Google slug
-const GL_SLUG           = 'google';
-// Naver slug
-const NV_SLUG           = 'naver';
-// Kakao slug
-const KA_SLUG           = 'kakao';
-// Line slug
-const LN_SLUG           = 'line';
-// Weibo slug
-const WB_SLUG           = 'weibo';
+const SESLP_VERSION = '1.0.0';
+// ==== Provider slugs (shared by registry and provider classes) ====
+const FB_SLUG = 'facebook';
+const GL_SLUG = 'google';
+const NV_SLUG = 'naver';
+const KA_SLUG = 'kakao';
+const LN_SLUG = 'line';
+const WB_SLUG = 'weibo';
+const LK_SLUG = 'linkedin';
 
 // ==== Documents ====
-const SESLP_DOCS_BASE   = 'https://selfcoding.app';
+const SESLP_DOCS_BASE = 'https://selfcoding.app';
 
 // ==== Options & settings ====
 // Unified options array key (where providers/client_id/client_secret live)
-const SESLP_OPT_KEY       = 'seslp_options';
+const SESLP_OPT_KEY = 'seslp_options';
 // Settings page slug under wp-admin
 const SESLP_SETTINGS_SLUG = 'seslp-settings';
 
 // ==== Redirect modes (used in settings/options) ====
-const SESLP_REDIRECT_FRONT     = 'front';     // Front page (home)
-const SESLP_REDIRECT_DASHBOARD = 'dashboard'; // /wp-admin/
-const SESLP_REDIRECT_PROFILE   = 'profile';   // Profile page URL
-const SESLP_REDIRECT_CUSTOM    = 'custom';    // Custom URL (options['redirect']['custom_url'])
-
-// ==== User meta / transient keys (prefix only to avoid collisions) ====
-const SESLP_META_PREFIX      = 'seslp_';       // e.g., seslp_provider_google_uid
-const SESLP_TRANSIENT_PREFIX = 'seslp_';       // e.g., seslp_state_xxx
-
-// ==== Asset handles (optional, for consistency) ====
-const SESLP_ASSET_ADMIN = 'seslp-admin-settings';
-const SESLP_ASSET_FRONT = 'seslp-front';
