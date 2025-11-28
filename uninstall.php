@@ -82,23 +82,23 @@ function seslp_cleanup_single_site(string $prefix = 'seslp_'): void {
 
   // site transients stored as options may also match the prefix, covered above when named with our prefix
 
-  // 2) Conditionally remove user meta & other data if admin opted in
+  // 2) Always unschedule cron hooks to prevent orphaned callbacks after uninstall
+  if (function_exists('wp_clear_scheduled_hook')) {
+    // Example hooks used by this plugin (update list if you add more)
+    $hooks = [
+      'seslp_cron_cleanup',
+      'seslp_cron_sync',
+    ];
+    foreach ($hooks as $hook) {
+      wp_clear_scheduled_hook($hook);
+    }
+  }
+
+  // 3) Conditionally remove user meta & other data if admin opted in
   if (seslp_should_remove_data()) {
     // user meta
     $usermeta_table = $wpdb->usermeta;
     $wpdb->query($wpdb->prepare("DELETE FROM {$usermeta_table} WHERE meta_key LIKE %s", $like));
-
-    // Scheduled events (use exact hook names if known)
-    if (function_exists('wp_clear_scheduled_hook')) {
-      // Example hooks used by this plugin (update list if you add more)
-      $hooks = [
-        'seslp_cron_cleanup',
-        'seslp_cron_sync',
-      ];
-      foreach ($hooks as $hook) {
-        wp_clear_scheduled_hook($hook);
-      }
-    }
 
     // Deep clean: drop custom tables if they exist
     if (seslp_should_deep_clean()) {
