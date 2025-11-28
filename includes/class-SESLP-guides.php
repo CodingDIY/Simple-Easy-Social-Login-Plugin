@@ -6,7 +6,6 @@ if (!defined('ABSPATH')) exit;
  * Admin "Guide" subpage controller.
  * - Renders localized Markdown via a template file: templates/guide-page.php
  * - Primary docs: /assets/md/{locale}.md (hyphen or underscore)
- * - Legacy docs supported: /assets/guide/{locale}.md
  * - Optional Parsedown: assets/md/Parsedown.php
  */
 class SESLP_Guides {
