@@ -7,7 +7,9 @@
  *
  * @var SESLP_Plugin $this
  */
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 // Get options array (normalized)
 $raw_opts = get_option('seslp_options', []);
@@ -64,7 +66,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
 
     <table id="seslp-login-table" class="form-table" role="presentation">
 
-      <?php foreach ($providers as $prov): 
+      <?php foreach ($providers as $prov) { 
         // Resolve labels with overrides, fallback to base
         $id_label     = $label_overrides[$prov]['id']     ?? $base_labels['id'];
         $secret_label = $label_overrides[$prov]['secret'] ?? $base_labels['secret'];
@@ -141,7 +143,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
         </tr>
       </tbody>
 
-      <?php endforeach; ?>
+      <?php } ?>
 
     </table>
 
@@ -149,7 +151,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
 
     <h2 class="seslp-section-title"><?php echo esc_html__('Post-login Redirect', SESLP_Plugin::TD); ?></h2>
 
-    <?php if ( $can_pro_features ) : ?>
+    <?php if ($can_pro_features) { ?>
 
     <table id="seslp-redirect-table" class="form-table" role="presentation">
       <tbody>
@@ -188,7 +190,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </tbody>
     </table>
 
-    <?php else : ?>
+    <?php } else { ?>
 
     <p class="description">
       <?php
@@ -202,7 +204,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </a>
     </p>
 
-    <?php endif; ?>
+    <?php } ?>
 
     <br>
 
@@ -259,7 +261,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
 
     <h2 class="seslp-section-title"><?php echo esc_html__('UI', SESLP_Plugin::TD); ?></h2>
 
-    <?php if ( $can_pro_features ) : ?>
+    <?php if ($can_pro_features) { ?>
 
     <table id="seslp-ui-table" class="form-table" role="presentation">
       <tbody>
@@ -287,7 +289,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </tbody>
     </table>
 
-    <?php else : ?>
+    <?php } else { ?>
 
     <p class="description">
       <?php
@@ -301,7 +303,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </a>
     </p>
 
-    <?php endif; ?>
+    <?php } ?>
 
     <br>
 
@@ -324,7 +326,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
 
     <h2 class="seslp-section-title"><?php echo esc_html__('Uninstall Options', SESLP_Plugin::TD); ?></h2>
 
-    <?php if ( $can_pro_features ) :
+    <?php if ($can_pro_features) {
       // Read current flags
       $rm  = get_option('seslp_uninstall_remove_data'); // 'yes' or ''
       $deep = get_option('seslp_uninstall_deep_clean'); // 'yes' or ''
@@ -364,7 +366,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </tbody>
     </table>
 
-    <?php else : ?>
+    <?php } else { ?>
 
     <p class="description">
       <?php
@@ -378,7 +380,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
       </a>
     </p>
 
-    <?php endif; ?>
+    <?php } ?>
 
     <?php submit_button(__('Save Changes', SESLP_Plugin::TD)); ?>
   </form>

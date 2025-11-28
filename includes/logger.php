@@ -22,18 +22,13 @@ final class SESLP_Logger {
    * @param array  $context optional structured context (json-encoded)
    */
   public static function log(string $level, string $message, array $context = []): void {
-    // $opts = get_option('seslp_options', []);
     $opts  = self::options();
     $debug = self::debug_settings($opts);
 
     // Honor enable switch (default: off)
     if (empty($debug['enabled'])) return;
-    // $enabled = !empty($opts['debug']['enabled']);
-    // if (!$enabled) return;
-
-    // // Timezone mode (default UTC)
-    // $tz_mode = $opts['debug']['timezone'] ?? 'UTC';
-
+    
+    // Timezone mode (default UTC)
     $tz_mode   = self::normalize_timezone_mode($debug['timezone'] ?? 'UTC');
     $now_utc   = new DateTimeImmutable('now', new DateTimeZone('UTC'));
     $now_local = new DateTimeImmutable('now', wp_timezone());
@@ -120,7 +115,9 @@ final class SESLP_Logger {
   /** Generic masker: keep N left/right chars, mask the middle */
   public static function mask_generic(string $s, int $keepLeft = 3, int $keepRight = 2, string $maskChar = '*'): string {
     $len = strlen($s);
-    if ($len <= ($keepLeft + $keepRight)) return str_repeat($maskChar, max(0, $len));
+    if ($len <= ($keepLeft + $keepRight)) {
+      return str_repeat($maskChar, max(0, $len));
+    }
     $left  = substr($s, 0, $keepLeft);
     $right = substr($s, -$keepRight);
     return $left . str_repeat($maskChar, max(0, $len - $keepLeft - $keepRight)) . $right;
@@ -172,7 +169,9 @@ final class SESLP_Logger {
    * Load plugin options once and normalize the result.
    */
   private static function options(): array {
-    if (self::$options_cache) return self::$options_cache;
+    if (self::$options_cache) {
+      return self::$options_cache;
+    }
 
     $key = defined('SESLP_OPT_KEY') ? SESLP_OPT_KEY : self::OPTION_FALLBACK;
     $raw = get_option($key, []);

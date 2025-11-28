@@ -9,8 +9,9 @@
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
-// Check point
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 /** Early includes (require once if files exist) */
 $__seslp_dir = plugin_dir_path(__FILE__);
@@ -47,7 +48,7 @@ foreach ([
 unset($__rel, $p, $__seslp_dir);
 
 /** Freemius bootstrap (externalized) */
-if ( function_exists('simple_easy_social_login_freemius') ) {
+if (function_exists('simple_easy_social_login_freemius')) {
   simple_easy_social_login_freemius()->set_basename(true, __FILE__);
 }
 
@@ -155,9 +156,7 @@ add_action('plugins_loaded', static function () {
 });
 
 add_action('admin_menu', static function () {
-  if (class_exists('SESLP_Guides')) {
-    SESLP_Guides::register_menu();
-  }
+  if (class_exists('SESLP_Guides')) { SESLP_Guides::register_menu(); }
 }, 99);
 
 /** Lifecycle */

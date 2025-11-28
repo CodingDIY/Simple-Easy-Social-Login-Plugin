@@ -72,12 +72,16 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
 
   /** Exchange authorization code for tokens */
   public function exchange_code(string $code, string $state): array {
-    if ($code === '' || $state === '') return [];
+    if ($code === '' || $state === '') {
+      return [];
+    }
     if (!class_exists('SESLP_State') || !SESLP_State::validate(self::SLUG, $state)) {
       return [];
     }
 
-    if ($this->client_id === '' || $this->client_secret === '') return [];
+    if ($this->client_id === '' || $this->client_secret === '') {
+      return [];
+    }
 
     $token_url = $this->get_config_string('token_url', 'https://oauth2.googleapis.com/token');
 
@@ -112,13 +116,17 @@ final class SESLP_Provider_Google implements SESLP_Provider_Interface {
 
   /** Fetch raw userinfo using access token */
   public function fetch_userinfo(string $access_token): array {
-    if ($access_token === '') return [];
+    if ($access_token === '') {
+      return [];
+    }
     $userinfo_url = $this->get_config_string('userinfo_url', 'https://www.googleapis.com/oauth2/v3/userinfo');
     $resp = wp_remote_get($userinfo_url, [
       'timeout' => 15,
       'headers' => ['Authorization' => 'Bearer ' . $access_token],
     ]);
-    if (is_wp_error($resp)) return [];
+    if (is_wp_error($resp)) {
+      return [];
+    }
     $data = json_decode(wp_remote_retrieve_body($resp), true);
     return is_array($data) ? $data : [];
   }

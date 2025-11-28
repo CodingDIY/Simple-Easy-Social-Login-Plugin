@@ -1,6 +1,9 @@
 <?php
-// includes/class-SESLP-guides.php
-if (!defined('ABSPATH')) exit;
+declare(strict_types=1);
+
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 /**
  * Admin "Guide" subpage controller.

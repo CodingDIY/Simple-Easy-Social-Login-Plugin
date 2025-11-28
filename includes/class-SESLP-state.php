@@ -5,6 +5,7 @@
  * - Uses WP transients for temporary storage (10 minutes default)
  */
 
+declare(strict_types=1);
 if (!defined('ABSPATH')) {
   exit;
 }

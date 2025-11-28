@@ -5,7 +5,9 @@
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_Auth {
   /** Register front-end router */
@@ -15,7 +17,9 @@ final class SESLP_Auth {
 
   /** Router — handles /?social_login={provider}&code=... */
   public function maybe_route_auth(): void {
-    if (empty($_GET['social_login'])) return;
+    if (empty($_GET['social_login'])) {
+      return;
+    }
     $provider = sanitize_key((string) $_GET['social_login']);
 
     SESLP_Logger::debug('Auth route triggered', [
@@ -24,36 +28,10 @@ final class SESLP_Auth {
     ]);
 
     // Only handle callbacks here (start flow links go directly to provider auth URLs)
-    if (!isset($_GET['code'])) return;
+    if (!isset($_GET['code'])) {
+      return;
+    }
 
-    // if ($provider === 'google') {
-    //   $this->handle_google_callback();
-    //   return;
-    // }
-    // if ($provider === 'linkedin') { 
-    //   $this->handle_linkedin_callback(); 
-    //   return; 
-    // }
-    // if ($provider === 'facebook') {
-    //   $this->handle_facebook_callback();
-    //   return;
-    // }
-    // if ($provider === 'naver') {
-    //   $this->handle_naver_callback();
-    //   return;
-    // }
-    // if ($provider === 'kakao') {
-    //   $this->handle_kakao_callback();
-    //   return;
-    // }
-    // if ($provider === 'line') {
-    //   $this->handle_line_callback();
-    //   return;
-    // }
-    // if ($provider === 'weibo') {
-    //   $this->handle_weibo_callback();
-    //   return;
-    // }
     $handlers = $this->get_callback_handlers();
     $handler  = $handlers[$provider] ?? null;
     if (is_callable($handler)) {

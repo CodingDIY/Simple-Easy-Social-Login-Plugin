@@ -11,7 +11,10 @@ if (!defined('ABSPATH')) {
 
 final class SESLP_Settings {
   public static function init(): void {
-    if (!is_admin()) return;
+    if (!is_admin()) {
+      return;
+    }
+    
     add_action('admin_menu', [self::class, 'add_settings_menu']);
     add_action('admin_init', [self::class, 'register_settings']);
     add_action('admin_enqueue_scripts', [self::class, 'enqueue_admin_assets']);

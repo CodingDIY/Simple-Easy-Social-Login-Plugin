@@ -3,7 +3,10 @@
   * Shared helper utilities for SESLP
   */
 
-if (!defined('ABSPATH')) exit;
+declare(strict_types=1); 
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 if (!class_exists('SESLP_Helpers')) {
   final class SESLP_Helpers {
@@ -15,7 +18,9 @@ if (!class_exists('SESLP_Helpers')) {
      * Ensures a consistent array shape even if the option is missing or corrupted.
      */
     private static function options(): array {
-      if (self::$options_cache) return self::$options_cache;
+      if (self::$options_cache) {
+        return self::$options_cache;
+      }
 
       $raw = get_option(defined('SESLP_OPT_KEY') ? SESLP_OPT_KEY : 'seslp_options', []);
       self::$options_cache = is_array($raw) ? $raw : [];

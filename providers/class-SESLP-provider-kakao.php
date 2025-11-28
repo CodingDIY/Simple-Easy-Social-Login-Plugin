@@ -94,7 +94,9 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
       'timeout' => 15,
       'body'    => $body,
     ]);
-    if (is_wp_error($resp)) return [];
+    if (is_wp_error($resp)) {
+      return [];
+    }
     $data = json_decode(wp_remote_retrieve_body($resp), true);
 
     if (class_exists('SESLP_Logger')) {

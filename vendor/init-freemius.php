@@ -2,11 +2,11 @@
 // Freemius SDK init extracted from main plugin file.
 // Code & comments in English only per project convention.
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
   exit;
 }
 
-if ( ! function_exists( 'seslp_freemius_config' ) ) {
+if (!function_exists('seslp_freemius_config')) {
   /**
    * Build Freemius configuration array.
    *
@@ -40,12 +40,12 @@ if ( ! function_exists( 'seslp_freemius_config' ) ) {
      *
      * @param array<string, mixed> $config
      */
-    return apply_filters( 'seslp_freemius_config', $config );
+    return apply_filters('seslp_freemius_config', $config);
   }
 }
 
 // Avoid re-declare.
-if ( ! function_exists( 'simple_easy_social_login_freemius' ) ) {
+if (!function_exists('simple_easy_social_login_freemius')) {
   /**
    * Initialize Freemius SDK instance.
    *
@@ -54,7 +54,7 @@ if ( ! function_exists( 'simple_easy_social_login_freemius' ) ) {
   function simple_easy_social_login_freemius() {
     global $simple_easy_social_login_freemius;
 
-    if ( ! isset( $simple_easy_social_login_freemius ) ) {
+    if (!isset($simple_easy_social_login_freemius)) {
       require_once __DIR__ . '/freemius/start.php';
 
       $simple_easy_social_login_freemius = fs_dynamic_init( seslp_freemius_config() );
@@ -65,4 +65,4 @@ if ( ! function_exists( 'simple_easy_social_login_freemius' ) ) {
 }
 
 $simple_easy_social_login_freemius = simple_easy_social_login_freemius();
-do_action( 'simple_easy_social_login_freemius_loaded', $simple_easy_social_login_freemius );
+do_action('simple_easy_social_login_freemius_loaded', $simple_easy_social_login_freemius);
