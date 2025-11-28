@@ -26,34 +26,62 @@ final class SESLP_Auth {
     // Only handle callbacks here (start flow links go directly to provider auth URLs)
     if (!isset($_GET['code'])) return;
 
-    if ($provider === 'google') {
-      $this->handle_google_callback();
+    // if ($provider === 'google') {
+    //   $this->handle_google_callback();
+    //   return;
+    // }
+    // if ($provider === 'linkedin') { 
+    //   $this->handle_linkedin_callback(); 
+    //   return; 
+    // }
+    // if ($provider === 'facebook') {
+    //   $this->handle_facebook_callback();
+    //   return;
+    // }
+    // if ($provider === 'naver') {
+    //   $this->handle_naver_callback();
+    //   return;
+    // }
+    // if ($provider === 'kakao') {
+    //   $this->handle_kakao_callback();
+    //   return;
+    // }
+    // if ($provider === 'line') {
+    //   $this->handle_line_callback();
+    //   return;
+    // }
+    // if ($provider === 'weibo') {
+    //   $this->handle_weibo_callback();
+    //   return;
+    // }
+    $handlers = $this->get_callback_handlers();
+    $handler  = $handlers[$provider] ?? null;
+    if (is_callable($handler)) {
+      call_user_func($handler);
       return;
     }
-    if ($provider === 'linkedin') { 
-      $this->handle_linkedin_callback(); 
-      return; 
-    }
-    if ($provider === 'facebook') {
-      $this->handle_facebook_callback();
-      return;
-    }
-    if ($provider === 'naver') {
-      $this->handle_naver_callback();
-      return;
-    }
-    if ($provider === 'kakao') {
-      $this->handle_kakao_callback();
-      return;
-    }
-    if ($provider === 'line') {
-      $this->handle_line_callback();
-      return;
-    }
-    if ($provider === 'weibo') {
-      $this->handle_weibo_callback();
-      return;
-    }
+
+    SESLP_Logger::notice('Unknown provider callback ignored', ['provider' => $provider]);
+  }
+
+  /** Map provider keys to callback handlers */
+  private function get_callback_handlers(): array {
+    $handlers = [
+      'google'   => [$this, 'handle_google_callback'],
+      'linkedin' => [$this, 'handle_linkedin_callback'],
+      'facebook' => [$this, 'handle_facebook_callback'],
+      'naver'    => [$this, 'handle_naver_callback'],
+      'kakao'    => [$this, 'handle_kakao_callback'],
+      'line'     => [$this, 'handle_line_callback'],
+      'weibo'    => [$this, 'handle_weibo_callback'],
+    ];
+
+    /**
+     * Allow customizing callback handlers per provider.
+     *
+     * @param array<string, callable> $handlers
+     */
+    return apply_filters('seslp_auth_callback_handlers', $handlers);
   }
 
   /** Handle Google OAuth callback: exchange code -> token -> userinfo -> sign in */
