@@ -5,7 +5,9 @@
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_Settings {
   public static function init(): void {
@@ -57,39 +59,57 @@ final class SESLP_Settings {
       'default'           => '',
     ]);
 
-    add_settings_section('seslp_section_main', __('Providers', SESLP_Plugin::TD), function () {
-      echo '<p>' . esc_html__('Enter OAuth credentials for each provider.', SESLP_Plugin::TD) . '</p>';
-    }, 'seslp-settings');
+    add_settings_section(
+      'seslp_section_main',
+      __('Providers', SESLP_Plugin::TD),
+      function () {
+        echo '<p>' . esc_html__('Enter OAuth credentials for each provider.', SESLP_Plugin::TD) . '</p>';
+      },
+      'seslp-settings'
+    );
 
-    $providers = SESLP_Providers_Registry::list();
-    $providers = array_values(array_diff($providers, ['weibo'])); // remove Weibo
-    if (!in_array('linkedin', $providers, true)) $providers[] = 'linkedin'; // add LinkedIn
-    
+    // Get provider keys for settings (minus weibo, plus linkedin) with filter hook.
+    $providers = self::provider_keys();
+
     foreach ($providers as $prov) {
-      add_settings_field("seslp_{$prov}_client_id",
+      add_settings_field(
+        "seslp_{$prov}_client_id",
         sprintf(esc_html__('%s Client ID', SESLP_Plugin::TD), ucfirst($prov)),
-        function () use ($prov) { self::render_input($prov, 'client_id'); },
+        function () use ($prov) {
+          self::render_input($prov, 'client_id');
+        },
         'seslp-settings',
         'seslp_section_main'
       );
-      add_settings_field("seslp_{$prov}_client_secret",
+
+      add_settings_field(
+        "seslp_{$prov}_client_secret",
         sprintf(esc_html__('%s Client Secret', SESLP_Plugin::TD), ucfirst($prov)),
-        function () use ($prov) { self::render_input($prov, 'client_secret', true); },
+        function () use ($prov) {
+          self::render_input($prov, 'client_secret', true);
+        },
         'seslp-settings',
         'seslp_section_main'
       );
     }
   }
 
-  public static function sanitize_yes_no($val) {
+  public static function sanitize_yes_no($val): string {
     return (is_string($val) && strtolower($val) === 'yes') ? 'yes' : '';
   }
 
   private static function render_input(string $provider, string $key, bool $password = false): void {
-    $opts = get_option('seslp_options', []);
+    // Cache options to avoid repeated get_option() calls per page load.
+    static $opts = null;
+
+    if ($opts === null) {
+      $opts = get_option('seslp_options', []);
+    }
+
     $val  = $opts['providers'][$provider][$key] ?? '';
     $name = "seslp_options[providers][{$provider}][{$key}]";
     $type = $password ? 'password' : 'text';
+
     printf(
       '<input type="%1$s" name="%2$s" value="%3$s" class="regular-text" autocomplete="off" />',
       esc_attr($type),
@@ -125,6 +145,36 @@ final class SESLP_Settings {
     wp_enqueue_script('seslp-admin', $plugin->url . $js_rel, ['jquery'], $js_ver, true);
   }
 
+  /**
+   * Return provider slugs used on settings screen.
+   *
+   * - Starts from registry list.
+   * - Removes Weibo.
+   * - Ensures LinkedIn is present.
+   * - Exposes a filter hook for customizations.
+   *
+   * @return string[]
+   */
+  private static function provider_keys(): array {
+    $providers = SESLP_Providers_Registry::list();
+
+    // Remove Weibo from settings UI.
+    $providers = array_values(array_diff($providers, ['weibo']));
+
+    // Ensure LinkedIn is available even if not in registry list.
+    if (!in_array('linkedin', $providers, true)) {
+      $providers[] = 'linkedin';
+    }
+
+    /**
+     * Filter the providers shown in the settings page.
+     *
+     * @param string[] $providers Provider slugs.
+     * @return string[]
+     */
+    return apply_filters('seslp_settings_providers', $providers);
+  }
+
   public static function render_settings_page(): void {
     // Theme override: /your-theme/seslp/settings-page.php
     $theme_tpl = function_exists('locate_template') ? locate_template('seslp/settings-page.php', false, false) : '';
@@ -135,7 +185,7 @@ final class SESLP_Settings {
 
     // Plugin template
     $plugin = SESLP_Plugin::instance();
-    $tpl = $plugin->dir . 'templates/settings-page.php';
+    $tpl    = $plugin->dir . 'templates/settings-page.php';
     if (file_exists($tpl)) {
       include $tpl; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingInclude
     }
