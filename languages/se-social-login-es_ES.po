@@ -205,3 +205,6 @@ msgstr "Añade un archivo Markdown localizado en assets/md/{locale}.md"
 
 msgid "Shortcode"
 msgstr "Código corto"
+
+msgid "Guide content is not available."
+msgstr "No se puede cargar el contenido de la guía."

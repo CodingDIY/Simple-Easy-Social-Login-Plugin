@@ -192,3 +192,6 @@ msgstr ""
 
 msgid "Shortcode"
 msgstr ""
+
+msgid "Guide content is not available."
+msgstr ""

@@ -205,3 +205,6 @@ msgstr "Bitte fügen Sie eine lokalisierte Markdown-Datei unter assets/md/{local
 
 msgid "Shortcode"
 msgstr "Shortcode"
+
+msgid "Guide content is not available."
+msgstr "Der Leitfadeninhalt kann nicht geladen werden."

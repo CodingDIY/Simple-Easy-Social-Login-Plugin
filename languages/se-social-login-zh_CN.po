@@ -205,3 +205,6 @@ msgstr "请在 assets/md/{locale}.md 添加对应语言的 Markdown 文件"
 
 msgid "Shortcode"
 msgstr "短代码"
+
+msgid "Guide content is not available."
+msgstr "无法加载指南内容。"
