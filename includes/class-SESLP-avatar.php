@@ -5,7 +5,9 @@
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_Avatar {
   public static function init(): void {
@@ -21,14 +23,14 @@ final class SESLP_Avatar {
   public static function filter_get_avatar_url($url, $id_or_email, $args) {
     $user = self::resolve_user($id_or_email);
     if ($user && $user->ID) {
-      $meta_url = get_user_meta($user->ID, 'seslp_avatar_url', true);
-      if (!empty($meta_url)) {
-        return esc_url($meta_url);
+      $meta = self::get_avatar_meta($user->ID);
+
+      if (!empty($meta['url'])) {
+        return esc_url($meta['url']);
       }
-      // Fallback to attachment ID if previously stored
-      $att_id = (int) get_user_meta($user->ID, 'seslp_avatar_id', true);
-      if ($att_id) {
-        $img = wp_get_attachment_image_url($att_id, 'thumbnail');
+
+      if ($meta['id']) {
+        $img = wp_get_attachment_image_url($meta['id'], 'thumbnail');
         if ($img) return $img;
       }
     }
@@ -41,26 +43,30 @@ final class SESLP_Avatar {
   public static function filter_pre_get_avatar($avatar, $id_or_email, $args) {
     $user = self::resolve_user($id_or_email);
     if ($user && $user->ID) {
-      $meta_url = get_user_meta($user->ID, 'seslp_avatar_url', true);
-      if (!empty($meta_url)) {
-        $alt   = isset($args['alt']) ? esc_attr($args['alt']) : esc_attr($user->display_name);
-        $class = isset($args['class']) ? esc_attr($args['class']) : 'avatar seslp-avatar';
-        $size  = isset($args['size']) ? (int) $args['size'] : 96;
-        $src   = esc_url($meta_url);
+      $meta       = self::get_avatar_meta($user->ID);
+      $size       = isset($args['size']) ? max(1, (int) $args['size']) : 96;
+      $alt        = isset($args['alt']) ? $args['alt'] : $user->display_name;
+      $class_attr = self::prepare_class_attr(isset($args['class']) ? $args['class'] : null);
+
+      if (!empty($meta['url'])) {
+        $src = esc_url($meta['url']);
         return sprintf(
           '<img alt="%s" src="%s" class="%s" height="%d" width="%d" loading="lazy" />',
-          $alt, $src, $class, $size, $size
+          esc_attr($alt),
+          $src,
+          esc_attr($class_attr),
+          $size,
+          $size
         );
       }
-      // Fallback to attachment ID if available
-      $att_id = (int) get_user_meta($user->ID, 'seslp_avatar_id', true);
-      if ($att_id) {
+      
+      if ($meta['id']) {
         $img = wp_get_attachment_image(
-          $att_id,
+          $meta['id'],
           [$size, $size],
           false,
           [
-            'class'   => isset($args['class']) ? $args['class'] : 'avatar seslp-avatar',
+            'class'   => $class_attr,
             'loading' => 'lazy',
           ]
         );
@@ -71,16 +77,58 @@ final class SESLP_Avatar {
   }
 
   private static function resolve_user($id_or_email): ?WP_User {
-    if ($id_or_email instanceof WP_User) return $id_or_email;
-    if ($id_or_email instanceof WP_Post) return get_user_by('id', (int) $id_or_email->post_author);
-    if ($id_or_email instanceof WP_Comment) return get_user_by('id', (int) $id_or_email->user_id);
+    if ($id_or_email instanceof WP_User) {
+      return $id_or_email;
+    }
+    if ($id_or_email instanceof WP_Post) {
+      return get_user_by('id', (int) $id_or_email->post_author);
+    }
+    if ($id_or_email instanceof WP_Comment) {
+      return get_user_by('id', (int) $id_or_email->user_id);
+    }
 
-    if (is_numeric($id_or_email)) return get_user_by('id', (int) $id_or_email);
+    if (is_numeric($id_or_email)) {
+      return get_user_by('id', (int) $id_or_email);
+    }
     if (is_string($id_or_email)) {
       return get_user_by('email', $id_or_email) ?: get_user_by('login', $id_or_email);
     }
 
     return null;
+  }
+
+  /**
+   * Retrieve avatar URL and attachment ID metadata for a user.
+   */
+  private static function get_avatar_meta(int $user_id): array {
+    return [
+      'url' => (string) get_user_meta($user_id, 'seslp_avatar_url', true),
+      'id'  => (int) get_user_meta($user_id, 'seslp_avatar_id', true),
+    ];
+  }
+
+  /**
+   * Normalize class attribute from string or array input.
+   */
+  private static function prepare_class_attr($class): string {
+    if (is_array($class)) {
+      $clean = array_map('sanitize_html_class', $class);
+      $clean = array_filter($clean, 'strlen');
+      if (!empty($clean)) {
+        return implode(' ', $clean);
+      }
+    } elseif (is_string($class) && $class !== '') {
+      $parts = preg_split('/\s+/', $class, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+      if ($parts) {
+        $clean = array_map('sanitize_html_class', $parts);
+        $clean = array_filter($clean, 'strlen');
+        if (!empty($clean)) {
+          return implode(' ', $clean);
+        }
+      }
+    }
+
+    return 'avatar seslp-avatar';
   }
 }
 
