@@ -7,7 +7,9 @@
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 if (!interface_exists('SESLP_Provider_Interface')) {
   // Interface should be loaded by the main plugin before this file.
@@ -15,56 +17,60 @@ if (!interface_exists('SESLP_Provider_Interface')) {
 }
 
 final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
-  public const SLUG = 'linkedin';
+  public const SLUG = LK_SLUG;
 
   /** Cached registry config */
   private array $cfg;
 
+  /** Cached client credentials */
+  private string $client_id = '';
+  private string $client_secret = '';
+
   public function __construct() {
-    $this->cfg = class_exists('SESLP_Providers_Registry') ? (SESLP_Providers_Registry::get(self::SLUG) ?: []) : [];
+    $this->cfg = class_exists('SESLP_Providers_Registry') ? ((array)SESLP_Providers_Registry::get(self::SLUG) ?: []) : [];
+
+    if (class_exists('SESLP_Helpers')) {
+      $this->client_id     = (string) SESLP_Helpers::get_client_id(self::SLUG);
+      $this->client_secret = (string) SESLP_Helpers::get_client_secret(self::SLUG);
+    }
   }
 
   /** Build the authorization URL for LinkedIn */
   public function get_auth_url(): string {
-    $client_id = class_exists('SESLP_Helpers') ? SESLP_Helpers::get_client_id(self::SLUG) : '';
-    if ($client_id === '') return '#';
+    if ($this->client_id === '') {
+      return '#';
+    }
 
-    $auth_base = (string)($this->cfg['auth_url'] ?? 'https://www.linkedin.com/oauth/v2/authorization');
-    $scopes    = $this->cfg['scopes'] ?? ['r_liteprofile', 'r_emailaddress'];
-    $scope_str = implode(' ', array_map('sanitize_text_field', $scopes));
+    $auth_base = $this->get_config_url('auth_url', 'https://www.linkedin.com/oauth/v2/authorization');
+    $scope_str = implode(' ', $this->get_scopes());
 
-    $state = class_exists('SESLP_State') ? SESLP_State::generate(self::SLUG) : wp_create_nonce('seslp_'.$client_id);
+    if (!class_exists('SESLP_State')) {
+      return '#';
+    }
 
-    $query = http_build_query([
+    $state = SESLP_State::create(self::SLUG);
+
+    $args = [
       'response_type' => 'code',
-      'client_id'     => $client_id,
+      'client_id'     => $this->client_id,
       'redirect_uri'  => $this->get_redirect_uri(),
       'state'         => $state,
       'scope'         => $scope_str,
-    ], '', '&', PHP_QUERY_RFC3986);
+    ];
 
-    $final = $auth_base . '?' . $query;
-
-    return $final;
+    return add_query_arg($args, $auth_base);
   }
 
   /** Compute the redirect/callback URI (?social_login=linkedin) */
   public function get_redirect_uri(): string {
-    // Force a trailing slash base URL and log the final redirect URI for debugging
-    $base = trailingslashit(home_url());
-    $uri  = add_query_arg(['social_login' => self::SLUG], $base);
-
-    return $uri;
+    return esc_url_raw(add_query_arg(['social_login' => self::SLUG], home_url('/')));
   }
 
   /** Exchange authorization code for tokens (state already validated in Auth) */
   public function exchange_code(string $code, string $state): array {
-    // $state is validated in Auth; accepted here to comply with the interface
-    $client_id     = class_exists('SESLP_Helpers') ? SESLP_Helpers::get_client_id(self::SLUG) : '';
-    $client_secret = class_exists('SESLP_Helpers') ? SESLP_Helpers::get_client_secret(self::SLUG) : '';
-    $token_url     = (string)($this->cfg['token_url'] ?? 'https://www.linkedin.com/oauth/v2/accessToken');
+    $token_url = $this->get_config_url('token_url', 'https://www.linkedin.com/oauth/v2/accessToken');
 
-    if ($client_id === '' || $client_secret === '' || $code === '') {
+    if ($this->client_id === '' || $this->client_secret === '' || $code === '') {
       return ['error' => 'missing_credentials_or_code'];
     }
 
@@ -72,8 +78,8 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
       'grant_type'    => 'authorization_code',
       'code'          => $code,
       'redirect_uri'  => $this->get_redirect_uri(),
-      'client_id'     => $client_id,
-      'client_secret' => $client_secret,
+      'client_id'     => $this->client_id,
+      'client_secret' => $this->client_secret,
     ];
 
     $resp = wp_remote_post($token_url, [
@@ -87,6 +93,13 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
     $http = wp_remote_retrieve_response_code($resp);
     $json = json_decode((string) wp_remote_retrieve_body($resp), true);
+
+    if (class_exists('SESLP_Logger')) {
+      SESLP_Logger::debug('LinkedIn token response', [
+        'http_code'       => $http,
+        'has_access_token'=> is_array($json) && isset($json['access_token']),
+      ]);
+    }
 
     if ($http !== 200 || !is_array($json)) {
       return ['error' => 'invalid_token_response', 'http_code' => $http, 'raw' => $json];
@@ -108,8 +121,8 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   /** Fetch user info */
   public function fetch_userinfo(string $access_token): array {
     // If OpenID Connect scopes are present, use the OIDC userinfo endpoint first.
-    $scopes   = $this->cfg['scopes'] ?? [];
-    $has_oidc = is_array($scopes) && in_array('openid', $scopes, true);
+    $scopes   = $this->get_scopes();
+    $has_oidc = in_array('openid', $scopes, true);
 
     if ($has_oidc) {
       $resp = wp_remote_get('https://api.linkedin.com/v2/userinfo', [
@@ -149,7 +162,7 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
   /** Legacy v2/me + v2/emailAddress flow (requires r_liteprofile & r_emailaddress) */
   private function fetch_userinfo_legacy(string $access_token): array {
-    $me_url = (string)($this->cfg['userinfo_url'] ?? 'https://api.linkedin.com/v2/me');
+    $me_url = $this->get_config_url('userinfo_url', 'https://api.linkedin.com/v2/me');
 
     // Request localized names and profile picture (highest available)
     $resp = wp_remote_get(add_query_arg([
@@ -180,8 +193,8 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   }
 
   /** Fetch primary email from LinkedIn */
-  private function fetch_email(string $access_token) {
-    $email_url = 'https://api.linkedin.com/v2/emailAddress';
+  private function fetch_email(string $access_token): ?string {
+    $email_url = $this->get_config_url('email_url', 'https://api.linkedin.com/v2/emailAddress');
     $resp = wp_remote_get(add_query_arg([
       'q'          => 'members',
       'projection' => '(elements*(handle~))',
@@ -234,5 +247,34 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
       'name'    => $name !== '' ? $name : $id,
       'picture' => $picture,
     ];
+  }
+
+  /** Normalize configured scopes into a de-duplicated string list */
+  private function get_scopes(): array {
+    $scopes = $this->cfg['scopes'] ?? ['r_liteprofile', 'r_emailaddress'];
+
+    if (is_string($scopes)) {
+      $scopes = preg_split('/[\s,]+/', $scopes) ?: [];
+    } elseif (!is_array($scopes)) {
+      $scopes = [];
+    }
+
+    $clean = array_filter(array_map('sanitize_text_field', $scopes));
+    if (empty($clean)) {
+      $clean = ['r_liteprofile', 'r_emailaddress'];
+    }
+
+    return array_values(array_unique($clean));
+  }
+
+  /** Get a sanitized URL string from registry config with a default fallback */
+  private function get_config_url(string $key, string $default): string {
+    $val = $this->cfg[$key] ?? '';
+    if (!is_string($val)) {
+      $val = '';
+    }
+
+    $url = esc_url_raw($val !== '' ? $val : $default);
+    return $url !== '' ? $url : esc_url_raw($default);
   }
 }
