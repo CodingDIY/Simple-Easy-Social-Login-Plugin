@@ -31,7 +31,7 @@ const WB_SLUG = 'weibo';
 const LK_SLUG = 'linkedin';
 
 // ==== Documents ====
-const SESLP_DOCS_BASE = 'https://selfcoding.app';
+// const SESLP_DOCS_BASE = 'https://selfcoding.app';
 
 // ==== Options & settings ====
 // Unified options array key (where providers/client_id/client_secret live)

@@ -39,7 +39,7 @@ foreach ($label_overrides_raw as $p => $arr) {
 global $is_free, $is_pro, $is_max, $can_pro_features, $can_max_features, $provider_allowed, $providers;
 
 // Documents site url
-$docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
+$docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') : '';
 ?>
 
 <div class="wrap">
@@ -116,6 +116,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
               class="regular-text" autocomplete="new-password" />
           </td>
         </tr>
+        <?php if (!empty($docs_base)) { ?>
         <tr>
           <th scope="row"></th>
           <td>
@@ -141,6 +142,7 @@ $docs_base = rtrim((string) SESLP_DOCS_BASE, '/');
             </p>
           </td>
         </tr>
+        <?php } ?>
       </tbody>
 
       <?php } ?>
