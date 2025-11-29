@@ -36,7 +36,29 @@ $provider_plan = [
 $provider_allowed = [];
 foreach ($provider_plan as $provider => $required_plan) {
   $required_plan = strtolower((string) $required_plan);
-  $is_allowed = !isset($current_plan[$required_plan]) ? false : (bool) $current_plan[$required_plan];
+  // $is_allowed = !isset($current_plan[$required_plan]) ? false : (bool) $current_plan[$required_plan];
+  // $is_allowed    = isset($current_plan[$required_plan])
+  //   ? (bool) $current_plan[$required_plan]
+  //   : false;
+  switch ($required_plan) {
+    case 'free':
+      // Allows free features when any plan is activated
+      $is_allowed = $is_free || $is_pro || $is_max;
+      break;
+
+    case 'pro':
+      // Only allowed on Pro or higher
+      $is_allowed = $is_pro || $is_max;
+      break;
+
+    case 'max':
+      // Only allowed on max
+      $is_allowed = $is_max;
+      break;
+
+    default:
+      $is_allowed = false;
+  }
   $provider_allowed[strtolower((string) $provider)] = $is_allowed;
 }
 

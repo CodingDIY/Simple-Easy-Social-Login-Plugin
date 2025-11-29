@@ -41,8 +41,12 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
       return '#';
     }
 
-    $auth_base = $this->get_config_url('auth_url', 'https://www.linkedin.com/oauth/v2/authorization');
-    $scope_str = implode(' ', $this->get_scopes());
+    $auth_base = SESLP_Helpers::get_config_string(
+      $this->cfg,
+      'auth_url',
+      'https://www.linkedin.com/oauth/v2/authorization'
+    );
+    $scope_str = implode(' ', SESLP_Helpers::get_scopes($this->cfg, ['r_liteprofile', 'r_emailaddress']));
 
     if (!class_exists('SESLP_State')) {
       return '#';
@@ -68,7 +72,11 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
   /** Exchange authorization code for tokens (state already validated in Auth) */
   public function exchange_code(string $code, string $state): array {
-    $token_url = $this->get_config_url('token_url', 'https://www.linkedin.com/oauth/v2/accessToken');
+    $token_url = SESLP_Helpers::get_config_string(
+      $this->cfg,
+      'token_url',
+      'https://www.linkedin.com/oauth/v2/accessToken'
+    );
 
     if ($this->client_id === '' || $this->client_secret === '' || $code === '') {
       return ['error' => 'missing_credentials_or_code'];
@@ -121,7 +129,7 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   /** Fetch user info */
   public function fetch_userinfo(string $access_token): array {
     // If OpenID Connect scopes are present, use the OIDC userinfo endpoint first.
-    $scopes   = $this->get_scopes();
+    $scopes   = SESLP_Helpers::get_scopes($this->cfg, ['r_liteprofile', 'r_emailaddress']);
     $has_oidc = in_array('openid', $scopes, true);
 
     if ($has_oidc) {
@@ -162,7 +170,11 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
   /** Legacy v2/me + v2/emailAddress flow (requires r_liteprofile & r_emailaddress) */
   private function fetch_userinfo_legacy(string $access_token): array {
-    $me_url = $this->get_config_url('userinfo_url', 'https://api.linkedin.com/v2/me');
+    $me_url = SESLP_Helpers::get_config_string(
+      $this->cfg,
+      'userinfo_url',
+      'https://api.linkedin.com/v2/me'
+    );
 
     // Request localized names and profile picture (highest available)
     $resp = wp_remote_get(add_query_arg([
@@ -194,7 +206,11 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
 
   /** Fetch primary email from LinkedIn */
   private function fetch_email(string $access_token): ?string {
-    $email_url = $this->get_config_url('email_url', 'https://api.linkedin.com/v2/emailAddress');
+    $email_url = SESLP_Helpers::get_config_string(
+      $this->cfg,
+      'email_url',
+      'https://api.linkedin.com/v2/emailAddress'
+    );
     $resp = wp_remote_get(add_query_arg([
       'q'          => 'members',
       'projection' => '(elements*(handle~))',
@@ -250,31 +266,31 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   }
 
   /** Normalize configured scopes into a de-duplicated string list */
-  private function get_scopes(): array {
-    $scopes = $this->cfg['scopes'] ?? ['r_liteprofile', 'r_emailaddress'];
+  // private function get_scopes(): array {
+  //   $scopes = $this->cfg['scopes'] ?? ['r_liteprofile', 'r_emailaddress'];
 
-    if (is_string($scopes)) {
-      $scopes = preg_split('/[\s,]+/', $scopes) ?: [];
-    } elseif (!is_array($scopes)) {
-      $scopes = [];
-    }
+  //   if (is_string($scopes)) {
+  //     $scopes = preg_split('/[\s,]+/', $scopes) ?: [];
+  //   } elseif (!is_array($scopes)) {
+  //     $scopes = [];
+  //   }
 
-    $clean = array_filter(array_map('sanitize_text_field', $scopes));
-    if (empty($clean)) {
-      $clean = ['r_liteprofile', 'r_emailaddress'];
-    }
+  //   $clean = array_filter(array_map('sanitize_text_field', $scopes));
+  //   if (empty($clean)) {
+  //     $clean = ['r_liteprofile', 'r_emailaddress'];
+  //   }
 
-    return array_values(array_unique($clean));
-  }
+  //   return array_values(array_unique($clean));
+  // }
 
   /** Get a sanitized URL string from registry config with a default fallback */
-  private function get_config_url(string $key, string $default): string {
-    $val = $this->cfg[$key] ?? '';
-    if (!is_string($val)) {
-      $val = '';
-    }
+  // private function get_config_url(string $key, string $default): string {
+  //   $val = $this->cfg[$key] ?? '';
+  //   if (!is_string($val)) {
+  //     $val = '';
+  //   }
 
-    $url = esc_url_raw($val !== '' ? $val : $default);
-    return $url !== '' ? $url : esc_url_raw($default);
-  }
+  //   $url = esc_url_raw($val !== '' ? $val : $default);
+  //   return $url !== '' ? $url : esc_url_raw($default);
+  // }
 }
