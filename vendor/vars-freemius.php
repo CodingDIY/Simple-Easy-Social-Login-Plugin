@@ -22,6 +22,10 @@ $current_plan = [
   'max'  => $is_max,
 ];
 
+// Capability flags used across settings templates
+$can_pro_features = $is_pro || $is_max; // Pro and Max plans
+$can_max_features = $is_max;            // Max plan only
+
 // Provider availability per plan
 $provider_plan = [
   'google'   => 'free',
@@ -36,10 +40,7 @@ $provider_plan = [
 $provider_allowed = [];
 foreach ($provider_plan as $provider => $required_plan) {
   $required_plan = strtolower((string) $required_plan);
-  // $is_allowed = !isset($current_plan[$required_plan]) ? false : (bool) $current_plan[$required_plan];
-  // $is_allowed    = isset($current_plan[$required_plan])
-  //   ? (bool) $current_plan[$required_plan]
-  //   : false;
+  
   switch ($required_plan) {
     case 'free':
       // Allows free features when any plan is activated
