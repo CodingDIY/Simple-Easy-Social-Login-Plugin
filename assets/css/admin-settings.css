@@ -23,6 +23,52 @@
   }
 }
 
+.seslp-secret-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.seslp-secret-wrapper .regular-text {
+  padding-right: 34px; /* room for eye icon */
+}
+
+/* Override core .button / .button-link styles */
+.wp-core-ui .seslp-secret-toggle.button.button-link {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  line-height: 1;
+  min-height: 0;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+.wp-core-ui .seslp-secret-toggle.button.button-link:hover,
+.wp-core-ui .seslp-secret-toggle.button.button-link:focus {
+  box-shadow: none !important;
+  text-decoration: none !important;
+  outline: none;
+}
+
+.seslp-secret-toggle .dashicons {
+  font-size: 18px;
+}
+
+/* .seslp-secret-visible .dashicons-hidden {
+  color: #007cba;
+} */
+
+/* .seslp-secret-wrapper.seslp-secret-visible .dashicons { */
+  /* optional: use hidden icon when visible */
+  /* change icon if you prefer dashicons-hidden */
+/* } */
+
 /* Guide page styles */
 .seslp-guide-wrap .seslp-guide-content { 
   /* max-width: 980px; */

@@ -86,8 +86,39 @@
     )
   }
 
+  /**
+   * Settings page: allow secret key to toggle visible and invisible
+   */
+  function initSecretVisibilityToggles() {
+    var wrappers = document.querySelectorAll('.seslp-secret-wrapper')
+    if (!wrappers.length) return
+
+    wrappers.forEach(function (wrapper) {
+      var input = wrapper.querySelector('input')
+      var toggle = wrapper.querySelector('.seslp-secret-toggle')
+      var icon = toggle ? toggle.querySelector('.dashicons') : null
+
+      if (!input || !toggle || !icon) return
+
+      toggle.addEventListener('click', function () {
+        var isPassword = input.getAttribute('type') === 'password'
+        input.setAttribute('type', isPassword ? 'text' : 'password')
+
+        // Toggle wrapper state
+        wrapper.classList.toggle('seslp-secret-visible', isPassword)
+
+        // Toggle icon classes
+        // dashicons-visibility  = "Opened eye"
+        // dashicons-hidden      = "Closed eye"
+        icon.classList.toggle('dashicons-visibility', !isPassword)
+        icon.classList.toggle('dashicons-hidden', isPassword)
+      })
+    })
+  }
+
   // Register all initializers
   onReady(initDebugTimezoneToggle)
   onReady(initUninstallToggles)
   onReady(initGuideAccordion)
+  onReady(initSecretVisibilityToggles)
 })()
