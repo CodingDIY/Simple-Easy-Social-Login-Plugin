@@ -208,3 +208,6 @@ msgstr "Shortcode"
 
 msgid "Guide content is not available."
 msgstr "Der Leitfadeninhalt kann nicht geladen werden."
+
+msgid "Show or hide secret"
+msgstr "Geheimnis anzeigen/ausblenden"

@@ -208,3 +208,6 @@ msgstr "短代碼"
 
 msgid "Guide content is not available."
 msgstr "無法載入指南內容。"
+
+msgid "Show or hide secret"
+msgstr "顯示或隱藏密鑰"

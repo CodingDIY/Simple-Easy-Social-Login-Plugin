@@ -195,3 +195,6 @@ msgstr ""
 
 msgid "Guide content is not available."
 msgstr ""
+
+msgid "Show or hide secret"
+msgstr ""

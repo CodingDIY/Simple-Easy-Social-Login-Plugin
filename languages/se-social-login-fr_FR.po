@@ -208,3 +208,6 @@ msgstr "Code court"
 
 msgid "Guide content is not available."
 msgstr "Le contenu du guide est indisponible."
+
+msgid "Show or hide secret"
+msgstr "Afficher ou masquer le secret"

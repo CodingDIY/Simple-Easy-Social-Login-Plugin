@@ -111,15 +111,12 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
             </label>
           </th>
           <td>
-            <!-- <input type="password" id="seslp_<?php echo esc_attr($prov); ?>_client_secret"
-              name="<?php echo esc_attr($name_secret); ?>" value="<?php echo esc_attr($secret_val); ?>"
-              class="regular-text" autocomplete="new-password" /> -->
             <div class="seslp-secret-wrapper">
-              <input type="password" id="seslp_<?php echo esc_attr( $prov ); ?>_client_secret"
-                name="<?php echo esc_attr( $name_secret ); ?>" value="<?php echo esc_attr( $secret_val ); ?>"
+              <input type="password" id="seslp_<?php echo esc_attr($prov); ?>_client_secret"
+                name="<?php echo esc_attr($name_secret); ?>" value="<?php echo esc_attr($secret_val); ?>"
                 class="regular-text" autocomplete="off" />
               <button type="button" class="button button-link seslp-secret-toggle"
-                aria-label="<?php esc_attr_e( 'Show or hide secret', SESLP_Plugin::TD ); ?>">
+                aria-label="<?php esc_attr_e('Show or hide secret', SESLP_Plugin::TD); ?>">
                 <span class="dashicons dashicons-visibility"></span>
               </button>
             </div>

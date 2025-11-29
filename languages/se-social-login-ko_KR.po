@@ -208,3 +208,6 @@ msgstr "숏코드"
 
 msgid "Guide content is not available."
 msgstr "가이드 내용을 불러올 수 없습니다."
+
+msgid "Show or hide secret"
+msgstr "시크릿 키 표시/숨기기"
