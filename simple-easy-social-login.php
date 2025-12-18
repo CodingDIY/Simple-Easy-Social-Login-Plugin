@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: Social Login with GOOGLE, FACEBOOK, NAVER, KAKAO, LINE and LINKEDIN
+ * Plugin Name: Simple Easy Social Login – Google, Facebook, Naver, Kakao, Line & LinkedIn
  * Description: Boost your WordPress site with a simple, easy, and lightweight social login solution. Instantly connect users through Google, Facebook, Naver, Kakao, Line, and LinkedIn. While keeping only the essential features for speed and reliability, this plugin offers detailed setup guides and full documentation on the official website — making social login integration effortless for everyone.
- * Author: Selfcoding
- * Version: 1.0
+ * Author: selfcoding
+ * Version: 1.9.7
  * Text Domain: se-social-login
  * Domain Path: /languages
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  */
 
 declare(strict_types=1);
