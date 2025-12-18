@@ -33,8 +33,115 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 #### 5) **로그 확인 경로**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 디버그 로그 및 문제 해결
+
+SESLP는 OAuth 및 소셜 로그인 문제를 진단하는 데 도움이 되는 전용 디버그 로그 파일을 제공합니다.
+
+<details>
+  <summary><strong>SESLP 디버그 로그 읽는 방법</strong></summary>
+
+#### 로그 파일 위치
+
+- `/wp-content/SESLP-debug.log` (SESLP 디버그 로그)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### 로그 형식
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`: UTC 또는 워드프레스 로컬 시간대 (예: KST) — SESLP 설정에서 선택 가능
+- 개인정보 보호: 이메일 / 토큰 / 시크릿 값은 자동으로 마스킹 처리됨 (예: `r********@g****.com`)
+
+#### OAuth 흐름 로그 (일반적)
+
+**1) OAuth 시작**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+의미: CSRF 보호를 위한 state 토큰이 생성되었습니다. `ttl`은 **10분간 유효**합니다.
+
+**2) 콜백 진입**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+의미: 콜백 라우트에 진입했습니다. `has_code:1` → OAuth `code` 값을 수신했습니다.
+
+**3) State 검증**
+
+성공:
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+실패:
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) 토큰 교환**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+의미: 액세스 토큰을 정상적으로 획득했습니다.
+
+실패:
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) 사용자 정보 요청**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) 사용자 연결 (Linker)**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) 리디렉션**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### 빠른 참조 테이블
+
+| 로그 메시지 (요약)      | 원인 추정                                 | 조치 방법                                 |
+| ----------------------- | ----------------------------------------- | ----------------------------------------- |
+| State validation failed | 타임아웃, 탭 전환, 중복 요청              | 빠르게 재시도, 시크릿/프라이빗 모드 사용  |
+| Token request failed    | Client ID/Secret/Redirect 오류, 요청 차단 | 개발자 콘솔, 방화벽, 서버 시간 확인       |
+| Userinfo invalid        | 스코프 누락 또는 이메일 비공개            | `email, profile` 스코프 추가, 사용자 동의 |
+| User create failed      | 계정 충돌 또는 워드프레스 제한            | 기존 사용자, 멀티사이트 규칙 확인         |
+| Redirect missing        | 코드 내 조기 return                       | 콜백 이후 Redirect 클래스 실행 여부 확인  |
+
+#### 버그 리포트에 포함하면 좋은 정보
+
+- 관련 로그 라인 (마스킹된 상태)
+- 사용한 Provider (Google / Naver 등)
+- 리디렉션 모드 / 커스텀 URL
+- 디버그 로그 활성화 상태
+- 워드프레스 환경 (단일 사이트, 멀티사이트, 캐시 플러그인)
+
+</details>
 
 ---
 
@@ -152,7 +259,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 > **로그 확인:**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (플러그인 디버그 ON)
+> - `wp-content/SESLP-debug.log` (플러그인 디버그 ON)
 > - `wp-content/debug.log` (WP_DEBUG, WP_DEBUG_LOG = true)
 
 #### 7) 요약 체크리스트
@@ -379,7 +486,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 > **로그 확인 경로:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log` (SESLP 디버그 ON 시)
+> - `/wp-content/SESLP-debug.log` (SESLP 디버그 ON 시)
 > - `/wp-content/debug.log` (WP_DEBUG = true)
 
 #### 7) 요약 체크리스트
@@ -494,7 +601,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 > **로그 확인 경로:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log` (SESLP 디버그 ON 시)
+> - `/wp-content/SESLP-debug.log` (SESLP 디버그 ON 시)
 > - `/wp-content/debug.log` (WP_DEBUG = true)
 
 #### 6) 요약 체크리스트
@@ -648,7 +755,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 > **로그 확인 경로:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log` (SESLP 디버그 ON)
+> - `/wp-content/SESLP-debug.log` (SESLP 디버그 ON)
 > - `/wp-content/debug.log` (WP_DEBUG = true)
 
 ### 9) 요약 체크리스트
@@ -786,7 +893,7 @@ Redirect URI는 콘솔에 등록된 값과 **100% 일치**해야 함
 
 > **로그 확인 경로:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log` (SESLP 디버그 ON)
+> - `/wp-content/SESLP-debug.log` (SESLP 디버그 ON)
 > - `/wp-content/debug.log` (WP_DEBUG = true)
 
 #### 7) 요약 체크리스트

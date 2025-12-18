@@ -35,8 +35,116 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 
 #### 5) **Où consulter les journaux (logs)**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 Journal de débogage et dépannage
+
+SESLP fournit un fichier de journal de débogage dédié pour vous aider à diagnostiquer les problèmes OAuth et de connexion sociale.
+
+<details>
+  <summary><strong>Comment lire les journaux de débogage SESLP</strong></summary>
+
+#### Emplacement des fichiers de log
+
+- `/wp-content/SESLP-debug.log` (journal de débogage SESLP)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### Format du journal
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z` : UTC ou fuseau horaire local de WordPress (ex. KST) — sélectionnable dans les réglages SESLP
+- Confidentialité : les e-mails / tokens / secrets sont automatiquement masqués  
+  (exemple : `r********@g****.com`)
+
+#### Journaux du flux OAuth (courants)
+
+**1) Démarrage OAuth**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+Signification : création du token `state` pour la protection CSRF. `ttl` est valide pendant **10 minutes**.
+
+**2) Callback déclenché**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+Signification : entrée dans le callback. `has_code:1` → le `code` OAuth a été reçu.
+
+**3) Validation du state**
+
+Succès :
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+Échec :
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Échange du token**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+Signification : token obtenu avec succès.
+
+Échec :
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) Requête userinfo**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) Liaison de l’utilisateur (linker)**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) Redirection**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### Tableau de référence rapide
+
+| Message du log (court)  | Cause probable                                  | Action                                        |
+| ----------------------- | ----------------------------------------------- | --------------------------------------------- |
+| State validation failed | Timeout, changement d’onglet, requête dupliquée | Réessayer rapidement, utiliser le mode privé  |
+| Token request failed    | Client ID/Secret/Redirect incorrects, blocage   | Vérifier console dev, pare-feu, heure serveur |
+| Userinfo invalid        | Scope manquant ou e-mail privé                  | Ajouter `email, profile`, consentement        |
+| User create failed      | Conflit de compte ou restriction WordPress      | Vérifier utilisateurs existants, multisite    |
+| Redirect missing        | Retour anticipé dans le code                    | Vérifier l’exécution de la classe Redirect    |
+
+#### Informations utiles à inclure dans un rapport de bug
+
+- Lignes de log pertinentes (masquées)
+- Fournisseur utilisé (Google / Naver / etc.)
+- Mode de redirection / URL personnalisée
+- État du logging de débogage
+- Environnement WordPress (site unique, multisite, plugins de cache)
+
+</details>
 
 ---
 
@@ -152,7 +260,7 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 
 > **Vérifier les logs :**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (debug du plugin activé)
+> - `wp-content/SESLP-debug.log` (debug du plugin activé)
 > - `wp-content/debug.log` (`WP_DEBUG` et `WP_DEBUG_LOG` à true)
 
 #### 7) Liste de vérification (résumé)
@@ -373,7 +481,7 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 
 > **Journaux (logs) :**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Liste de vérification (résumé)
@@ -615,7 +723,7 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 
 > **Journaux :**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 9) Checklist
@@ -732,7 +840,7 @@ Certains fournisseurs permettent à l’utilisateur de refuser le partage de l�
 
 > **Journaux :**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Checklist

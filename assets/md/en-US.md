@@ -34,8 +34,115 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 #### 5) **Where to check logs**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 Debug Log & Troubleshooting
+
+SESLP provides a dedicated debug log file to help you diagnose OAuth and social login issues.
+
+<details>
+  <summary><strong>How to read SESLP debug logs</strong></summary>
+
+#### Log file location
+
+- `/wp-content/SESLP-debug.log` (SESLP debug log)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### Log format
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`: UTC or WordPress local time (e.g. KST) — selectable in SESLP Settings
+- Privacy: Emails/tokens/secrets are masked automatically (example: `r********@g****.com`)
+
+#### OAuth flow logs (common)
+
+**1) OAuth start**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+Meaning: CSRF protection state token created. `ttl` is valid for 10 minutes.
+
+**2) Callback triggered**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+Meaning: Callback entered. `has_code:1` → OAuth `code` received.
+
+**3) State validation**
+
+Success:
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+Failure:
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Token exchange**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+Meaning: Token obtained.
+
+Failure:
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) Userinfo request**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) User linker**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) Redirect**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### Quick reference table
+
+| Log Message (short)     | Likely Cause                                     | Action                                    |
+| ----------------------- | ------------------------------------------------ | ----------------------------------------- |
+| State validation failed | Timeout, tab switch, duplicate request           | Retry quickly, use private mode           |
+| Token request failed    | Wrong client ID/secret/redirect, blocked request | Check dev console, firewall, server time  |
+| Userinfo invalid        | Missing scope or email private                   | Add `email, profile` scope, user consent  |
+| User create failed      | Account conflict or WordPress restriction        | Check existing users, multisite rules     |
+| Redirect missing        | Early return in code                             | Ensure Redirect class runs after callback |
+
+#### Helpful info to include in bug reports
+
+- Relevant log lines (masked)
+- Provider used (Google/Naver/etc.)
+- Redirect mode/custom URL
+- Debug logging state
+- WordPress environment (single site, multisite, cache plugins)
+
+</details>
 
 ---
 
@@ -151,7 +258,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 > **Check logs:**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (plugin debug ON)
+> - `wp-content/SESLP-debug.log` (plugin debug ON)
 > - `wp-content/debug.log` (WP_DEBUG, WP_DEBUG_LOG = true)
 
 #### 7) Summary Checklist
@@ -374,7 +481,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Summary Checklist
@@ -485,7 +592,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 6) Summary Checklist
@@ -621,7 +728,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 > **Logs:**
 >
-> `/wp-content/seslp-logs/seslp-debug.log`  
+> `/wp-content/SESLP-debug.log`  
 > `/wp-content/debug.log`
 
 #### 9) Summary Checklist
@@ -738,7 +845,7 @@ Some providers allow users to deny email sharing. SESLP can fall back to stable 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Summary Checklist

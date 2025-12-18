@@ -1,0 +1,244 @@
+# Simple Easy Social Login
+
+Simple Easy Social Login 是一款輕量且使用者友善的 WordPress 外掛，可為您的網站新增快速、順暢的社群登入功能。
+
+本外掛支援 **Google、Facebook、LinkedIn（免費）**，以及 **Naver、Kakao、Line（進階版）**，  
+特別適合面向亞洲（韓國、日本、中國）的網站，同時也能良好支援歐洲與南美地區的使用者。
+
+此外掛可與 WordPress 預設的登入與註冊頁面無縫整合，  
+同時支援 WooCommerce 的登入與註冊表單。  
+社群平台的個人頭像可自動同步為 WordPress 使用者的個人頭像。
+
+此外，本外掛採用 **可擴充的 Provider 架構** 設計，  
+在需要時，可透過獨立的 Add-on 外掛方式新增其他 OAuth Provider。
+
+---
+
+## ✨ 功能特色
+
+- Google 登入（免費）
+- Facebook 登入（免費）
+- LinkedIn 登入（免費）
+- Naver 登入（進階版）
+- Kakao 登入（進階版）
+- Line 登入（進階版）
+- 使用者頭像自動同步
+- 依電子郵件自動連結既有的 WordPress 使用者
+- 支援登入／登出／註冊後的自訂重新導向 URL
+- 簡潔直觀的管理後台，用於設定各 Provider
+- 支援短代碼： [se_social_login]
+- 自動顯示於 WordPress 登入與註冊表單
+- 支援 WooCommerce 登入與註冊表單（選用）
+- 輕量化架構，遵循 WordPress 編碼標準
+- 不建立不必要的資料庫資料表
+- 支援透過 Add-on 外掛擴充新的 OAuth Provider 的 Provider 系統
+
+---
+
+## 🐞 偵錯日誌
+
+SESLP 內建偵錯日誌系統，可協助診斷 OAuth 與社群登入相關問題。
+
+您可在 WordPress 管理後台中查看詳細的日誌說明：
+**SESLP → Guides → Debug Log & Troubleshooting**
+
+日誌檔案產生位置：
+
+- `/wp-content/SESLP-debug.log`
+- `/wp-content/debug.log`（啟用 `WP_DEBUG_LOG` 時）
+
+---
+
+## 🚀 安裝方式
+
+1. 將外掛上傳至 `/wp-content/plugins/simple-easy-social-login/` 目錄。
+2. 於 WordPress 管理後台中，透過 **外掛 → 已安裝的外掛** 啟用外掛。
+3. 前往 **設定 → Simple Easy Social Login**。
+4. 輸入各社群登入 Provider 的 Client ID 與 Client Secret。
+5. 儲存設定。
+6. 確認前端頁面中的社群登入按鈕是否正常顯示。
+
+---
+
+## ❓ 常見問題
+
+### 是否支援 WooCommerce？
+
+是的。本外掛可與 WooCommerce 的登入與註冊表單整合使用。
+
+### 是否只能使用 Google 登入？
+
+可以。每個 Provider 都可個別啟用或停用。
+
+### 什麼時候需要進階版授權？
+
+使用 **Naver、Kakao、Line** 登入時，需要進階版授權。  
+Google、Facebook 與 LinkedIn 可免費使用。
+
+### 是否提供短代碼？
+
+是的。您可以使用以下短代碼，在任何位置插入社群登入按鈕： [se_social_login]
+
+### 是否會自動匯入使用者頭像？
+
+是的。對於 Google、Facebook 等部分 Provider，可自動取得並同步使用者的個人頭像作為 WordPress 使用者頭像。
+
+---
+
+## 🖼 螢幕截圖
+
+1. 管理後台設定頁面
+2. 社群登入按鈕範例
+3. 進階 Provider（Naver / Kakao / Line）
+4. 與 WordPress 登入表單的整合範例
+
+---
+
+## 📝 更新紀錄（Changelog）
+
+### 1.9.7
+
+- 在 README 中新增偵錯日誌說明區段
+- 將詳細的偵錯日誌指南整合至管理後台說明（多語系）
+- 統一日誌檔案路徑說明（`/wp-content/SESLP-debug.log`）
+- 文件結構整理與一致性改善
+
+### 1.9.6
+
+- 改善設定頁面的使用體驗
+- 新增 Secret 金鑰顯示／隱藏切換功能
+- 修正與 WordPress 核心樣式的衝突問題
+- 改善 Pro / Max 方案偵測邏輯
+
+### 1.9.5
+
+- 大規模重構
+- 整合 Helpers 並改善 Provider 架構
+- 整理設定介面
+- 提升穩定性與可維護性
+
+### 1.9.3
+
+- 更新 Guides 的翻譯內容
+- 於設定頁面新增短代碼顯示
+
+### 1.9.2
+
+- 整理內部結構
+- 新增 Guides 載入器類別
+- 重構範本結構
+- 提升設定與 CSS 載入器的穩定性
+
+### 1.9.1
+
+- 新增管理員指南頁面
+- 基於 Markdown 的多語系文件渲染（採用 Parsedown）
+- 改善 UI 樣式
+
+### 1.9.0
+
+- 大規模重構準備階段
+- 擴充 i18n 輔助工具
+- 改善安全格式化與日誌結構
+
+### 1.7.23
+
+- 翻譯更新
+
+### 1.7.22
+
+- 改善除錯訊息，顯示先前登入的 Provider
+
+### 1.7.21
+
+- 偵測到相同電子郵件重複註冊時，於錯誤訊息中顯示 Provider 名稱
+- 透過 JavaScript 在 10 秒後自動隱藏錯誤訊息
+
+### 1.7.19
+
+- 防止使用相同電子郵件建立重複帳號
+- 改善 OAuth 流程：
+  - `get_access_token()`
+  - `get_user_info()`
+  - `create_or_link_user()`
+
+### 1.7.18
+
+- 移除 Google Client ID / Secret 欄位的提示說明
+- 優化程式碼結構
+- 移除 Line 登入按鈕中的「(Email required)」文字
+
+### 1.7.17
+
+- 修正 Line 登入相關問題：
+  - 防止重新登入時建立重複使用者
+  - 修正 `/complete-profile` 頁面重複出現的問題
+  - 允許更新電子郵件，解決「Invalid request」錯誤
+- 使用 `SESLP_Logger` 統一除錯日誌
+
+### 1.7.16
+
+- 在除錯日誌中遮罩顯示授權金鑰（例如：abc\*\*\*\*123）
+- 新增 `wp_options` 檢查指南以利除錯
+- 當日誌寫入失敗時顯示管理員通知
+
+### 1.7.15
+
+- 修正除錯日誌寫入失敗問題
+- 使用 WordPress 本地時區記錄時間戳
+- 於儲存設定時新增除錯日誌
+
+### 1.7.5
+
+- 套用最新的安全性修補
+- 進行效能最佳化並改善使用者體驗
+
+### 1.7.0
+
+- 改善社群登入按鈕同步機制
+- 強化安全性並修正錯誤
+
+### 1.7.3
+
+- 改善除錯系統
+- 新增專用 debug 目錄
+
+### 1.6.0
+
+- 在選擇 Plus / Premium 時，恢復顯示授權金鑰區塊的邏輯
+
+### 1.5.0
+
+- 註冊 `seslp_license_type` 選項
+- 修正儲存設定時授權類型被重設為 Free 的問題
+
+### 1.4.0
+
+- 使用 `admin_enqueue_scripts` 修正後台 `style.css` 載入問題
+
+### 1.3.0
+
+- 改善單選按鈕 UI
+- 將內嵌 CSS 移至 `style.css`
+
+### 1.2.0
+
+- 新增授權類型選擇功能（Free / Plus / Premium）
+- 改善設定頁面 UI 版面配置
+
+### 1.1.0
+
+- 新增多語系支援與翻譯檔載入功能
+- 改善使用者驗證邏輯
+
+### 1.0.0
+
+- 初始版本發佈
+- 新增 Google、Facebook、Naver、Kakao、Line、Weibo 社群登入
+
+---
+
+## 📄 授權
+
+GPLv2 or later
+https://www.gnu.org/licenses/gpl-2.0.html

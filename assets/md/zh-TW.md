@@ -34,8 +34,115 @@
 
 #### 5) **Log 檔案位置**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log`（`WP_DEBUG_LOG = true`）
+
+## 🐞 偵錯日誌與問題排查
+
+SESLP 提供專用的偵錯日誌檔案，協助您診斷 OAuth 與社群登入相關問題。
+
+<details>
+  <summary><strong>如何閱讀 SESLP 偵錯日誌</strong></summary>
+
+#### 日誌檔案位置
+
+- `/wp-content/SESLP-debug.log`（SESLP 偵錯日誌）
+- `/wp-content/debug.log`（`WP_DEBUG_LOG = true`）
+
+#### 日誌格式
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`：UTC 或 WordPress 本地時間（例如 KST）— 可在 SESLP 設定中選擇
+- 隱私說明：Email / Token / Secret 會自動進行遮罩處理 （範例：`r********@g****.com`）
+
+#### OAuth 流程日誌（常見）
+
+**1) OAuth 啟動**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+說明：已建立用於 CSRF 防護的 state token。 `ttl` 的有效期限為 **10 分鐘**。
+
+**2) 回呼觸發**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+說明：已進入回呼流程。 `has_code:1` → 已接收到 OAuth 的 `code`。
+
+**3) State 驗證**
+
+成功：
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+失敗：
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Token 交換**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+說明：成功取得存取權杖（Access Token）。
+
+失敗：
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) 使用者資訊請求（userinfo）**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) 使用者關聯（Linker）**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) 重新導向**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### 快速參考表
+
+| 日誌訊息（簡述）        | 可能原因                                       | 處理方式                                    |
+| ----------------------- | ---------------------------------------------- | ------------------------------------------- |
+| State validation failed | 逾時、切換分頁、重複請求                       | 立即重試，使用無痕／私人瀏覽模式            |
+| Token request failed    | Client ID / Secret / Redirect 錯誤、請求被阻擋 | 檢查開發者主控台、防火牆、伺服器時間        |
+| Userinfo invalid        | 缺少 Scope 或 Email 為私人                     | 加入 `email, profile` Scope，取得使用者同意 |
+| User create failed      | 帳號衝突或 WordPress 限制                      | 檢查既有使用者、Multisite 規則              |
+| Redirect missing        | 程式碼中過早 return                            | 確保 Redirect 類別在回呼後執行              |
+
+#### 回報錯誤時建議提供的資訊
+
+- 相關日誌內容（已遮罩）
+- 使用的登入提供者（Google / Naver 等）
+- 重新導向模式／自訂 URL
+- 偵錯日誌啟用狀態
+- WordPress 環境（單站台、多站台、快取外掛）
+
+</details>
 
 ---
 
@@ -159,7 +266,7 @@
 
 > **查看日誌：**
 >
-> - `wp-content/seslp-logs/seslp-debug.log`（啟用外掛 Debug 時）
+> - `wp-content/SESLP-debug.log`（啟用外掛 Debug 時）
 > - `wp-content/debug.log`（WP_DEBUG、WP_DEBUG_LOG = true 時）
 
 ---
@@ -378,7 +485,7 @@
 
 > **日誌位置：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) 檢查清單
@@ -488,7 +595,7 @@
 
 > **Logs：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 6) 總結檢查清單（Summary Checklist）
@@ -624,7 +731,7 @@
 
 > **日誌：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 9) 檢查清單
@@ -739,7 +846,7 @@
 
 > **日誌：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) 檢查清單

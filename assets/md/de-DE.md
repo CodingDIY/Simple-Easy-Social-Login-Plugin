@@ -35,8 +35,116 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 #### 5) **Log-Dateien**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 Debug-Log & Fehlerbehebung
+
+SESLP stellt eine eigene Debug-Logdatei bereit, mit der Sie OAuth- und Social-Login-Probleme diagnostizieren können.
+
+<details>
+  <summary><strong>So lesen Sie SESLP-Debug-Logs</strong></summary>
+
+#### Speicherort der Logdateien
+
+- `/wp-content/SESLP-debug.log` (SESLP-Debug-Log)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### Log-Format
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`: UTC oder WordPress-Lokalzeit (z. B. KST) — in den SESLP-Einstellungen auswählbar
+- Datenschutz: E-Mails/Tokens/Secrets werden automatisch maskiert (Beispiel: `r********@g****.com`)
+
+#### OAuth-Flow-Logs (häufig)
+
+**1) OAuth-Start**
+
+```
+[DEBUG] State created {“provider”:“google”,“state”:“906****23”,“ttl”:“10min”}
+```
+
+Bedeutung: CSRF-Schutz-State-Token erstellt. `ttl` ist 10 Minuten gültig.
+
+**2) Callback ausgelöst**
+
+```
+[DEBUG] Auth route triggered {“provider”:“google”,“has_code”:1}
+
+```
+
+Bedeutung: Callback aufgerufen. `has_code:1` → OAuth-`code` empfangen.
+
+**3) State-Validierung**
+
+Erfolg:
+
+```
+[DEBUG] State validated {“provider”:“google”,“state”:“906****23”}
+```
+
+Fehlschlag:
+
+```
+[WARNING] State validation failed: not found/expired {“provider”:“google”,“state”:“906****23”}
+```
+
+**4) Token-Austausch**
+
+```
+[DEBUG] Token response (google) {“has_access_token”:1}
+```
+
+Bedeutung: Token erhalten.
+
+Fehlschlag:
+
+```
+[ERROR] Token request failed (google) {“error”:”…”}
+```
+
+**5) Userinfo-Anfrage**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) Benutzerverknüpfung (Linker)**
+
+```
+[DEBUG] Linker: signing in user {“user_id”:45,“provider”:“google”,“created”:0}
+[INFO]  Login success (google) {“user_id”:45,“email”:“r********@g****.com”}
+```
+
+**7) Weiterleitung (Redirect)**
+
+```
+[DEBUG] Redirect decision {“mode”:“profile”,“user_id”:45,“url”:“https://example.com/wp-admin/profile.php”}
+```
+
+#### Kurzreferenz-Tabelle
+
+| Log-Nachricht (kurz)    | Wahrscheinliche Ursache                              | Maßnahme                                                        |
+| ----------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| State validation failed | Timeout, Tab-Wechsel, doppelte Anfrage               | Schnell erneut versuchen, privaten Modus nutzen                 |
+| Token request failed    | Falsche Client-ID/Secret/Redirect, Request blockiert | Dev-Konsole, Firewall, Serverzeit prüfen                        |
+| Userinfo invalid        | Fehlender Scope oder E-Mail privat                   | `email, profile` Scope hinzufügen, Zustimmung                   |
+| User create failed      | Konto-Konflikt oder WordPress-Einschränkung          | Bestehende Benutzer, Multisite-Regeln prüfen                    |
+| Redirect missing        | Frühzeitiger Return im Code                          | Sicherstellen, dass die Redirect-Klasse nach dem Callback läuft |
+
+#### Hilfreiche Infos für Bug-Reports
+
+- Relevante Log-Zeilen (maskiert)
+- Verwendeter Provider (Google/Naver/etc.)
+- Redirect-Modus / benutzerdefinierte URL
+- Debug-Logging-Status
+- WordPress-Umgebung (Single-Site, Multisite, Cache-Plugins)
+
+</details>
 
 ---
 
@@ -155,7 +263,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 > **Logs:**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (Plugin-Debug-Modus aktiviert)
+> - `wp-content/SESLP-debug.log` (Plugin-Debug-Modus aktiviert)
 > - `wp-content/debug.log` (WP_DEBUG, WP_DEBUG_LOG = true)
 
 #### 7) Zusammenfassungs-Checkliste
@@ -365,7 +473,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Checkliste
@@ -472,7 +580,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 ### 6) Checkliste
@@ -608,7 +716,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 ### 9) Checkliste
@@ -725,7 +833,7 @@ Einige Anbieter erlauben es Nutzern, die Weitergabe der E-Mail zu verweigern. SE
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Checkliste

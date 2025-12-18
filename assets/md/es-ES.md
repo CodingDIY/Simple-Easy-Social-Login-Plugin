@@ -35,8 +35,115 @@ Algunos proveedores permiten que el usuario niegue compartir su correo. SESLP pu
 
 ##### 5) **Dónde revisar los logs**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 Registro de depuración y solución de problemas
+
+SESLP proporciona un archivo de registro de depuración dedicado para ayudarte a diagnosticar problemas de OAuth e inicio de sesión social.
+
+<details>
+  <summary><strong>Cómo leer los registros de depuración de SESLP</strong></summary>
+
+#### Ubicación del archivo de registro
+
+- `/wp-content/SESLP-debug.log` (registro de depuración de SESLP)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### Formato del registro
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`: UTC o la hora local de WordPress (p. ej., KST) — seleccionable en Ajustes de SESLP
+- Privacidad: los emails/tokens/secrets se enmascaran automáticamente (ejemplo: `r********@g****.com`)
+
+#### Registros del flujo OAuth (común)
+
+**1) Inicio de OAuth**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+Significado: se creó el token `state` de protección CSRF. `ttl` es válido durante 10 minutos.
+
+**2) Callback activado**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+Significado: se accedió al callback. `has_code:1` → se recibió el `code` de OAuth.
+
+**3) Validación de state**
+
+Éxito:
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+Fallo:
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Intercambio de token**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+Significado: se obtuvo el token.
+
+Fallo:
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) Solicitud de userinfo**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) Vinculación de usuario (linker)**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) Redirección**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### Tabla de referencia rápida
+
+| Mensaje del log (corto) | Causa probable                                  | Acción                                                    |
+| ----------------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| State validation failed | Timeout, cambio de pestaña, solicitud duplicada | Reintenta rápido, usa modo incógnito                      |
+| Token request failed    | Client ID/secret/redirect incorrectos, bloqueo  | Revisa consola dev, firewall, hora del servidor           |
+| Userinfo invalid        | Falta scope o email privado                     | Añade scope `email, profile`, consentimiento              |
+| User create failed      | Conflicto de cuenta o restricción de WordPress  | Revisa usuarios existentes, reglas multisite              |
+| Redirect missing        | Retorno temprano en el código                   | Asegura que la clase Redirect se ejecute tras el callback |
+
+#### Información útil para incluir en reportes de errores
+
+- Líneas relevantes del log (enmascaradas)
+- Proveedor usado (Google/Naver/etc.)
+- Modo de redirección / URL personalizada
+- Estado del registro de depuración
+- Entorno de WordPress (sitio único, multisite, plugins de caché)
+
+</details>
 
 ---
 
@@ -150,7 +257,7 @@ Explique claramente en la pantalla de consentimiento para qué se solicita el pe
 
 > **Revisar logs:**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (debug del plugin activado)
+> - `wp-content/SESLP-debug.log` (debug del plugin activado)
 > - `wp-content/debug.log` (WP_DEBUG, WP_DEBUG_LOG = true)
 
 #### 7) Lista de verificación (resumen)
@@ -371,7 +478,7 @@ Explique claramente en la pantalla de consentimiento para qué se solicita el pe
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Lista de verificación (resumen)
@@ -613,7 +720,7 @@ Explique claramente en la pantalla de consentimiento para qué se solicita el pe
 
 > **Registros:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 9) Lista de verificación
@@ -730,7 +837,7 @@ Explique claramente en la pantalla de consentimiento para qué se solicita el pe
 
 > **Registros:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Lista de verificación

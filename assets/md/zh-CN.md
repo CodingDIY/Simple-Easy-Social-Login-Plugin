@@ -34,8 +34,115 @@
 
 #### 5) **日志查看路径**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log`（`WP_DEBUG_LOG = true`）
+
+## 🐞 调试日志与故障排查
+
+SESLP 提供了一个专用的调试日志文件，用于帮助您诊断 OAuth 及社交登录相关的问题。
+
+<details>
+  <summary><strong>如何阅读 SESLP 调试日志</strong></summary>
+
+#### 日志文件位置
+
+- `/wp-content/SESLP-debug.log`（SESLP 调试日志）
+- `/wp-content/debug.log`（`WP_DEBUG_LOG = true`）
+
+#### 日志格式
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`：UTC 或 WordPress 本地时间（例如 KST）— 可在 SESLP 设置中选择
+- 隐私说明：邮箱 / token / secret 会自动进行掩码处理 （示例：`r********@g****.com`）
+
+#### OAuth 流程日志（常见）
+
+**1) OAuth 启动**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+说明：已创建用于 CSRF 防护的 state token。 `ttl` 的有效期为 **10 分钟**。
+
+**2) 回调触发**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+说明：已进入回调流程。 `has_code:1` → 已接收到 OAuth `code`。
+
+**3) State 校验**
+
+成功：
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+失败：
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Token 交换**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+说明：成功获取访问令牌。
+
+失败：
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) 用户信息请求（userinfo）**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) 用户关联（Linker）**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) 重定向**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### 快速参考表
+
+| 日志信息（简要）        | 可能原因                                       | 处理方式                                   |
+| ----------------------- | ---------------------------------------------- | ------------------------------------------ |
+| State validation failed | 超时、切换标签页、重复请求                     | 立即重试，使用无痕/隐私模式                |
+| Token request failed    | Client ID / Secret / Redirect 错误，请求被拦截 | 检查开发者控制台、防火墙、服务器时间       |
+| Userinfo invalid        | 缺少作用域或邮箱为私密                         | 添加 `email, profile` 作用域并获取用户授权 |
+| User create failed      | 账号冲突或 WordPress 限制                      | 检查现有用户、Multisite 规则               |
+| Redirect missing        | 代码中过早 return                              | 确保 Redirect 类在回调之后执行             |
+
+#### 提交 Bug 报告时建议包含的信息
+
+- 相关日志内容（已掩码）
+- 使用的登录提供方（Google / Naver 等）
+- 重定向模式 / 自定义 URL
+- 调试日志启用状态
+- WordPress 环境（单站点、多站点、缓存插件）
+
+</details>
 
 ---
 
@@ -151,7 +258,7 @@
 
 > **查看日志：**
 >
-> - `wp-content/seslp-logs/seslp-debug.log`（插件调试开启时）
+> - `wp-content/SESLP-debug.log`（插件调试开启时）
 > - `wp-content/debug.log`（`WP_DEBUG`, `WP_DEBUG_LOG = true`）
 
 #### 7) 总结检查清单
@@ -375,7 +482,7 @@
 
 > **日志路径：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) 总结检查清单
@@ -486,7 +593,7 @@
 
 > **日志（Logs）：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 6) 检查清单（Summary Checklist）
@@ -622,7 +729,7 @@
 
 > **日志：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 9) 检查清单
@@ -738,7 +845,7 @@
 
 > **日志：**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) 检查清单

@@ -34,8 +34,115 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 #### 5) **Onde verificar os logs**
 
-- `/wp-content/seslp-logs/seslp-debug.log`
+- `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+## 🐞 Log de depuração e solução de problemas
+
+O SESLP fornece um arquivo de log de depuração dedicado para ajudar você a diagnosticar problemas de OAuth e de login social.
+
+<details>
+  <summary><strong>Como ler os logs de depuração do SESLP</strong></summary>
+
+#### Local do arquivo de log
+
+- `/wp-content/SESLP-debug.log` (log de depuração do SESLP)
+- `/wp-content/debug.log` (`WP_DEBUG_LOG = true`)
+
+#### Formato do log
+
+```
+[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}
+```
+
+- `Z`: UTC ou horário local do WordPress (ex.: KST) — selecionável nas configurações do SESLP
+- Privacidade: e-mails/tokens/secrets são mascarados automaticamente (exemplo: `r********@g****.com`)
+
+#### Logs do fluxo OAuth (comum)
+
+**1) Início do OAuth**
+
+```
+[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}
+```
+
+Significado: token `state` de proteção CSRF criado. `ttl` é válido por 10 minutos.
+
+**2) Callback acionado**
+
+```
+[DEBUG] Auth route triggered {"provider":"google","has_code":1}
+```
+
+Significado: callback acessado. `has_code:1` → `code` do OAuth recebido.
+
+**3) Validação do state**
+
+Sucesso:
+
+```
+[DEBUG] State validated {"provider":"google","state":"906****23"}
+```
+
+Falha:
+
+```
+[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}
+```
+
+**4) Troca do token**
+
+```
+[DEBUG] Token response (google) {"has_access_token":1}
+```
+
+Significado: token obtido.
+
+Falha:
+
+```
+[ERROR] Token request failed (google) {"error":"..."}
+```
+
+**5) Requisição de userinfo**
+
+```
+[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)
+```
+
+**6) Vinculação de usuário (linker)**
+
+```
+[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}
+```
+
+**7) Redirecionamento**
+
+```
+[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}
+```
+
+#### Tabela de referência rápida
+
+| Mensagem do log (curta) | Causa provável                                             | Ação                                                        |
+| ----------------------- | ---------------------------------------------------------- | ----------------------------------------------------------- |
+| State validation failed | Timeout, troca de aba, requisição duplicada                | Tentar novamente rápido, usar modo privado                  |
+| Token request failed    | Client ID/secret/redirect incorretos, requisição bloqueada | Verificar console dev, firewall, hora do servidor           |
+| Userinfo invalid        | Escopo ausente ou e-mail privado                           | Adicionar escopo `email, profile`, consentimento do usuário |
+| User create failed      | Conflito de conta ou restrição do WordPress                | Verificar usuários existentes, regras de multisite          |
+| Redirect missing        | Retorno antecipado no código                               | Garantir que a classe Redirect rode após o callback         |
+
+#### Informações úteis para incluir em reportes de bugs
+
+- Linhas relevantes do log (mascaradas)
+- Provedor usado (Google/Naver/etc.)
+- Modo de redirecionamento / URL personalizada
+- Estado do log de depuração
+- Ambiente do WordPress (site único, multisite, plugins de cache)
+
+</details>
 
 ---
 
@@ -151,7 +258,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 > **Verificar logs:**
 >
-> - `wp-content/seslp-logs/seslp-debug.log` (debug do plugin ATIVADO)
+> - `wp-content/SESLP-debug.log` (debug do plugin ATIVADO)
 > - `wp-content/debug.log` (`WP_DEBUG`, `WP_DEBUG_LOG = true`)
 
 #### 7) Checklist de resumo
@@ -374,7 +481,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Checklist de resumo
@@ -485,7 +592,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 6) Checklist de resumo
@@ -621,7 +728,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 9) Checklist
@@ -736,7 +843,7 @@ Alguns provedores permitem que o usuário negue o compartilhamento do e-mail. O 
 
 > **Logs:**
 >
-> - `/wp-content/seslp-logs/seslp-debug.log`
+> - `/wp-content/SESLP-debug.log`
 > - `/wp-content/debug.log`
 
 #### 7) Checklist
