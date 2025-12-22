@@ -96,6 +96,14 @@ Google、Facebook 和 LinkedIn 可免费使用。
 
 ## 📝 更新日志（Changelog）
 
+### 1.9.8
+
+- 修复了 `SESLP_Avatar::resolve_user()` 中的致命类型错误，确保返回值为 `WP_User|null`
+- 改进了头像回退处理：
+  - 当社交资料头像缺失或无效时，安全地使用 WordPress 默认头像
+  - 防止头像图片损坏（例如 LinkedIn 头像问题）
+- 与头像显示相关的细微稳定性改进
+
 ### 1.9.7
 
 - 在 README 中新增调试日志说明部分

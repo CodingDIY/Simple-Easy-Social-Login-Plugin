@@ -96,6 +96,14 @@ Oui. Pour certains fournisseurs tels que Google et Facebook, les images de profi
 
 ## 📝 Journal des modifications (Changelog)
 
+### 1.9.8
+
+- Correction d’une erreur fatale de type dans `SESLP_Avatar::resolve_user()` en garantissant un retour de type `WP_User|null`
+- Amélioration de la gestion du fallback des avatars :
+  - Retour sécurisé vers l’avatar par défaut de WordPress lorsque l’image de profil social est absente ou invalide
+  - Prévention des avatars cassés (par exemple, problèmes avec les images de profil LinkedIn)
+- Améliorations mineures de la stabilité liées à l’affichage des avatars
+
 ### 1.9.7
 
 - Ajout d’une section de journal de débogage dans la README

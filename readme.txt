@@ -74,6 +74,12 @@ For supported Providers such as Google and Facebook, profile images are automati
 
 == Changelog ==
 
+= 1.9.8 =
+* Fixed a fatal type error in SESLP_Avatar::resolve_user() by ensuring a WP_User or null return value
+* Improved avatar fallback handling to safely use WordPress core default avatars
+* Prevented broken avatar images when social profile images are missing or invalid
+* Minor stability improvements related to avatar rendering
+
 = 1.9.7 =
 * Added Debug Logging section to README
 * Integrated detailed debug log guide into Admin Guides (multilingual)

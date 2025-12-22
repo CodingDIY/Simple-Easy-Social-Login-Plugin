@@ -97,6 +97,14 @@ Sim. Para Providers compatíveis, como Google e Facebook, as imagens de perfil p
 
 ## 📝 Registro de alterações (Changelog)
 
+### 1.9.8
+
+- Correção de um erro fatal de tipo em `SESLP_Avatar::resolve_user()`, garantindo o retorno `WP_User|null`
+- Melhoria no tratamento de fallback de avatar:
+  - Uso seguro do avatar padrão do WordPress quando a imagem do perfil social estiver ausente ou inválida
+  - Prevenção de imagens de avatar quebradas (por exemplo, problemas com imagens de perfil do LinkedIn)
+- Pequenas melhorias de estabilidade relacionadas à renderização de avatares
+
 ### 1.9.7
 
 - Adicionada seção de log de depuração ao README

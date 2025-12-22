@@ -106,6 +106,14 @@ Yes. For supported providers such as Google and Facebook, profile images can be 
 
 ## 📝 Changelog
 
+### 1.9.8
+
+- Fixed a fatal type error in `SESLP_Avatar::resolve_user()` by ensuring a `WP_User|null` return value
+- Improved avatar fallback handling:
+  - Safely fall back to WordPress core default avatar when a social profile image is missing or invalid
+  - Prevent broken avatar images (e.g. LinkedIn profile image issues)
+- Minor stability improvements related to avatar rendering
+
 ### 1.9.7
 
 - Added Debug Logging section to README

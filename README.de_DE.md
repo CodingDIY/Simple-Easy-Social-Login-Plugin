@@ -97,6 +97,14 @@ Ja. Bei unterstützten Providern wie Google und Facebook können Profilbilder au
 
 ## 📝 Änderungsprotokoll (Changelog)
 
+### 1.9.8
+
+- Behebung eines fatalen TypeErrors in `SESLP_Avatar::resolve_user()` durch Sicherstellung eines Rückgabewerts vom Typ `WP_User|null`
+- Verbesserte Avatar-Fallback-Behandlung:
+  - Sicheres Zurückfallen auf den WordPress-Standard-Avatar, wenn ein Social-Profilbild fehlt oder ungültig ist
+  - Vermeidung defekter Avatar-Bilder (z. B. bei LinkedIn-Profilbildern)
+- Kleinere Stabilitätsverbesserungen im Zusammenhang mit der Avatar-Darstellung
+
 ### 1.9.7
 
 - Debug-Logging-Abschnitt zur README hinzugefügt
