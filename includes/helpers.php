@@ -78,5 +78,41 @@ if (!class_exists('SESLP_Helpers')) {
 
       return $scopes === [] ? $fallback : $scopes;
     }
+
+    /**
+     * Get Freemius upgrade / checkout URL with an optional coupon auto-applied.
+     *
+     * @param string $coupon_code Coupon code to auto-apply in the hosted checkout.
+     * @return string Upgrade URL (may be empty if Freemius isn't available).
+     */
+    public static function get_upgrade_url(string $coupon_code = 'SESLP30'): string {
+      $url = '';
+
+      if (function_exists('simple_easy_social_login_freemius')) {
+        $fs = simple_easy_social_login_freemius();
+
+        if (is_object($fs) && method_exists($fs, 'get_upgrade_url')) {
+          // get_upgrade_url() is an alias to pricing_url() in the Freemius SDK.
+          $url = (string) $fs->get_upgrade_url();
+        }
+      }
+
+      if ($url !== '' && $coupon_code !== '') {
+        $url = add_query_arg(
+          [
+            'coupon' => $coupon_code,
+          ],
+          $url
+        );
+      }
+
+      /**
+       * Filter the final upgrade URL.
+       *
+       * @param string $url         The checkout URL.
+       * @param string $coupon_code Coupon code.
+       */
+      return (string) apply_filters('seslp_upgrade_url', $url, $coupon_code);
+    }
   }
 }

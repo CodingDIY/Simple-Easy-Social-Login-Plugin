@@ -211,3 +211,15 @@ msgstr "Le contenu du guide est indisponible."
 
 msgid "Show or hide secret"
 msgstr "Afficher ou masquer le secret"
+
+msgid "Launch Promotion (%s)"
+msgstr "Offre de lancement (%s)"
+
+msgid "Valid until February 2026."
+msgstr "Valable jusqu’en février 2026."
+
+msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
+msgstr "Profitez de <strong>%1$s de réduction sur les fonctionnalités PRO</strong> (%2$s)."
+
+msgid "Upgrade to PRO & Apply Coupon"
+msgstr "Passer à PRO et appliquer le coupon"

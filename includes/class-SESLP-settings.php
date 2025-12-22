@@ -9,6 +9,8 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+require_once plugin_dir_path(__DIR__) . 'includes/launch-banner.php';
+
 final class SESLP_Settings {
   public static function init(): void {
     if (!is_admin()) {
@@ -185,6 +187,7 @@ final class SESLP_Settings {
     $plugin = SESLP_Plugin::instance();
     $tpl    = $plugin->dir . 'templates/settings-page.php';
     if (file_exists($tpl)) {
+      seslp_render_launch_promo_banner();
       include $tpl; // phpcs:ignore WordPressVIPMinimum.Files.IncludingFile.UsingInclude
     }
   }

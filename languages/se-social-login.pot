@@ -198,3 +198,15 @@ msgstr ""
 
 msgid "Show or hide secret"
 msgstr ""
+
+msgid "Launch Promotion (%s)"
+msgstr ""
+
+msgid "Valid until February 2026."
+msgstr ""
+
+msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
+msgstr ""
+
+msgid "Upgrade to PRO & Apply Coupon"
+msgstr ""

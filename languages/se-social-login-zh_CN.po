@@ -211,3 +211,15 @@ msgstr "无法加载指南内容。"
 
 msgid "Show or hide secret"
 msgstr "显示或隐藏密钥"
+
+msgid "Launch Promotion (%s)"
+msgstr "上线促销活动（%s）"
+
+msgid "Valid until February 2026."
+msgstr "有效期至 2026 年 2 月。"
+
+msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
+msgstr "享受 <strong>PRO 功能 %1$s 折扣</strong>（%2$s）。"
+
+msgid "Upgrade to PRO & Apply Coupon"
+msgstr "升级到 PRO 并使用优惠券"

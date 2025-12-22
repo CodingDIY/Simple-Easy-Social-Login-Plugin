@@ -211,3 +211,15 @@ msgstr "가이드 내용을 불러올 수 없습니다."
 
 msgid "Show or hide secret"
 msgstr "시크릿 키 표시/숨기기"
+
+msgid "Launch Promotion (%s)"
+msgstr "런칭 기념 프로모션 (%s)"
+
+msgid "Valid until February 2026."
+msgstr "2026년 2월까지 유효합니다."
+
+msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
+msgstr "<strong>PRO 기능 %1$s 할인</strong> 혜택을 받아보세요 (%2$s)."
+
+msgid "Upgrade to PRO & Apply Coupon"
+msgstr "PRO로 업그레이드하고 쿠폰 적용"
