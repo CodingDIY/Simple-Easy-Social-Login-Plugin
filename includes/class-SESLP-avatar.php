@@ -81,17 +81,17 @@ final class SESLP_Avatar {
       return $id_or_email;
     }
     if ($id_or_email instanceof WP_Post) {
-      return get_user_by('id', (int) $id_or_email->post_author);
+      return get_user_by('id', (int) $id_or_email->post_author) ?: null;
     }
     if ($id_or_email instanceof WP_Comment) {
-      return get_user_by('id', (int) $id_or_email->user_id);
+      return get_user_by('id', (int) $id_or_email->user_id) ?: null;
     }
 
     if (is_numeric($id_or_email)) {
-      return get_user_by('id', (int) $id_or_email);
+      return get_user_by('id', (int) $id_or_email) ?: null;
     }
     if (is_string($id_or_email)) {
-      return get_user_by('email', $id_or_email) ?: get_user_by('login', $id_or_email);
+      return get_user_by('email', $id_or_email) ?: (get_user_by('login', $id_or_email) ?: null);
     }
 
     return null;
