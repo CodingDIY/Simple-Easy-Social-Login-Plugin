@@ -66,6 +66,22 @@ Logdateien werden hier erstellt:
 
 Ja. Es integriert sich in die Anmelde- und Registrierungsformulare von WooCommerce.
 
+### WooCommerce-Anmeldung funktioniert, aber das Weiterleitungsverhalten ist anders. Ist das normal?
+
+Ja. Wenn WooCommerce aktiv ist, werden Benutzer nach der Anmeldung in der Regel auf die Seite **Mein Konto** weitergeleitet.  
+Die Weiterleitungs-URL kann in den Plugin-Einstellungen oder über verfügbare Filter angepasst werden.
+
+### Was sollte ich überprüfen, wenn der Social Login auf einer WooCommerce-Seite nicht funktioniert?
+
+Bitte überprüfen Sie Folgendes:
+
+- WooCommerce ist auf eine aktuelle stabile Version aktualisiert
+- Der Social-Login-Anbieter ist in den Plugin-Einstellungen aktiviert
+- Client-ID und Client-Secret sind korrekt eingegeben
+- Redirect- / Callback-URLs sind korrekt in der Entwicklerkonsole des Anbieters registriert
+- Benutzerdefinierte Login- oder Checkout-Templates entfernen keine standardmäßigen WooCommerce-Hooks
+- Die Debug-Protokollierung ist aktiviert und `/wp-content/SESLP-debug.log` wurde überprüft
+
 ### Kann ich nur den Google Login verwenden?
 
 Ja. Jeder Provider kann einzeln aktiviert oder deaktiviert werden.

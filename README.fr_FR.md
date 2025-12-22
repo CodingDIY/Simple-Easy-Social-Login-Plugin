@@ -66,6 +66,22 @@ Les fichiers de log sont générés ici :
 
 Oui. Elle s’intègre aux formulaires de connexion et d’inscription de WooCommerce.
 
+### La connexion WooCommerce fonctionne, mais le comportement de redirection est différent. Est-ce normal ?
+
+Oui. Lorsque WooCommerce est actif, les utilisateurs sont généralement redirigés vers la page **Mon compte** après la connexion.  
+L’URL de redirection peut être personnalisée dans les paramètres du plugin ou via les filtres disponibles.
+
+### Que dois-je vérifier si la connexion sociale ne fonctionne pas sur un site WooCommerce ?
+
+Veuillez vérifier les points suivants :
+
+- WooCommerce est mis à jour vers une version stable récente
+- Le fournisseur de connexion sociale est activé dans les paramètres du plugin
+- Les valeurs Client ID et Client Secret sont correctes
+- Les URLs de redirection / callback sont correctement enregistrées dans la console développeur du fournisseur
+- Les templates personnalisés de connexion ou de paiement ne suppriment pas les hooks WooCommerce par défaut
+- La journalisation de débogage est activée et le fichier `/wp-content/SESLP-debug.log` a été consulté
+
 ### Puis-je utiliser uniquement la connexion Google ?
 
 Oui. Chaque fournisseur peut être activé ou désactivé individuellement.

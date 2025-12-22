@@ -66,6 +66,22 @@ Os arquivos de log são gerados em:
 
 Sim. Ele se integra aos formulários de login e registro do WooCommerce.
 
+### O login do WooCommerce funciona, mas o comportamento de redirecionamento é diferente. Isso é esperado?
+
+Sim. Quando o WooCommerce está ativo, os usuários normalmente são redirecionados para a página **Minha conta** após o login.  
+A URL de redirecionamento pode ser personalizada nas configurações do plugin ou por meio de filtros disponíveis.
+
+### O que devo verificar se o login social não funcionar em um site WooCommerce?
+
+Verifique os seguintes itens:
+
+- O WooCommerce está atualizado para uma versão estável recente
+- O provedor de login social está ativado nas configurações do plugin
+- Os valores de Client ID e Client Secret estão corretos
+- As URLs de redirecionamento / callback estão corretamente registradas no console do desenvolvedor do provedor
+- Templates personalizados de login ou checkout não removem os hooks padrão do WooCommerce
+- O log de depuração está ativado e o arquivo `/wp-content/SESLP-debug.log` foi revisado
+
 ### Posso usar apenas o login com Google?
 
 Sim. Cada Provider pode ser ativado ou desativado individualmente.

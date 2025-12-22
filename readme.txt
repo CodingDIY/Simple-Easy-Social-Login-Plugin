@@ -52,6 +52,19 @@ https://github.com/CodingDIY/Simple-Easy-Social-Login-Plugin
 = Does this plugin work with WooCommerce? =
 Yes. It integrates with WooCommerce login and registration forms.
 
+= WooCommerce login works, but redirect behavior is different. Is this expected? =
+Yes. When WooCommerce is active, users are typically redirected to the My Account page after login.
+You can customize the redirect URL in the plugin settings or via available filters.
+
+= What should I check if social login does not work on a WooCommerce site? =
+Please verify the following:
+* WooCommerce is updated to a recent stable version
+* The social login Provider is enabled in the plugin settings
+* Client ID and Client Secret values are correct
+* Redirect / Callback URLs are correctly registered in the Provider's developer console
+* Custom login or checkout templates do not remove default WooCommerce hooks
+* Debug logging is enabled to review `/wp-content/SESLP-debug.log`
+
 = Can I use only Google login? =
 Yes. Each Provider can be enabled or disabled individually.
 

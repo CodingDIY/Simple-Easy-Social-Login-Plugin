@@ -66,6 +66,22 @@ Los archivos de registro se generan en:
 
 Sí. Se integra con los formularios de inicio de sesión y registro de WooCommerce.
 
+### El inicio de sesión con WooCommerce funciona, pero el comportamiento de redirección es diferente. ¿Es normal?
+
+Sí. Cuando WooCommerce está activo, los usuarios suelen ser redirigidos a la página **Mi cuenta** después de iniciar sesión.  
+La URL de redirección puede personalizarse desde la configuración del plugin o mediante los filtros disponibles.
+
+### ¿Qué debo comprobar si el inicio de sesión social no funciona en un sitio WooCommerce?
+
+Por favor, verifica lo siguiente:
+
+- WooCommerce está actualizado a una versión estable reciente
+- El proveedor de inicio de sesión social está habilitado en la configuración del plugin
+- El Client ID y el Client Secret son correctos
+- Las URLs de redirección / callback están registradas correctamente en la consola del desarrollador del proveedor
+- Las plantillas personalizadas de inicio de sesión o checkout no eliminan los hooks predeterminados de WooCommerce
+- El registro de depuración está habilitado y se ha revisado `/wp-content/SESLP-debug.log`
+
 ### ¿Puedo usar solo el inicio de sesión con Google?
 
 Sí. Cada proveedor se puede activar o desactivar de forma individual.
