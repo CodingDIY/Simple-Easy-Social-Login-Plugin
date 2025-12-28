@@ -103,14 +103,27 @@ Oui. Pour certains fournisseurs tels que Google et Facebook, les images de profi
 
 ## 🖼 Captures d’écran
 
-1. Page de réglages dans l’administration
-2. Exemple de boutons de connexion sociale
-3. Fournisseurs Premium (Naver / Kakao / Line)
-4. Exemple d’intégration avec le formulaire de connexion WordPress
+1. Boutons de connexion sociale affichés sur la page de connexion WordPress (disposition en liste).
+2. Disposition des boutons de connexion sociale en mode icônes uniquement.
+3. Options de redirection après la connexion (tableau de bord, profil, page d’accueil ou URL personnalisée).
+4. Journal de débogage, options de mise en page de l’interface, shortcode et paramètres de désinstallation.
+5. Guide de configuration intégré expliquant les règles de redirection OAuth et les exigences courantes.
+6. Guide étape par étape pour configurer l’écran de consentement OAuth et le client Google.
+7. Paramètres d’administration pour les identifiants de connexion Google, Facebook et LinkedIn.
+8. Paramètres d’administration pour les fournisseurs de connexion Naver, Kakao et LINE.
+9. Règles d’URI de redirection unifiées utilisées par tous les fournisseurs pris en charge.
+10. Emplacement des journaux de débogage et aperçu du dépannage.
+11. Erreurs OAuth courantes, solutions recommandées et emplacements des journaux de débogage.
 
 ---
 
 ## 📝 Journal des modifications (Changelog)
+
+### 1.9.9
+
+- Finalisation des captures d’écran et de la documentation pour la publication publique
+- Ajout de descriptions complètes des captures d’écran couvrant le flux de connexion, les paramètres, les guides et le dépannage
+- Améliorations mineures de nettoyage et de cohérence de la documentation
 
 ### 1.9.8
 

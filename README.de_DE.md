@@ -104,14 +104,27 @@ Ja. Bei unterstützten Providern wie Google und Facebook können Profilbilder au
 
 ## 🖼 Screenshots
 
-1. Einstellungsseite im Adminbereich
-2. Beispiel für Social-Login-Buttons
-3. Premium-Provider (Naver / Kakao / Line)
-4. Integration mit dem WordPress-Anmeldeformular
+1. Social-Login-Schaltflächen auf der WordPress-Anmeldeseite (Listenlayout).
+2. Nur-Icon-Layout der Social-Login-Schaltflächen auf dem Anmeldebildschirm.
+3. Weiterleitungsoptionen nach dem Login (Dashboard, Profil, Startseite oder benutzerdefinierte URL).
+4. Debug-Protokollierung, UI-Layout-Optionen, Shortcode- und Deinstallations-Einstellungen.
+5. Integrierte Einrichtungsanleitung mit Erklärung der OAuth-Redirect-Regeln und grundlegender Anforderungen.
+6. Schritt-für-Schritt-Anleitung zur Einrichtung des Google OAuth-Zustimmungsbildschirms und Clients.
+7. Admin-Einstellungen für Google-, Facebook- und LinkedIn-Login-Zugangsdaten.
+8. Admin-Einstellungen für Naver-, Kakao- und LINE-Login-Anbieter.
+9. Einheitliche Redirect-URI-Regeln für alle unterstützten Anbieter.
+10. Speicherort der Debug-Logs und Übersicht zur Fehlerbehebung.
+11. Häufige OAuth-Fehler, empfohlene Lösungen und Speicherorte der Debug-Logs.
 
 ---
 
 ## 📝 Änderungsprotokoll (Changelog)
+
+### 1.9.9
+
+- Screenshots und Dokumentation für die öffentliche Veröffentlichung finalisiert
+- Umfassende Screenshot-Beschreibungen für Login-Ablauf, Einstellungen, Anleitungen und Fehlerbehebung hinzugefügt
+- Kleinere Bereinigungen und Konsistenzverbesserungen in der Dokumentation
 
 ### 1.9.8
 

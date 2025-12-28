@@ -4,7 +4,7 @@ Tags: login, social login, google login, facebook login, naver login, kakao logi
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.9.8
+Stable tag: 1.9.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,12 +83,22 @@ Yes. You can insert social login buttons anywhere using the shortcode:
 For supported Providers such as Google and Facebook, profile images are automatically imported.
 
 == Screenshots ==
-1. Admin settings page
-2. Social login buttons example
-3. Premium Providers (Naver / Kakao / Line)
-4. Integration with the WordPress login form
+1. Social login buttons displayed on the WordPress login page (list layout).
+2. Icon-only social login buttons layout on the login screen.
+3. Post-login redirect options (dashboard, profile, front page, or custom URL).
+4. Debug logging, UI layout options, shortcode, and uninstall settings.
+5. Built-in setup guide explaining OAuth redirect rules and common requirements.
+6. Step-by-step Google OAuth consent screen and client setup guide.
+7. Admin settings for Google, Facebook, and LinkedIn login credentials.
+8. Admin settings for Naver, Kakao, and LINE login providers.
+9. Unified redirect URI rules used across all supported providers.
+10. Debug log location and troubleshooting overview.
+11. Common OAuth errors, solutions, and debug log locations for troubleshooting.
 
 == Changelog ==
+
+= 1.9.9 =
+* Finalized screenshots and documentation for public release.
 
 = 1.9.8 =
 * Fixed a fatal type error in SESLP_Avatar::resolve_user() by ensuring a WP_User or null return value

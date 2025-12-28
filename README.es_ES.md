@@ -104,14 +104,27 @@ Sí. Para proveedores compatibles como Google y Facebook, las imágenes de perfi
 
 ## 🖼 Capturas de pantalla
 
-1. Página de ajustes en el panel de administración
-2. Ejemplo de botones de inicio de sesión social
-3. Proveedores Premium (Naver / Kakao / Line)
-4. Integración con el formulario de inicio de sesión de WordPress
+1. Botones de inicio de sesión social mostrados en la página de inicio de sesión de WordPress (diseño en lista).
+2. Diseño de solo iconos para los botones de inicio de sesión social en la pantalla de acceso.
+3. Opciones de redirección después del inicio de sesión (escritorio, perfil, página principal o URL personalizada).
+4. Registro de depuración, opciones de diseño de la interfaz, shortcode y ajustes de desinstalación.
+5. Guía de configuración integrada que explica las reglas de redirección OAuth y los requisitos comunes.
+6. Guía paso a paso para configurar la pantalla de consentimiento y el cliente OAuth de Google.
+7. Ajustes de administrador para las credenciales de inicio de sesión de Google, Facebook y LinkedIn.
+8. Ajustes de administrador para los proveedores de inicio de sesión Naver, Kakao y LINE.
+9. Reglas unificadas de URI de redirección utilizadas en todos los proveedores compatibles.
+10. Ubicación del archivo de registro de depuración y vista general de solución de problemas.
+11. Errores comunes de OAuth, soluciones recomendadas y ubicación de los registros de depuración.
 
 ---
 
 ## 📝 Registro de cambios (Changelog)
+
+### 1.9.9
+
+- Finalización de capturas de pantalla y documentación para el lanzamiento público
+- Se añadieron descripciones completas de capturas de pantalla que cubren el flujo de inicio de sesión, ajustes, guías y solución de problemas
+- Pequeñas mejoras de limpieza y coherencia en la documentación
 
 ### 1.9.8
 

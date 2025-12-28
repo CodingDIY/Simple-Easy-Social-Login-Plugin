@@ -104,14 +104,27 @@ Sim. Para Providers compatíveis, como Google e Facebook, as imagens de perfil p
 
 ## 🖼 Capturas de tela
 
-1. Página de configurações no painel administrativo
-2. Exemplo de botões de login social
-3. Providers Premium (Naver / Kakao / Line)
-4. Integração com o formulário de login do WordPress
+1. Botões de login social exibidos na página de login do WordPress (layout em lista).
+2. Layout somente com ícones para os botões de login social na tela de login.
+3. Opções de redirecionamento após o login (painel, perfil, página inicial ou URL personalizada).
+4. Registro de depuração, opções de layout da interface, shortcode e configurações de desinstalação.
+5. Guia de configuração integrado explicando regras de redirecionamento OAuth e requisitos comuns.
+6. Guia passo a passo para configurar a tela de consentimento OAuth e o cliente do Google.
+7. Configurações administrativas para credenciais de login do Google, Facebook e LinkedIn.
+8. Configurações administrativas para provedores de login Naver, Kakao e LINE.
+9. Regras unificadas de URI de redirecionamento usadas em todos os provedores compatíveis.
+10. Localização dos logs de depuração e visão geral de solução de problemas.
+11. Erros comuns de OAuth, soluções recomendadas e local dos logs de depuração.
 
 ---
 
 ## 📝 Registro de alterações (Changelog)
+
+### 1.9.9
+
+- Finalização das capturas de tela e da documentação para o lançamento público
+- Adição de descrições completas das capturas de tela, abrangendo fluxo de login, configurações, guias e solução de problemas
+- Pequenas melhorias de limpeza e consistência na documentação
 
 ### 1.9.8
 

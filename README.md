@@ -113,14 +113,27 @@ Yes. For supported providers such as Google and Facebook, profile images can be 
 
 ## 🖼 Screenshots
 
-1. Admin settings page
-2. Social login buttons example
-3. Premium providers (Naver / Kakao / Line)
-4. Integration with the WordPress login form
+1. Social login buttons displayed on the WordPress login page (list layout).
+2. Icon-only social login buttons layout on the login screen.
+3. Post-login redirect options (dashboard, profile, front page, or custom URL).
+4. Debug logging, UI layout options, shortcode, and uninstall settings.
+5. Built-in setup guide explaining OAuth redirect rules and common requirements.
+6. Step-by-step Google OAuth consent screen and client setup guide.
+7. Admin settings for Google, Facebook, and LinkedIn login credentials.
+8. Admin settings for Naver, Kakao, and LINE login providers.
+9. Unified redirect URI rules used across all supported providers.
+10. Debug log location and troubleshooting overview.
+11. Common OAuth errors, solutions, and debug log locations for troubleshooting.
 
 ---
 
 ## 📝 Changelog
+
+### 1.9.9
+
+- Finalized screenshots and documentation for the public release
+- Added comprehensive screenshot descriptions covering login flow, settings, guides, and troubleshooting
+- Minor documentation cleanup and consistency improvements
 
 ### 1.9.8
 
