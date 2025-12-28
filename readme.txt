@@ -208,5 +208,5 @@ For supported Providers such as Google and Facebook, profile images are automati
 
 == Upgrade Notice ==
 
-= 1.9.8 =
+= 1.9.9 =
 This update improves stability, usability, and security. We recommend updating to the latest version.
