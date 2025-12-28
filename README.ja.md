@@ -1,4 +1,4 @@
-# Simple Easy Social Login
+# Simple Easy Social Login – OAuth Login
 
 Simple Easy Social Login は、WordPress サイトに高速かつ簡単なソーシャルログイン機能を追加できる、軽量でユーザーフレンドリーなプラグインです。
 

@@ -1,4 +1,4 @@
-=== Simple Easy Social Login ===
+=== Simple Easy Social Login – OAuth Login ===
 Contributors: selfcoding
 Tags: login, social login, google login, facebook login, naver login, kakao login, line login, linkedin login
 Requires at least: 6.0

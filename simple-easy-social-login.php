@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Simple Easy Social Login – Google, Facebook, Naver, Kakao, Line & LinkedIn
+ * Plugin Name: Simple Easy Social Login – OAuth Login
  * Description: Boost your WordPress site with a simple, easy, and lightweight social login solution. Instantly connect users through Google, Facebook, Naver, Kakao, Line, and LinkedIn. While keeping only the essential features for speed and reliability, this plugin offers detailed setup guides and full documentation on the official website — making social login integration effortless for everyone.
  * Author: selfcoding
  * Version: 1.9.9

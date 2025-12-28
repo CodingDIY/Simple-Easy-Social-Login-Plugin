@@ -1,4 +1,4 @@
-# Simple Easy Social Login
+# Simple Easy Social Login – OAuth Login
 
 Simple Easy Social Login 是一款輕量且使用者友善的 WordPress 外掛，可為您的網站新增快速、順暢的社群登入功能。
 

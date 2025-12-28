@@ -11,7 +11,7 @@
 
 ---
 
-# Simple Easy Social Login
+# Simple Easy Social Login – OAuth Login
 
 Simple Easy Social Login is a lightweight and user-friendly WordPress plugin that adds fast and seamless social login functionality to your website.
 

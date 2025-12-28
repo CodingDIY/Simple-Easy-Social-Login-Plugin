@@ -1,4 +1,4 @@
-# Simple Easy Social Login
+# Simple Easy Social Login – OAuth Login
 
 Simple Easy Social Login est une extension WordPress légère et conviviale qui permet d’ajouter une fonctionnalité de connexion sociale rapide et fluide à votre site.
 
