@@ -51,7 +51,11 @@ final class SESLP_Settings {
   }
 
   public static function register_settings(): void {
-    register_setting('seslp_group', 'seslp_options');
+    register_setting('seslp_group', 'seslp_options', [
+      'type'              => 'array',
+      'sanitize_callback' => ['SESLP_Settings', 'sanitize_options'],
+      'default'           => [],
+    ]);
 
     register_setting('seslp_group', 'seslp_uninstall_remove_data', [
       'type'              => 'string',
@@ -101,6 +105,43 @@ final class SESLP_Settings {
 
   public static function sanitize_yes_no($val): string {
     return (is_string($val) && strtolower($val) === 'yes') ? 'yes' : '';
+  }
+
+  // Sanitize seslp_options before saving to the database.
+  public static function sanitize_options($opts): array {
+    if (!is_array($opts)) {
+      return [];
+    }
+
+    $sanitized = $opts;
+
+    // Sanitize provider credentials.
+    if (isset($sanitized['providers']) && is_array($sanitized['providers'])) {
+      foreach ($sanitized['providers'] as $provider => $fields) {
+        if (!is_array($fields)) {
+          continue;
+        }
+
+        $p = sanitize_key((string) $provider);
+
+        foreach ($fields as $key => $value) {
+          $k = sanitize_key((string) $key);
+
+          // Default: treat provider fields as plain text.
+          $sanitized['providers'][$p][$k] = sanitize_text_field((string) $value);
+        }
+      }
+    }
+
+    // Sanitize any URL-like fields if present.
+    $url_keys = ['redirect_url', 'custom_url', 'url'];
+    foreach ($url_keys as $url_key) {
+      if (isset($sanitized[$url_key])) {
+        $sanitized[$url_key] = esc_url_raw((string) $sanitized[$url_key]);
+      }
+    }
+
+    return $sanitized;
   }
 
   private static function render_input(string $provider, string $key, bool $password = false): void {

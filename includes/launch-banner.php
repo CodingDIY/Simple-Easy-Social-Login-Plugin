@@ -46,7 +46,7 @@ function seslp_render_launch_promo_banner(): void {
       );
     ?>
     <br>
-    <a href="<?php echo esc_url( SESLP_Helpers::get_upgrade_url() ); ?>" target="_blank">
+    <a href="<?php echo esc_url( SESLP_Helpers::get_upgrade_url() ); ?>" target="_blank" rel="noopener noreferrer">
       <?php echo esc_html__( 'Upgrade to PRO & Apply Coupon', $td ); ?>
     </a>
     <br>
