@@ -18,22 +18,43 @@ $redir    = $opts['redirect'] ?? [];
 $mode     = isset($redir['mode']) ? (string) $redir['mode'] : 'front';
 $custom   = isset($redir['custom_url']) ? (string) $redir['custom_url'] : '';
 
-// Labels sourced from central registry (single source of truth)
-$base_labels_raw     = SESLP_Providers_Registry::base_labels();
-$label_overrides_raw = SESLP_Providers_Registry::label_overrides();
+// Base labels (fallback)
+$base_labels = array(
+	'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
+	'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
+);
 
-// Localize at render-time
-$base_labels = [
-  'id'     => __($base_labels_raw['id'], 'simple-easy-social-login-oauth-login'),
-  'secret' => __($base_labels_raw['secret'], 'simple-easy-social-login-oauth-login'),
-];
-
-$label_overrides = [];
-foreach ($label_overrides_raw as $p => $arr) {
-  $label_overrides[$p] = [];
-  if (isset($arr['id']))     $label_overrides[$p]['id']     = __($arr['id'], 'simple-easy-social-login-oauth-login');
-  if (isset($arr['secret'])) $label_overrides[$p]['secret'] = __($arr['secret'], 'simple-easy-social-login-oauth-login');
-}
+// Provider-specific overrides
+$label_overrides = array(
+	'google' => array(
+		'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'facebook' => array(
+		'id'     => __( 'App ID', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'App Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'linkedin' => array(
+		'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'naver' => array(
+		'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'kakao' => array(
+		'id'     => __( 'REST API Key', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'line' => array(
+		'id'     => __( 'Channel ID', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'Channel Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+	'weibo' => array(
+		'id'     => __( 'App Key', 'simple-easy-social-login-oauth-login' ),
+		'secret' => __( 'App Secret', 'simple-easy-social-login-oauth-login' ),
+	),
+);
 
 // Use global Freemius plan vars
 global $is_free, $is_pro, $is_max, $can_pro_features, $can_max_features, $provider_allowed, $providers;
@@ -88,7 +109,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
         <tr>
           <td colspan="2" class="seslp-no-padding-left">
             <h2 class="seslp-section-title">
-              <?php echo esc_html(ucfirst($prov)); ?> <?php echo esc_html_e('Login', 'simple-easy-social-login-oauth-login'); ?>
+              <?php echo esc_html( ucfirst( $prov ) ); ?>
+              <?php esc_html_e( 'Login', 'simple-easy-social-login-oauth-login' ); ?>
             </h2>
           </td>
         </tr>
@@ -157,7 +179,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <br>
 
-    <h2 class="seslp-section-title"><?php echo esc_html__('Post-login Redirect', 'simple-easy-social-login-oauth-login'); ?></h2>
+    <h2 class="seslp-section-title">
+      <?php echo esc_html__('Post-login Redirect', 'simple-easy-social-login-oauth-login'); ?></h2>
 
     <?php if ($can_pro_features) { ?>
 
@@ -216,7 +239,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <br>
 
-    <h2 class="seslp-section-title"><?php echo esc_html__('Debug Logging', 'simple-easy-social-login-oauth-login'); ?></h2>
+    <h2 class="seslp-section-title"><?php echo esc_html__('Debug Logging', 'simple-easy-social-login-oauth-login'); ?>
+    </h2>
 
     <table id="seslp-debug-table" class="form-table" role="presentation">
       <tbody>
@@ -234,7 +258,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
               <?php esc_html_e('Off', 'simple-easy-social-login-oauth-login'); ?>
             </label>
             <p class="description">
-              <?php esc_html_e('Writes to wp-content/SESLP-debug.log when enabled.', 'simple-easy-social-login-oauth-login'); ?></p>
+              <?php esc_html_e('Writes to wp-content/SESLP-debug.log when enabled.', 'simple-easy-social-login-oauth-login'); ?>
+            </p>
           </td>
         </tr>
         <tr id="seslp-tz-row">
@@ -332,7 +357,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <hr>
 
-    <h2 class="seslp-section-title"><?php echo esc_html__('Uninstall Options', 'simple-easy-social-login-oauth-login'); ?></h2>
+    <h2 class="seslp-section-title">
+      <?php echo esc_html__('Uninstall Options', 'simple-easy-social-login-oauth-login'); ?></h2>
 
     <?php if ($can_pro_features) {
       // Read current flags
@@ -390,6 +416,6 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <?php } ?>
 
-    <?php submit_button(__('Save Changes', 'simple-easy-social-login-oauth-login')); ?>
+    <?php submit_button( esc_html__( 'Save Changes', 'simple-easy-social-login-oauth-login' ) ); ?>
   </form>
 </div>
