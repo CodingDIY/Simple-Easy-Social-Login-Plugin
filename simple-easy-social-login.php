@@ -4,7 +4,7 @@
  * Description: Boost your WordPress site with a simple, easy, and lightweight social login solution. Instantly connect users through Google, Facebook, Naver, Kakao, Line, and LinkedIn. While keeping only the essential features for speed and reliability, this plugin offers detailed setup guides and full documentation on the official website — making social login integration effortless for everyone.
  * Author: selfcoding
  * Version: 1.9.9
- * Text Domain: se-social-login
+ * Text Domain: simple-easy-social-login-oauth-login
  * Domain Path: /languages
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -75,7 +75,6 @@ final class SESLP_Plugin {
 
   /** Delegate to global constants from includes/constants.php (single source of truth) */
   public const SLUG    = SESLP_SLUG;
-  public const TD      = SESLP_TD;
   public const VERSION = SESLP_VERSION;
 
   /** Paths */
@@ -88,9 +87,6 @@ final class SESLP_Plugin {
     $this->file = __FILE__;
     $this->dir  = plugin_dir_path($this->file);
     $this->url  = plugin_dir_url($this->file);
-
-    // Load textdomain immediately when the plugin instance is created
-    $this->load_textdomain();
   }
 
   /** Public singleton accessor */
@@ -121,12 +117,6 @@ final class SESLP_Plugin {
   }
   public static function deactivate(): void {
     // Keep options on deactivate; remove in uninstall.php if needed.
-  }
-
-  /** i18n */
-  public function load_textdomain(): void {
-    // Loads from /wp-content/languages/plugins/ as well as /languages in the plugin
-    load_plugin_textdomain(self::TD, false, dirname(plugin_basename($this->file)) . '/languages');
   }
 
   /** Public helper for templates: returns the provider-specific auth URL */

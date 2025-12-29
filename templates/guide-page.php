@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
     if ( ! empty( $guide_html ) ) {
       echo wp_kses_post( $guide_html );
     } else {
-      echo '<p>' . esc_html__( 'Guide content is not available.', SESLP_Plugin::TD ) . '</p>';
+      echo '<p>' . esc_html__( 'Guide content is not available.', 'simple-easy-social-login-oauth-login' ) . '</p>';
     }
     ?>
   </div>

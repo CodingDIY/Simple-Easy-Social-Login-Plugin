@@ -22,8 +22,8 @@ class SESLP_Guides {
 
     add_submenu_page(
       $parent_slug,
-      __('Guide', SESLP_Plugin::TD),
-      __('Guide', SESLP_Plugin::TD),
+      __('Guide', 'simple-easy-social-login-oauth-login'),
+      __('Guide', 'simple-easy-social-login-oauth-login'),
       'manage_options',
       'seslp-guide',
       [self::class, 'render_guide_page']
@@ -33,7 +33,7 @@ class SESLP_Guides {
   /** Entry point for the page. Loads template and passes data. */
   public static function render_guide_page(): void {
     if (!current_user_can('manage_options')) {
-      wp_die(esc_html__('You do not have sufficient permissions to access this page.', SESLP_Plugin::TD));
+      wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'simple-easy-social-login-oauth-login'));
     }
 
     // Reuse admin CSS with consistent handle & cache-busting (same as Settings).
@@ -88,7 +88,7 @@ class SESLP_Guides {
     if (!file_exists($template)) {
       // Fallback: simple inline output if template is missing.
       echo '<div class="wrap seslp-guide-wrap"><h1>'
-         . esc_html__('SESLP Guide', SESLP_Plugin::TD)
+         . esc_html__('SESLP Guide', 'simple-easy-social-login-oauth-login')
          . '</h1><div class="seslp-guide-content">'
          . $html
          . '</div></div>';
@@ -96,7 +96,7 @@ class SESLP_Guides {
     }
 
     // Provide data to template in scoped variables.
-    $page_title = __('SESLP Guide', SESLP_Plugin::TD);
+    $page_title = __('SESLP Guide', 'simple-easy-social-login-oauth-login');
     $guide_html = $html;
     $guide_file = $md_file;
 
@@ -118,8 +118,8 @@ class SESLP_Guides {
 
   /** Small info message as Markdown. */
   private static function not_found_message(): string {
-    return "### " . esc_html__('Guide not found', SESLP_Plugin::TD) . "\n\n"
-         . esc_html__('Please add a localized Markdown file under assets/md/{locale}.md', SESLP_Plugin::TD);
+    return "### " . esc_html__('Guide not found', 'simple-easy-social-login-oauth-login') . "\n\n"
+         . esc_html__('Please add a localized Markdown file under assets/md/{locale}.md', 'simple-easy-social-login-oauth-login');
   }
 
   /** Markdown → HTML using Parsedown located under assets/md/Parsedown.php (no fallback). */

@@ -17,8 +17,6 @@ if (!defined('ABSPATH')) exit;
 // ==== Plugin identity ====
 // Slug used for assets enqueue prefixes, option names suffixes, etc.
 const SESLP_SLUG = 'simple-easy-social-login';
-// Text domain (keep in sync with plugin header + .pot)
-const SESLP_TD = 'se-social-login';
 // Version (bump on release; use for cache-busting if needed)
 const SESLP_VERSION = '1.9.9';
 // ==== Provider slugs (shared by registry and provider classes) ====

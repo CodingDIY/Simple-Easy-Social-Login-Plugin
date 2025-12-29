@@ -27,8 +27,8 @@ final class SESLP_Settings {
 
     // 1) Top-level menu
     add_menu_page(
-      __( 'Simple Easy Social Login', SESLP_Plugin::TD ),  // Page title
-      __( 'SE Social Login', SESLP_Plugin::TD ),           // Menu title (top-level label)
+      __( 'Simple Easy Social Login', 'simple-easy-social-login-oauth-login' ),  // Page title
+      __( 'SE Social Login', 'simple-easy-social-login-oauth-login' ),           // Menu title (top-level label)
       'manage_options',                                    // Capability
       $settings_slug,                                      // Menu slug
       [ self::class, 'render_settings_page' ],             // Callback
@@ -42,8 +42,8 @@ final class SESLP_Settings {
 
     add_submenu_page(
       $settings_slug,                                               // Parent slug (this top-level menu)
-      __( 'Simple Easy Social Login – Setting', SESLP_Plugin::TD ), // Page title for the tab
-      __( 'Setting', SESLP_Plugin::TD ),                            // Submenu label
+      __( 'Simple Easy Social Login – Setting', 'simple-easy-social-login-oauth-login' ), // Page title for the tab
+      __( 'Setting', 'simple-easy-social-login-oauth-login' ),                            // Submenu label
       'manage_options',
       $settings_slug,                                               // Same slug → same page callback
       [ self::class, 'render_settings_page' ]
@@ -70,9 +70,9 @@ final class SESLP_Settings {
 
     add_settings_section(
       'seslp_section_main',
-      __('Providers', SESLP_Plugin::TD),
+      __('Providers', 'simple-easy-social-login-oauth-login'),
       function () {
-        echo '<p>' . esc_html__('Enter OAuth credentials for each provider.', SESLP_Plugin::TD) . '</p>';
+        echo '<p>' . esc_html__('Enter OAuth credentials for each provider.', 'simple-easy-social-login-oauth-login') . '</p>';
       },
       'seslp-settings'
     );
@@ -83,7 +83,7 @@ final class SESLP_Settings {
     foreach ($providers as $prov) {
       add_settings_field(
         "seslp_{$prov}_client_id",
-        sprintf(esc_html__('%s Client ID', SESLP_Plugin::TD), ucfirst($prov)),
+        sprintf(esc_html__('%s Client ID', 'simple-easy-social-login-oauth-login'), ucfirst($prov)),
         function () use ($prov) {
           self::render_input($prov, 'client_id');
         },
@@ -93,7 +93,7 @@ final class SESLP_Settings {
 
       add_settings_field(
         "seslp_{$prov}_client_secret",
-        sprintf(esc_html__('%s Client Secret', SESLP_Plugin::TD), ucfirst($prov)),
+        sprintf(esc_html__('%s Client Secret', 'simple-easy-social-login-oauth-login'), ucfirst($prov)),
         function () use ($prov) {
           self::render_input($prov, 'client_secret', true);
         },

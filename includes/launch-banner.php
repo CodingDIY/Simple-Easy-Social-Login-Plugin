@@ -11,9 +11,6 @@ function seslp_render_launch_promo_banner(): void {
   // Promotion end date (YYYY-MM-DD)
   $promo_end_date = '2026-02-28';
   $today = current_time('Y-m-d');
-
-  $td = SESLP_Plugin::TD;
-
   $is_pro_user = isset($GLOBALS['can_pro_features']) && true === (bool) $GLOBALS['can_pro_features'];
 
   if ($today > $promo_end_date || $is_pro_user) {
@@ -25,8 +22,8 @@ function seslp_render_launch_promo_banner(): void {
     🎉 <?php
       $title = sprintf(
         /* translators: %s: promotion end date text. */
-        __( 'Launch Promotion (%s)', $td ),
-        __( 'Valid until February 2026.', $td )
+        __( 'Launch Promotion (%s)', 'simple-easy-social-login-oauth-login' ),
+        __( 'Valid until February 2026.', 'simple-easy-social-login-oauth-login' )
       );
       echo esc_html($title);
     ?>
@@ -39,7 +36,7 @@ function seslp_render_launch_promo_banner(): void {
       echo wp_kses_post(
         sprintf(
           /* translators: 1: discount text (e.g. 30%), 2: list of PRO providers. */
-          __( 'Get <strong>%1$s OFF PRO features</strong> (%2$s).', $td ),
+          __( 'Get <strong>%1$s OFF PRO features</strong> (%2$s).', 'simple-easy-social-login-oauth-login' ),
           esc_html($discount_text),
           esc_html($providers_text)
         )
@@ -47,7 +44,7 @@ function seslp_render_launch_promo_banner(): void {
     ?>
     <br>
     <a href="<?php echo esc_url( SESLP_Helpers::get_upgrade_url() ); ?>" target="_blank" rel="noopener noreferrer">
-      <?php echo esc_html__( 'Upgrade to PRO & Apply Coupon', $td ); ?>
+      <?php echo esc_html__( 'Upgrade to PRO & Apply Coupon', 'simple-easy-social-login-oauth-login' ); ?>
     </a>
     <br>
   </p>

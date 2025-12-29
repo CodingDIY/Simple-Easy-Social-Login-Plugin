@@ -41,18 +41,18 @@ $is_configured = static function (string $prov): bool {
 };
 ?>
 <div class="seslp-logins">
-  <p><strong><?php esc_html_e('Social Login with:', SESLP_Plugin::TD); ?></strong></p>
+  <p><strong><?php esc_html_e('Social Login with:', 'simple-easy-social-login-oauth-login'); ?></strong></p>
 
   <?php
   // Inline error: map seslp_err values to friendly messages
   if (isset($_GET['seslp_err'])) {
     $err = sanitize_key((string) $_GET['seslp_err']);
     $friendly_map = [
-      'email_exists'   => __('This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider).', SESLP_Plugin::TD),
-      'invalid_state'  => __('Your session has expired or the login attempt was invalid. Please try again.', SESLP_Plugin::TD),
-      'unknown_error'  => __('An unknown error occurred. Please try again.', SESLP_Plugin::TD),
-      'token_failed'   => __('Failed to obtain access token from the provider. Please try again.', SESLP_Plugin::TD),
-      'profile_failed' => __('Failed to fetch your profile information from the provider. Please try again.', SESLP_Plugin::TD),
+      'email_exists'   => __('This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider).', 'simple-easy-social-login-oauth-login'),
+      'invalid_state'  => __('Your session has expired or the login attempt was invalid. Please try again.', 'simple-easy-social-login-oauth-login'),
+      'unknown_error'  => __('An unknown error occurred. Please try again.', 'simple-easy-social-login-oauth-login'),
+      'token_failed'   => __('Failed to obtain access token from the provider. Please try again.', 'simple-easy-social-login-oauth-login'),
+      'profile_failed' => __('Failed to fetch your profile information from the provider. Please try again.', 'simple-easy-social-login-oauth-login'),
     ];
 
     if (isset($friendly_map[$err])) {
