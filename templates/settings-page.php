@@ -162,8 +162,8 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
             ?>
             <p class="description">
               <?php
-                /* translators: %s: Documentation link. */
                 printf(
+                  /* translators: %s: Documentation link. */
                   esc_html__( 'Need help? Follow %s', 'simple-easy-social-login-oauth-login' ),
                   '<a href="' . esc_url($seslp_doc_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'this documentation page', 'simple-easy-social-login-oauth-login' ) . '</a>'
                 );
@@ -226,8 +226,8 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
     <p class="description">
       <?php
-        /* translators: %s: Required plan name, e.g. Pro. */
         printf(
+          /* translators: %s: Required plan name, e.g. Pro. */
           esc_html__( 'This feature is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
           'Pro'
         );
@@ -328,8 +328,8 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
     <p class="description">
       <?php
-        /* translators: %s: Required plan name, e.g. Pro. */
         printf(
+          /* translators: %s: Required plan name, e.g. Pro. */
           esc_html__( 'This section is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
           'Pro'
         );
@@ -407,8 +407,8 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
     <p class="description">
       <?php
-        /* translators: %s: Required plan name, e.g. Pro. */
         printf(
+          /* translators: %s: Required plan name, e.g. Pro. */
           esc_html__( 'This section is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
           'Pro'
         );

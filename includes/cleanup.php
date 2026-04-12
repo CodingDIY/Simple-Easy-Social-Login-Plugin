@@ -49,12 +49,12 @@ if (!function_exists('seslp_cleanup_single_site')) {
 
     $seslp_like = $wpdb->esc_like($seslp_prefix) . '%';
 
-    $wpdb->query(
+    $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup requires direct deletion of plugin-owned options.
       $wpdb->prepare(
         "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
         $seslp_like
       )
-    ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup requires direct deletion of plugin-owned options.
+    ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- WordPress core table name from $wpdb.
 
     if (function_exists('wp_clear_scheduled_hook')) {
       foreach (['seslp_cron_cleanup', 'seslp_cron_sync'] as $seslp_hook) {
@@ -63,12 +63,12 @@ if (!function_exists('seslp_cleanup_single_site')) {
     }
 
     if (seslp_should_remove_data()) {
-      $wpdb->query(
+      $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup requires direct deletion of plugin-owned user meta.
         $wpdb->prepare(
           "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s",
           $seslp_like
         )
-      ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup requires direct deletion of plugin-owned user meta.
+      ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- WordPress core table name from $wpdb.
 
       if (seslp_should_deep_clean()) {
         $seslp_maybe_tables = [
@@ -76,14 +76,14 @@ if (!function_exists('seslp_cleanup_single_site')) {
         ];
 
         foreach ($seslp_maybe_tables as $seslp_table) {
-          $seslp_exists = $wpdb->get_var(
+          $seslp_exists = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup checks whether the plugin table exists before dropping it.
             $wpdb->prepare('SHOW TABLES LIKE %s', $seslp_table)
-          ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Cleanup checks whether the plugin table exists before dropping it.
+          );
 
           if ($seslp_exists === $seslp_table) {
-            $wpdb->query(
+            $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Cleanup intentionally drops a plugin-owned table built from the current site prefix and fixed suffix.
               "DROP TABLE IF EXISTS `{$seslp_table}`"
-            ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Cleanup intentionally drops a plugin-owned table built from the current site prefix and fixed suffix.
+            ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is built from the current site prefix and fixed plugin suffix.
           }
         }
       }
