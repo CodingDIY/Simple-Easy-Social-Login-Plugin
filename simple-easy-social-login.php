@@ -21,6 +21,7 @@ foreach ([
   'vendor/init-freemius.php', // Freemius start
   'includes/constants.php',
   'includes/helpers.php',
+  'includes/cleanup.php',
   'includes/logger.php',
   'providers/class-SESLP-providers-registry.php',
   'vendor/vars-freemius.php', // freemius variables
@@ -52,6 +53,10 @@ unset($seslp_rel, $seslp_p, $seslp_dir);
 /** Freemius bootstrap (externalized) */
 if (function_exists('simple_easy_social_login_freemius')) {
   simple_easy_social_login_freemius()->set_basename(true, __FILE__);
+}
+
+if (function_exists('simple_easy_social_login_freemius') && function_exists('seslp_uninstall_cleanup')) {
+  simple_easy_social_login_freemius()->add_action('after_uninstall', 'seslp_uninstall_cleanup');
 }
 
 /**
@@ -139,17 +144,33 @@ final class SESLP_Plugin {
 }
 
 /** Bootstrap */
-add_action('plugins_loaded', static function () {
+function seslp_bootstrap(): void {
   SESLP_Plugin::instance();
-  if (class_exists('SESLP_Settings')) { SESLP_Settings::init(); }
-  if (class_exists('SESLP_Assets')) { (new SESLP_Assets())->register(); }
-  if (class_exists('SESLP_UI')) { (new SESLP_UI())->register(); }
-  if (class_exists('SESLP_Auth')) { (new SESLP_Auth())->register(); }
-});
 
-add_action('admin_menu', static function () {
-  if (class_exists('SESLP_Guides')) { SESLP_Guides::register_menu(); }
-}, 99);
+  if (class_exists('SESLP_Settings')) {
+    SESLP_Settings::init();
+  }
+
+  if (class_exists('SESLP_Assets')) {
+    (new SESLP_Assets())->register();
+  }
+
+  if (class_exists('SESLP_UI')) {
+    (new SESLP_UI())->register();
+  }
+
+  if (class_exists('SESLP_Auth')) {
+    (new SESLP_Auth())->register();
+  }
+}
+add_action('plugins_loaded', 'seslp_bootstrap');
+
+function seslp_register_admin_menu(): void {
+  if (class_exists('SESLP_Guides')) {
+    SESLP_Guides::register_menu();
+  }
+}
+add_action('admin_menu', 'seslp_register_admin_menu', 99);
 
 /** Lifecycle */
 register_activation_hook(__FILE__, ['SESLP_Plugin', 'activate']);
