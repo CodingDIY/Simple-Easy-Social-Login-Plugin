@@ -119,6 +119,8 @@ final class SESLP_Plugin {
         ],
       ]);
     }
+    // Trigger redirect to settings page after activation
+    set_transient('seslp_activation_redirect', true, 30);
   }
   public static function deactivate(): void {
     // Keep options on deactivate; remove in uninstall.php if needed.
@@ -171,6 +173,26 @@ function seslp_register_admin_menu(): void {
   }
 }
 add_action('admin_menu', 'seslp_register_admin_menu', 99);
+
+function seslp_maybe_redirect_after_activation(): void {
+  if (!is_admin() || !current_user_can('manage_options')) {
+    return;
+  }
+
+  if (!get_transient('seslp_activation_redirect')) {
+    return;
+  }
+
+  delete_transient('seslp_activation_redirect');
+
+  if (wp_doing_ajax()) {
+    return;
+  }
+
+  wp_safe_redirect(admin_url('admin.php?page=seslp-settings'));
+  exit;
+}
+add_action('admin_init', 'seslp_maybe_redirect_after_activation');
 
 /** Lifecycle */
 register_activation_hook(__FILE__, ['SESLP_Plugin', 'activate']);
