@@ -31,7 +31,7 @@ final class SESLP_UI {
     $should_show  = (bool) apply_filters('seslp_show_login_buttons', $should_show, $opts);
 
     if ($should_show) {
-      echo $this->render_buttons_html();
+      echo wp_kses_post($this->render_buttons_html());
     }
   }
 

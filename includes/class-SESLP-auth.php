@@ -17,18 +17,18 @@ final class SESLP_Auth {
 
   /** Router — handles /?social_login={provider}&code=... */
   public function maybe_route_auth(): void {
-    if (empty($_GET['social_login'])) {
+    if (empty($_GET['social_login'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
       return;
     }
-    $provider = sanitize_key((string) $_GET['social_login']);
+    $provider = sanitize_key(wp_unslash($_GET['social_login'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
 
     SESLP_Logger::debug('Auth route triggered', [
       'provider' => $provider,
-      'has_code' => isset($_GET['code']) ? 1 : 0,
+      'has_code' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     ]);
 
     // Only handle callbacks here (start flow links go directly to provider auth URLs)
-    if (!isset($_GET['code'])) {
+    if (!isset($_GET['code'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
       return;
     }
 
@@ -39,7 +39,7 @@ final class SESLP_Auth {
       return;
     }
 
-    SESLP_Logger::notice('Unknown provider callback ignored', ['provider' => $provider]);
+    SESLP_Logger::warning('Unknown provider callback ignored', ['provider' => $provider]);
   }
 
   /** Map provider keys to callback handlers */
@@ -65,10 +65,10 @@ final class SESLP_Auth {
   /** Handle Google OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_google_callback(): void {
     // Validate state
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     SESLP_Logger::debug('Google callback received', [
       'state' => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0,
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     ]);
     if (!SESLP_State::validate('google', $state)) {
       SESLP_Logger::warning('Invalid state (google)', ['state' => $state]);
@@ -76,7 +76,7 @@ final class SESLP_Auth {
       exit;
     }
 
-    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     if ($code === '') {
       SESLP_Logger::warning('Missing code (google)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
@@ -172,8 +172,8 @@ final class SESLP_Auth {
   /** Handle Facebook OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_facebook_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
-    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
 
     SESLP_Logger::debug('Facebook callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
@@ -247,10 +247,10 @@ final class SESLP_Auth {
   /** Handle Naver OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_naver_callback(): void {
     // Validate state
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     SESLP_Logger::debug('Naver callback received', [
       'state' => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0,
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     ]);
     if (!SESLP_State::validate('naver', $state)) {
       SESLP_Logger::warning('Invalid state (naver)', ['state' => $state]);
@@ -259,7 +259,7 @@ final class SESLP_Auth {
     }
 
     // Read auth code
-    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     if ($code === '') {
       SESLP_Logger::warning('Missing code (naver)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
@@ -357,8 +357,8 @@ final class SESLP_Auth {
   /** Handle Kakao OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_kakao_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
-    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
 
     SESLP_Logger::debug('Kakao callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
@@ -432,8 +432,8 @@ final class SESLP_Auth {
   /** Handle Line OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_line_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
-    $code  = isset($_GET['code'])  ? sanitize_text_field((string) $_GET['code'])  : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
 
     SESLP_Logger::debug('Line callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
@@ -513,7 +513,7 @@ final class SESLP_Auth {
   private function handle_weibo_callback(): void {
     // Weibo provider has been deprecated/removed due to ICP constraints.
     // If this legacy path is reached (old bookmarks/links), redirect safely with a friendly flag.
-    SESLP_Logger::notice('Weibo callback reached after provider removal; redirecting safely.');
+    SESLP_Logger::info('Weibo callback reached after provider removal; redirecting safely.');
 
     $redirect = add_query_arg(
       [
@@ -529,10 +529,10 @@ final class SESLP_Auth {
 
   /* LinkedIn callback */
   private function handle_linkedin_callback(): void {
-    $state = isset($_GET['state']) ? sanitize_text_field((string) $_GET['state']) : '';
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     SESLP_Logger::debug('LinkedIn callback received', [
       'state'        => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0,
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     ]);
 
     if (!SESLP_State::validate('linkedin', $state)) {
@@ -541,7 +541,7 @@ final class SESLP_Auth {
       exit;
     }
 
-    $code = isset($_GET['code']) ? sanitize_text_field((string) $_GET['code']) : '';
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     if ($code === '') {
       SESLP_Logger::warning('Missing code (linkedin)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));

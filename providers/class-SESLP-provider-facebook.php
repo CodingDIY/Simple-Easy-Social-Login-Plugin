@@ -19,7 +19,7 @@ if (!interface_exists('SESLP_Provider_Interface')) {
 
 final class SESLP_Provider_Facebook implements SESLP_Provider_Interface {
   /** Provider slug */
-  private const SLUG = FB_SLUG;
+  private const SLUG = SESLP_FB_SLUG;
 
   /** Cached registry config */
   private array $cfg;

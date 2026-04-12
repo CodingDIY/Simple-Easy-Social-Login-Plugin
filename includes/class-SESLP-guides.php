@@ -90,7 +90,7 @@ class SESLP_Guides {
       echo '<div class="wrap seslp-guide-wrap"><h1>'
          . esc_html__('SESLP Guide', 'simple-easy-social-login-oauth-login')
          . '</h1><div class="seslp-guide-content">'
-         . $html
+         . wp_kses($html, $allowed)
          . '</div></div>';
       return;
     }
@@ -129,11 +129,11 @@ class SESLP_Guides {
     if (file_exists($parsedown_path)) {
       require_once $parsedown_path;
 
-      if (class_exists('\Parsedown')) {
-        $pd = new \Parsedown();
-        $pd->setBreaksEnabled(true);
+      if (class_exists('SESLP_Parsedown')) {
+        $seslp_pd = new SESLP_Parsedown();
+        $seslp_pd->setBreaksEnabled(true);
 
-        return $pd->text($md);
+        return $seslp_pd->text($md);
       }
     }
 

@@ -12,20 +12,20 @@ if (!defined('ABSPATH')) {
 }
 
 // Get options array (normalized)
-$raw_opts = get_option('seslp_options', []);
-$opts     = is_array($raw_opts) ? $raw_opts : [];
-$redir    = $opts['redirect'] ?? [];
-$mode     = isset($redir['mode']) ? (string) $redir['mode'] : 'front';
-$custom   = isset($redir['custom_url']) ? (string) $redir['custom_url'] : '';
+$seslp_raw_opts = get_option('seslp_options', []);
+$seslp_opts     = is_array($seslp_raw_opts) ? $seslp_raw_opts : [];
+$seslp_redir    = $seslp_opts['redirect'] ?? [];
+$seslp_mode     = isset($seslp_redir['mode']) ? (string) $seslp_redir['mode'] : 'front';
+$seslp_custom   = isset($seslp_redir['custom_url']) ? (string) $seslp_redir['custom_url'] : '';
 
 // Base labels (fallback)
-$base_labels = array(
+$seslp_base_labels = array(
 	'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
 	'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
 );
 
 // Provider-specific overrides
-$label_overrides = array(
+$seslp_label_overrides = array(
 	'google' => array(
 		'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
 		'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
@@ -60,7 +60,7 @@ $label_overrides = array(
 global $is_free, $is_pro, $is_max, $can_pro_features, $can_max_features, $provider_allowed, $providers;
 
 // Documents site url
-$docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') : '';
+$seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') : '';
 ?>
 
 <div class="wrap">
@@ -68,7 +68,7 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
   <?php
     // Show settings updated / error messages on our custom settings page
-    if (isset($_GET['settings-updated'])) {
+    if (isset($_GET['settings-updated'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading settings API redirect flag.
       add_settings_error(
         'seslp_messages',
         'seslp_message',
@@ -87,55 +87,55 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <table id="seslp-login-table" class="form-table" role="presentation">
 
-      <?php foreach ($providers as $prov) { 
+      <?php foreach ($providers as $seslp_prov) { 
         // Resolve labels with overrides, fallback to base
-        $id_label     = $label_overrides[$prov]['id']     ?? $base_labels['id'];
-        $secret_label = $label_overrides[$prov]['secret'] ?? $base_labels['secret'];
+        $seslp_id_label     = $seslp_label_overrides[$seslp_prov]['id']     ?? $seslp_base_labels['id'];
+        $seslp_secret_label = $seslp_label_overrides[$seslp_prov]['secret'] ?? $seslp_base_labels['secret'];
 
         // Read current values via helpers to reuse option cache and normalization
-        $id_val     = method_exists('SESLP_Helpers', 'get_client_id')
-          ? SESLP_Helpers::get_client_id($prov)
+        $seslp_id_val     = method_exists('SESLP_Helpers', 'get_client_id')
+          ? SESLP_Helpers::get_client_id($seslp_prov)
           : '';
-        $secret_val = method_exists('SESLP_Helpers', 'get_client_secret')
-          ? SESLP_Helpers::get_client_secret($prov)
+        $seslp_secret_val = method_exists('SESLP_Helpers', 'get_client_secret')
+          ? SESLP_Helpers::get_client_secret($seslp_prov)
           : '';
 
         // Build input names that keep the unified structure
-        $name_id     = "seslp_options[providers][{$prov}][client_id]";
-        $name_secret = "seslp_options[providers][{$prov}][client_secret]";
+        $seslp_name_id     = "seslp_options[providers][{$seslp_prov}][client_id]";
+        $seslp_name_secret = "seslp_options[providers][{$seslp_prov}][client_secret]";
       ?>
 
-      <tbody class="<?php echo 'login_' . esc_html(ucfirst($prov)); ?>">
+      <tbody class="<?php echo 'login_' . esc_html(ucfirst($seslp_prov)); ?>">
         <tr>
           <td colspan="2" class="seslp-no-padding-left">
             <h2 class="seslp-section-title">
-              <?php echo esc_html( ucfirst( $prov ) ); ?>
+              <?php echo esc_html( ucfirst( $seslp_prov ) ); ?>
               <?php esc_html_e( 'Login', 'simple-easy-social-login-oauth-login' ); ?>
             </h2>
           </td>
         </tr>
         <tr>
           <th scope="row">
-            <label for="seslp_<?php echo esc_attr($prov); ?>_client_id">
-              <?php echo esc_html($id_label); ?>
+            <label for="seslp_<?php echo esc_attr($seslp_prov); ?>_client_id">
+              <?php echo esc_html($seslp_id_label); ?>
             </label>
           </th>
           <td>
-            <input type="text" id="seslp_<?php echo esc_attr($prov); ?>_client_id"
-              name="<?php echo esc_attr($name_id); ?>" value="<?php echo esc_attr($id_val); ?>" class="regular-text"
+            <input type="text" id="seslp_<?php echo esc_attr($seslp_prov); ?>_client_id"
+              name="<?php echo esc_attr($seslp_name_id); ?>" value="<?php echo esc_attr($seslp_id_val); ?>" class="regular-text"
               autocomplete="off" />
           </td>
         </tr>
         <tr>
           <th scope="row">
-            <label for="seslp_<?php echo esc_attr($prov); ?>_client_secret">
-              <?php echo esc_html($secret_label); ?>
+            <label for="seslp_<?php echo esc_attr($seslp_prov); ?>_client_secret">
+              <?php echo esc_html($seslp_secret_label); ?>
             </label>
           </th>
           <td>
             <div class="seslp-secret-wrapper">
-              <input type="password" id="seslp_<?php echo esc_attr($prov); ?>_client_secret"
-                name="<?php echo esc_attr($name_secret); ?>" value="<?php echo esc_attr($secret_val); ?>"
+              <input type="password" id="seslp_<?php echo esc_attr($seslp_prov); ?>_client_secret"
+                name="<?php echo esc_attr($seslp_name_secret); ?>" value="<?php echo esc_attr($seslp_secret_val); ?>"
                 class="regular-text" autocomplete="off" />
               <button type="button" class="button button-link seslp-secret-toggle"
                 aria-label="<?php esc_attr_e('Show or hide secret', 'simple-easy-social-login-oauth-login'); ?>">
@@ -144,27 +144,28 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
             </div>
           </td>
         </tr>
-        <?php if (!empty($docs_base)) { ?>
+        <?php if (!empty($seslp_docs_base)) { ?>
         <tr>
           <th scope="row"></th>
           <td>
             <?php
               // Build provider-specific docs URL using base domain constant
-              $prov_slug = strtolower((string) $prov);
+              $seslp_prov_slug = strtolower((string) $seslp_prov);
 
               /** Allow overrides for provider-specific documentation links */
-              $doc_url = (string) apply_filters(
+              $seslp_doc_url = (string) apply_filters(
                 'seslp_provider_docs_url',
-                $docs_base . '/docs/plugins/se-social-login/' . $prov_slug,
-                $prov,
-                $docs_base
+                $seslp_docs_base . '/docs/plugins/se-social-login/' . $seslp_prov_slug,
+                $seslp_prov,
+                $seslp_docs_base
               );
             ?>
             <p class="description">
               <?php
+                /* translators: %s: Documentation link. */
                 printf(
                   esc_html__( 'Need help? Follow %s', 'simple-easy-social-login-oauth-login' ),
-                  '<a href="' . esc_url($doc_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'this documentation page', 'simple-easy-social-login-oauth-login' ) . '</a>'
+                  '<a href="' . esc_url($seslp_doc_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'this documentation page', 'simple-easy-social-login-oauth-login' ) . '</a>'
                 );
               ?>
             </p>
@@ -192,26 +193,26 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
             <fieldset>
               <label class="seslp-radio-label">
                 <input type="radio" name="seslp_options[redirect][mode]" value="dashboard"
-                  <?php checked($mode, 'dashboard'); ?> />
+                  <?php checked($seslp_mode, 'dashboard'); ?> />
                 <?php echo esc_html__('Dashboard (wp-admin)', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <label class="seslp-radio-label">
                 <input type="radio" name="seslp_options[redirect][mode]" value="profile"
-                  <?php checked($mode, 'profile'); ?> />
+                  <?php checked($seslp_mode, 'profile'); ?> />
                 <?php echo esc_html__('Profile page (wp-admin/profile.php)', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <label class="seslp-radio-label">
                 <input type="radio" name="seslp_options[redirect][mode]" value="front"
-                  <?php checked($mode, 'front'); ?> />
+                  <?php checked($seslp_mode, 'front'); ?> />
                 <?php echo esc_html__('Front page (home) — Default', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <label class="seslp-radio-label">
                 <input type="radio" name="seslp_options[redirect][mode]" value="custom"
-                  <?php checked($mode, 'custom'); ?> />
+                  <?php checked($seslp_mode, 'custom'); ?> />
                 <?php echo esc_html__('Custom URL', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <input type="url" class="regular-text" name="seslp_options[redirect][custom_url]"
-                value="<?php echo esc_attr($custom); ?>" placeholder="https://example.com/after-login" />
+                value="<?php echo esc_attr($seslp_custom); ?>" placeholder="https://example.com/after-login" />
               <p class="description">
                 <?php esc_html_e("When 'Custom URL' is selected, users are redirected to this address after login.", 'simple-easy-social-login-oauth-login'); ?>
               </p>
@@ -225,6 +226,7 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <p class="description">
       <?php
+        /* translators: %s: Required plan name, e.g. Pro. */
         printf(
           esc_html__( 'This feature is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
           'Pro'
@@ -248,13 +250,13 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
         <tr>
           <th scope="row"><?php esc_html_e('Enable logging', 'simple-easy-social-login-oauth-login'); ?></th>
           <td>
-            <?php $enabled = !empty($opts['debug']['enabled']) ? 1 : 0; ?>
+            <?php $seslp_enabled = !empty($seslp_opts['debug']['enabled']) ? 1 : 0; ?>
             <label class="seslp-inline-label">
-              <input type="radio" name="seslp_options[debug][enabled]" value="1" <?php checked($enabled, 1); ?> />
+              <input type="radio" name="seslp_options[debug][enabled]" value="1" <?php checked($seslp_enabled, 1); ?> />
               <?php esc_html_e('On', 'simple-easy-social-login-oauth-login'); ?>
             </label>
             <label>
-              <input type="radio" name="seslp_options[debug][enabled]" value="0" <?php checked($enabled, 0); ?> />
+              <input type="radio" name="seslp_options[debug][enabled]" value="0" <?php checked($seslp_enabled, 0); ?> />
               <?php esc_html_e('Off', 'simple-easy-social-login-oauth-login'); ?>
             </label>
             <p class="description">
@@ -267,17 +269,17 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
           <td>
             <select name="seslp_options[debug][timezone]">
               <?php
-              $current = $opts['debug']['timezone'] ?? 'UTC';
+              $seslp_current = $seslp_opts['debug']['timezone'] ?? 'UTC';
               foreach ([
                 'UTC'   => __('UTC', 'simple-easy-social-login-oauth-login'),
                 'local' => __('WordPress Local', 'simple-easy-social-login-oauth-login'),
                 'both'  => __('Both', 'simple-easy-social-login-oauth-login'),
-              ] as $val => $label) {
+              ] as $seslp_val => $seslp_label) {
                 printf(
                   '<option value="%s" %s>%s</option>',
-                  esc_attr($val),
-                  selected($current, $val, false),
-                  esc_html($label)
+                  esc_attr($seslp_val),
+                  selected($seslp_current, $seslp_val, false),
+                  esc_html($seslp_label)
                 );
               }
               ?>
@@ -301,16 +303,16 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
         <tr>
           <th scope="row"><?php echo esc_html__('Login buttons layout', 'simple-easy-social-login-oauth-login'); ?></th>
           <td>
-            <?php $layout = isset($opts['ui']['layout']) ? (string) $opts['ui']['layout'] : 'list'; ?>
+            <?php $seslp_layout = isset($seslp_opts['ui']['layout']) ? (string) $seslp_opts['ui']['layout'] : 'list'; ?>
             <fieldset>
               <label>
-                <input type="radio" name="seslp_options[ui][layout]" value="list" <?php checked($layout, 'list'); ?> />
+                <input type="radio" name="seslp_options[ui][layout]" value="list" <?php checked($seslp_layout, 'list'); ?> />
                 <?php echo esc_html__('List (logo + text, vertical)', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <br />
               <label>
                 <input type="radio" name="seslp_options[ui][layout]" value="icons"
-                  <?php checked($layout, 'icons'); ?> />
+                  <?php checked($seslp_layout, 'icons'); ?> />
                 <?php echo esc_html__('Icons only (horizontal)', 'simple-easy-social-login-oauth-login'); ?>
               </label>
               <p class="description">
@@ -326,10 +328,11 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <p class="description">
       <?php
-          printf(
-            esc_html__( 'This section is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
-            'Pro'
-          );
+        /* translators: %s: Required plan name, e.g. Pro. */
+        printf(
+          esc_html__( 'This section is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
+          'Pro'
+        );
         ?>
       <a href="<?php echo esc_url( admin_url('admin.php?page=seslp-settings-pricing') ); ?>">
         <?php echo esc_html__( 'See plans', 'simple-easy-social-login-oauth-login' ); ?>
@@ -362,8 +365,8 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <?php if ($can_pro_features) {
       // Read current flags
-      $rm  = get_option('seslp_uninstall_remove_data'); // 'yes' or ''
-      $deep = get_option('seslp_uninstall_deep_clean'); // 'yes' or ''
+      $seslp_rm  = get_option('seslp_uninstall_remove_data'); // 'yes' or ''
+      $seslp_deep = get_option('seslp_uninstall_deep_clean'); // 'yes' or ''
     ?>
 
     <table id="seslp-uninstall-table" class="form-table" role="presentation">
@@ -374,7 +377,7 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
             <input type="hidden" name="seslp_uninstall_remove_data" value="" />
             <label>
               <input type="checkbox" name="seslp_uninstall_remove_data" value="yes"
-                <?php checked(is_string($rm) && strtolower($rm) === 'yes'); ?> data-seslp-role="remove-data" />
+                <?php checked(is_string($seslp_rm) && strtolower($seslp_rm) === 'yes'); ?> data-seslp-role="remove-data" />
               <?php echo esc_html__('Delete plugin data on uninstall', 'simple-easy-social-login-oauth-login'); ?>
             </label>
             <p class="description">
@@ -383,13 +386,13 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
           </td>
         </tr>
         <tr id="seslp-deep-row"
-          class="<?php echo (is_string($rm) && strtolower($rm) === 'yes') ? '' : 'seslp-hidden'; ?>">
+          class="<?php echo (is_string($seslp_rm) && strtolower($seslp_rm) === 'yes') ? '' : 'seslp-hidden'; ?>">
           <th scope="row"><?php echo esc_html__('Deep clean', 'simple-easy-social-login-oauth-login'); ?></th>
           <td>
             <input type="hidden" name="seslp_uninstall_deep_clean" value="" />
             <label>
               <input type="checkbox" name="seslp_uninstall_deep_clean" value="yes"
-                <?php checked(is_string($deep) && strtolower($deep) === 'yes'); ?> data-seslp-role="deep-clean" />
+                <?php checked(is_string($seslp_deep) && strtolower($seslp_deep) === 'yes'); ?> data-seslp-role="deep-clean" />
               <?php echo esc_html__('Also drop custom tables / logs', 'simple-easy-social-login-oauth-login'); ?>
             </label>
             <p class="description">
@@ -404,6 +407,7 @@ $docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') :
 
     <p class="description">
       <?php
+        /* translators: %s: Required plan name, e.g. Pro. */
         printf(
           esc_html__( 'This section is available on %s and above.', 'simple-easy-social-login-oauth-login' ),
           'Pro'

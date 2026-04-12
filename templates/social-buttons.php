@@ -11,28 +11,28 @@ if (!defined('ABSPATH')) {
 }
 
 // Providers
-$providers = SESLP_Providers_Registry::list();
+$seslp_providers = SESLP_Providers_Registry::list();
 
 // Plugin base URL
-$base_url = SESLP_Plugin::instance()->url;
+$seslp_base_url = SESLP_Plugin::instance()->url;
 
-$opts = get_option('seslp_options', []);
-$opts = is_array($opts) ? $opts : [];
-$layout = isset($opts['ui']['layout']) && is_string($opts['ui']['layout'])
-    ? sanitize_key($opts['ui']['layout'])
+$seslp_opts = get_option('seslp_options', []);
+$seslp_opts = is_array($seslp_opts) ? $seslp_opts : [];
+$seslp_layout = isset($seslp_opts['ui']['layout']) && is_string($seslp_opts['ui']['layout'])
+    ? sanitize_key($seslp_opts['ui']['layout'])
     : 'list';
 
 // Local helper: check if provider credentials exist (uses cached helpers first, legacy fallback second).
-$is_configured = static function (string $prov): bool {
-  $prov = sanitize_key($prov);
+$seslp_is_configured = static function (string $seslp_prov): bool {
+  $seslp_prov = sanitize_key($seslp_prov);
 
-  $id     = SESLP_Helpers::get_client_id($prov);
-  $secret = SESLP_Helpers::get_client_secret($prov);
+  $id     = SESLP_Helpers::get_client_id($seslp_prov);
+  $secret = SESLP_Helpers::get_client_secret($seslp_prov);
 
   // Fallback to legacy flat options (e.g., seslp_weibo_client_id / _client_secret)
   if ($id === '' || $secret === '') {
-    $legacy_id     = trim((string) get_option('seslp_' . $prov . '_client_id', ''));
-    $legacy_secret = trim((string) get_option('seslp_' . $prov . '_client_secret', ''));
+    $legacy_id     = trim((string) get_option('seslp_' . $seslp_prov . '_client_id', ''));
+    $legacy_secret = trim((string) get_option('seslp_' . $seslp_prov . '_client_secret', ''));
     if ($id === '')     $id     = $legacy_id;
     if ($secret === '') $secret = $legacy_secret;
   }
@@ -45,9 +45,9 @@ $is_configured = static function (string $prov): bool {
 
   <?php
   // Inline error: map seslp_err values to friendly messages
-  if (isset($_GET['seslp_err'])) {
-    $err = sanitize_key((string) $_GET['seslp_err']);
-    $friendly_map = [
+  if (isset($_GET['seslp_err'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading login error flag from redirect query string.
+    $seslp_err = sanitize_key(wp_unslash($_GET['seslp_err'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading login error flag from redirect query string.
+    $seslp_friendly_map = [
       'email_exists'   => __('This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider).', 'simple-easy-social-login-oauth-login'),
       'invalid_state'  => __('Your session has expired or the login attempt was invalid. Please try again.', 'simple-easy-social-login-oauth-login'),
       'unknown_error'  => __('An unknown error occurred. Please try again.', 'simple-easy-social-login-oauth-login'),
@@ -55,38 +55,38 @@ $is_configured = static function (string $prov): bool {
       'profile_failed' => __('Failed to fetch your profile information from the provider. Please try again.', 'simple-easy-social-login-oauth-login'),
     ];
 
-    if (isset($friendly_map[$err])) {
+    if (isset($seslp_friendly_map[$seslp_err])) {
       echo '<div class="seslp-inline-error is-error"><small>'
-        . esc_html($friendly_map[$err])
+        . esc_html($seslp_friendly_map[$seslp_err])
         . '</small></div>';
     }
   }
   ?>
 
-  <div class="seslp-buttons layout-<?php echo esc_attr($layout); ?>">
-    <?php foreach ($providers as $prov) {
+  <div class="seslp-buttons layout-<?php echo esc_attr($seslp_layout); ?>">
+    <?php foreach ($seslp_providers as $seslp_prov) {
       // Decide if provider is configured before asking for an auth URL
-      $configured = $is_configured($prov) && class_exists('SESLP_Provider_' . ucfirst($prov));
+      $seslp_configured = $seslp_is_configured($seslp_prov) && class_exists('SESLP_Provider_' . ucfirst($seslp_prov));
 
       // If not configured (or provider class missing), do not render this provider at all.
-      if (!$configured) {
+      if (!$seslp_configured) {
         continue;
       }
 
       // Build URL and UI pieces
-      $raw_url = (string) SESLP_Plugin::instance()->auth_url($prov);
-      if ($raw_url === '' || $raw_url === '#') {
+      $seslp_raw_url = (string) SESLP_Plugin::instance()->auth_url($seslp_prov);
+      if ($seslp_raw_url === '' || $seslp_raw_url === '#') {
         // Safety: if an unexpected empty URL sneaks in, skip rendering
         continue;
       }
-      $href     = esc_url($raw_url);
-      $img_url  = esc_url($base_url . 'assets/images/img-logo-' . $prov . '.png');
-      $label    = esc_html(ucfirst($prov) . ' Login');
+      $seslp_href     = $seslp_raw_url;
+      $seslp_img_url  = $seslp_base_url . 'assets/images/img-logo-' . $seslp_prov . '.png';
+      $seslp_label    = ucfirst($seslp_prov) . ' Login';
       ?>
-    <a class="seslp-btn seslp-<?php echo esc_attr($prov); ?>" href="<?php echo $href; ?>">
-      <img class="seslp-logo" src="<?php echo $img_url; ?>" alt="<?php echo esc_attr(ucfirst($prov)); ?>" />
-      <?php if ($layout !== 'icons') { ?>
-      <span class="seslp-label"><?php echo $label; ?></span>
+    <a class="seslp-btn seslp-<?php echo esc_attr($seslp_prov); ?>" href="<?php echo esc_url($seslp_href); ?>">
+      <img class="seslp-logo" src="<?php echo esc_url($seslp_img_url); ?>" alt="<?php echo esc_attr(ucfirst($seslp_prov)); ?>" />
+      <?php if ($seslp_layout !== 'icons') { ?>
+      <span class="seslp-label"><?php echo esc_html($seslp_label); ?></span>
       <?php } ?>
     </a>
     <?php } ?>

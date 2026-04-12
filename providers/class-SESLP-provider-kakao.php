@@ -19,7 +19,7 @@ if (!interface_exists('SESLP_Provider_Interface')) {
 
 final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
   /** Provider slug */
-  private const SLUG = KA_SLUG;
+  private const SLUG = SESLP_KA_SLUG;
 
   /** Cached registry config */
   private array $cfg;

@@ -76,9 +76,13 @@ function seslp_cleanup_single_site(string $prefix = 'seslp_'): void {
   $like = $wpdb->esc_like($prefix) . '%';
 
   // options
-  $options_table = $wpdb->options;
   /* delete options starting with our prefix */
-  $wpdb->query($wpdb->prepare("DELETE FROM {$options_table} WHERE option_name LIKE %s", $like));
+  $wpdb->query(
+    $wpdb->prepare(
+      "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+      $like
+    )
+  ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- WordPress core table name from $wpdb.
 
   // site transients stored as options may also match the prefix, covered above when named with our prefix
 
@@ -97,8 +101,12 @@ function seslp_cleanup_single_site(string $prefix = 'seslp_'): void {
   // 3) Conditionally remove user meta & other data if admin opted in
   if (seslp_should_remove_data()) {
     // user meta
-    $usermeta_table = $wpdb->usermeta;
-    $wpdb->query($wpdb->prepare("DELETE FROM {$usermeta_table} WHERE meta_key LIKE %s", $like));
+    $wpdb->query(
+      $wpdb->prepare(
+        "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s",
+        $like
+      )
+    ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- WordPress core table name from $wpdb.
 
     // Deep clean: drop custom tables if they exist
     if (seslp_should_deep_clean()) {
@@ -108,7 +116,7 @@ function seslp_cleanup_single_site(string $prefix = 'seslp_'): void {
       foreach ($maybe_tables as $table) {
         $exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
         if ($exists === $table) {
-          $wpdb->query("DROP TABLE IF EXISTS `{$table}`");
+          $wpdb->query("DROP TABLE IF EXISTS `{$table}`"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is built from the current site prefix and a fixed plugin suffix.
         }
       }
     }
@@ -119,8 +127,8 @@ function seslp_cleanup_single_site(string $prefix = 'seslp_'): void {
 // Run cleanup: single or multisite
 // ----------------------------------------
 if (is_multisite()) {
-  $site_ids = get_sites([ 'fields' => 'ids' ]);
-  foreach ($site_ids as $blog_id) {
+  $seslp_site_ids = get_sites([ 'fields' => 'ids' ]);
+  foreach ($seslp_site_ids as $blog_id) {
     switch_to_blog((int) $blog_id);
     seslp_cleanup_single_site($seslp_prefix);
     restore_current_blog();

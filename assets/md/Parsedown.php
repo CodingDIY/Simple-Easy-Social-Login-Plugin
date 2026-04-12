@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+  exit; // Exit if accessed directly
+}
 #
 #
 # Parsedown
@@ -12,7 +15,8 @@
 #
 #
 
-class Parsedown
+// Parsedown library (renamed with SESLP_ prefix for WordPress.org compliance)
+class SESLP_Parsedown
 {
     # ~
 

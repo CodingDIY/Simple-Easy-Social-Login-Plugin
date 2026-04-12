@@ -83,6 +83,7 @@ final class SESLP_Settings {
     foreach ($providers as $prov) {
       add_settings_field(
         "seslp_{$prov}_client_id",
+        /* translators: %s: Provider name (e.g., Google, Naver). */
         sprintf(esc_html__('%s Client ID', 'simple-easy-social-login-oauth-login'), ucfirst($prov)),
         function () use ($prov) {
           self::render_input($prov, 'client_id');
@@ -93,6 +94,7 @@ final class SESLP_Settings {
 
       add_settings_field(
         "seslp_{$prov}_client_secret",
+        /* translators: %s: Provider name (e.g., Google, Naver). */
         sprintf(esc_html__('%s Client Secret', 'simple-easy-social-login-oauth-login'), ucfirst($prov)),
         function () use ($prov) {
           self::render_input($prov, 'client_secret', true);
@@ -161,11 +163,11 @@ final class SESLP_Settings {
 
   public static function enqueue_admin_assets(string $hook): void {
     // Load on all SESLP admin pages: settings, pricing, account, etc.
-    if (!isset($_GET['page'])) {
+    if (!isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading current admin page slug.
       return;
     }
 
-    $page = sanitize_key((string) $_GET['page']);
+    $page = sanitize_key(wp_unslash($_GET['page'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading current admin page slug.
 
     // seslp-settings, seslp-settings-pricing, seslp-settings-account ...
     if (strpos($page, 'seslp-settings') !== 0) {

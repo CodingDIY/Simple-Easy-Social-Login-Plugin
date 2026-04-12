@@ -1,12 +1,14 @@
 === Simple Easy Social Login – OAuth Login ===
 Contributors: selfcoding
-Tags: login, social login, google login, facebook login, naver login, kakao login, line login, linkedin login
+Tags: social login, oauth login, google login, naver login, woocommerce
 Requires at least: 6.0
 Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.9.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+Add Google, Facebook, LinkedIn, Naver, Kakao, and Line social login to WordPress and WooCommerce.
 
 == Description ==
 Simple Easy Social Login is a lightweight WordPress plugin that allows you to add fast and easy social login functionality to your website.

@@ -17,7 +17,7 @@ if (!interface_exists('SESLP_Provider_Interface')) {
 }
 
 final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
-  public const SLUG = LK_SLUG;
+  public const SLUG = SESLP_LK_SLUG;
 
   /** Cached registry config */
   private array $cfg;

@@ -47,19 +47,40 @@ final class SESLP_Logger {
     );
 
     $path = WP_CONTENT_DIR . '/' . self::FILE;
+    $fs   = self::filesystem();
 
-    // Write with file lock; fallback to error_log on failure
-    $fh = @fopen($path, 'ab');
-    if ($fh) {
-      if (flock($fh, LOCK_EX)) {
-        fwrite($fh, $line);
-        fflush($fh);
-        flock($fh, LOCK_UN);
-      }
-      fclose($fh);
-    } else {
-      error_log($line);
+    if (!$fs) {
+      return;
     }
+
+    $existing = '';
+    if ($fs->exists($path)) {
+      $existing = $fs->get_contents($path);
+      if (!is_string($existing)) {
+        $existing = '';
+      }
+    }
+
+    $fs->put_contents($path, $existing . $line, FS_CHMOD_FILE);
+  }
+
+  /**
+   * Initialize and return the WordPress filesystem instance.
+   */
+  private static function filesystem() {
+    global $wp_filesystem;
+
+    if ($wp_filesystem instanceof WP_Filesystem_Base) {
+      return $wp_filesystem;
+    }
+
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+
+    if (!WP_Filesystem()) {
+      return null;
+    }
+
+    return $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem : null;
   }
 
   public static function debug(string $msg, array $ctx = []): void {

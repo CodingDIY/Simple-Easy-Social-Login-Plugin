@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
 }
 
 /** Early includes (require once if files exist) */
-$__seslp_dir = plugin_dir_path(__FILE__);
+$seslp_dir = plugin_dir_path(__FILE__);
 foreach ([
   'vendor/init-freemius.php', // Freemius start
   'includes/constants.php',
@@ -41,13 +41,13 @@ foreach ([
   'includes/class-SESLP-ui.php',
   'includes/class-SESLP-auth.php',
   'includes/class-SESLP-guides.php',
-] as $__rel) {
-  $p = $__seslp_dir . $__rel;
-  if (file_exists($p)) {
-    require_once $p;
+] as $seslp_rel) {
+  $seslp_p = $seslp_dir . $seslp_rel;
+  if (file_exists($seslp_p)) {
+    require_once $seslp_p;
   }
 }
-unset($__rel, $p, $__seslp_dir);
+unset($seslp_rel, $seslp_p, $seslp_dir);
 
 /** Freemius bootstrap (externalized) */
 if (function_exists('simple_easy_social_login_freemius')) {
