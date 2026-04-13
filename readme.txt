@@ -23,9 +23,6 @@ The plugin is built on an extensible Provider-based architecture, which allows n
 Full documentation is available on GitHub:
 https://github.com/CodingDIY/Simple-Easy-Social-Login-Plugin
 
-🎉 Launch Promotion: Get 30% OFF **PREMIUM features (Naver, Kakao, and Line)** with a limited-time launch coupon.
-Valid until February 2026. Upgrade to PRO anytime and unlock premium social logins.
-
 == Features ==
 * Google Login (Free)
 * Facebook Login (Free)
