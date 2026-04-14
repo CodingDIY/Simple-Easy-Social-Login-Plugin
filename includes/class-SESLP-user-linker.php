@@ -6,11 +6,13 @@
  */
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
 final class SESLP_User_Linker {
   /**
-   * Link existing user by email or create a new one, then sign in.
+   * Link an existing user by email or create a new subscriber when registration is allowed, then sign in.
    *
    * @param array<string,string> $profile {id,email,name,picture}
    * @param string               $provider e.g. 'google', 'naver'
@@ -57,6 +59,13 @@ final class SESLP_User_Linker {
       }
     } else {
       // No user found → create a new one
+      if (!get_option('users_can_register')) {
+        SESLP_Logger::warning('Linker: user creation blocked because registration is disabled', [
+          'provider' => $prov,
+          'email'    => SESLP_Logger::mask_email($email),
+        ]);
+        return null;
+      }
       $username = $this->build_unique_username($email, $prov);
 
       $uid = wp_insert_user([
@@ -64,6 +73,7 @@ final class SESLP_User_Linker {
         'user_email'   => $email,
         'display_name' => $name !== '' ? $name : $username,
         'user_pass'    => wp_generate_password(24),
+        'role'         => 'subscriber',
       ]);
 
       if (is_wp_error($uid)) {
@@ -113,8 +123,7 @@ final class SESLP_User_Linker {
     ]);
 
     wp_set_current_user($user->ID);
-    // Preserve old behavior: new users get "remember me", existing users don't
-    wp_set_auth_cookie($user->ID, $created ? true : false);
+    wp_set_auth_cookie($user->ID, false);
 
     /**
      * Fires after a SESLP user is linked or created and signed in.
