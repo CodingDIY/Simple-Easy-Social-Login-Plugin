@@ -1,0 +1,934 @@
+<div class="seslp-guide-doc">
+  <blockquote>
+    <p>
+      Ce document explique comment configurer chaque fournisseur de connexion sociale (Google, Facebook,
+      LinkedIn, Naver, Kakao, LINE) dans le plugin <strong>Simple Easy Social Login (SESLP)</strong>.
+    </p>
+    <p>
+      Toutes les connexions reposent sur <strong>OAuth 2.0 / OpenID Connect (OIDC)</strong>.<br>
+      Vous devez créer une application (client) dans la console de chaque fournisseur et saisir le
+      <strong>Client ID / Client Secret</strong> dans SESLP.
+    </p>
+  </blockquote>
+
+  <hr>
+
+  <h2>🔧 Guide de configuration commune</h2>
+
+  <h4>1) <strong>Règle de Redirect URI :</strong></h4>
+
+  <p><code>https://{your-domain}/?social_login={provider}</code></p>
+
+  <p>Exemples :</p>
+
+  <ul>
+    <li>Google → <code>https://example.com/?social_login=google</code></li>
+    <li>Facebook → <code>https://example.com/?social_login=facebook</code></li>
+    <li>LinkedIn → <code>https://example.com/?social_login=linkedin</code></li>
+    <li>Naver → <code>https://example.com/?social_login=naver</code></li>
+    <li>Kakao → <code>https://example.com/?social_login=kakao</code></li>
+    <li>LINE → <code>https://example.com/?social_login=line</code></li>
+  </ul>
+
+  <h4>2) <strong>HTTPS requis.</strong></h4>
+
+  <p>La plupart des fournisseurs exigent HTTPS et rejetteront les redirections <code>http://</code>.</p>
+
+  <h4>3) <strong>Correspondance exacte</strong></h4>
+
+  <p>
+    La Redirect URI dans la console doit correspondre à <strong>100 %</strong> à celle envoyée par SESLP
+    (protocole, sous-domaine, chemin, slash final et chaîne de requête).
+  </p>
+
+  <h4>4) <strong>L’adresse e-mail peut être indisponible</strong></h4>
+
+  <p>
+    Certains fournisseurs permettent aux utilisateurs de refuser le partage de leur adresse e-mail.
+    SESLP peut alors utiliser des identifiants stables du fournisseur pour lier les comptes.
+  </p>
+
+  <h4>5) <strong>Où vérifier les journaux</strong></h4>
+
+  <ul>
+    <li><code>/wp-content/SESLP-debug.log</code></li>
+    <li><code>/wp-content/debug.log</code> (<code>WP_DEBUG_LOG = true</code>)</li>
+  </ul>
+
+  <h2>🐞 Journal de débogage &amp; dépannage</h2>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Comment lire les journaux de débogage SESLP</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <h4>Emplacement du fichier journal</h4>
+
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code> (journal de débogage SESLP)</li>
+        <li><code>/wp-content/debug.log</code> (<code>WP_DEBUG_LOG = true</code>)</li>
+      </ul>
+
+      <h4>Format du journal</h4>
+
+      <pre><code>[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}</code></pre>
+
+      <ul>
+        <li><code>Z</code> : UTC ou heure locale de WordPress (par ex. KST) — sélectionnable dans les paramètres SESLP</li>
+        <li>
+          Confidentialité : les e-mails, jetons et secrets sont automatiquement masqués
+          (exemple : <code>r********@g****.com</code>)
+        </li>
+      </ul>
+
+      <h4>Journaux du flux OAuth (généraux)</h4>
+
+      <p><strong>1) Démarrage d’OAuth</strong></p>
+
+      <pre><code>[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}</code></pre>
+
+      <p>
+        Signification : un jeton state de protection CSRF a été créé. <code>ttl</code> est valide pendant 10 minutes.
+      </p>
+
+      <p><strong>2) Callback déclenché</strong></p>
+
+      <pre><code>[DEBUG] Auth route triggered {"provider":"google","has_code":1}</code></pre>
+
+      <p>Signification : le callback a été atteint. <code>has_code:1</code> → le code OAuth <code>code</code> a été reçu.</p>
+
+      <p><strong>3) Validation du state</strong></p>
+
+      <p>Succès :</p>
+      <pre><code>[DEBUG] State validated {"provider":"google","state":"906****23"}</code></pre>
+
+      <p>Échec :</p>
+      <pre><code>[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}</code></pre>
+
+      <p><strong>4) Échange du jeton</strong></p>
+
+      <pre><code>[DEBUG] Token response (google) {"has_access_token":1}</code></pre>
+
+      <p>Signification : le jeton a été obtenu.</p>
+
+      <p>Échec :</p>
+      <pre><code>[ERROR] Token request failed (google) {"error":"..."}</code></pre>
+
+      <p><strong>5) Requête d’informations utilisateur</strong></p>
+
+      <pre><code>[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)</code></pre>
+
+      <p><strong>6) Lien utilisateur</strong></p>
+
+      <pre><code>[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}</code></pre>
+
+      <p><strong>7) Redirection</strong></p>
+
+      <pre><code>[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}</code></pre>
+
+      <h4>Tableau de référence rapide</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Message du journal (résumé)</th>
+            <th>Cause probable</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State validation failed</td>
+            <td>Délai dépassé, changement d’onglet, requête en double</td>
+            <td>Réessayez rapidement, utilisez le mode privé</td>
+          </tr>
+          <tr>
+            <td>Token request failed</td>
+            <td>Client ID/Secret/Redirect incorrect, requête bloquée</td>
+            <td>Vérifiez la console de développement, le pare-feu et l’heure du serveur</td>
+          </tr>
+          <tr>
+            <td>Userinfo invalid</td>
+            <td>Scope manquant ou e-mail privé</td>
+            <td>Ajoutez les scopes <code>email, profile</code> et demandez le consentement de l’utilisateur</td>
+          </tr>
+          <tr>
+            <td>User create failed</td>
+            <td>Conflit de compte ou restriction WordPress</td>
+            <td>Vérifiez les utilisateurs existants et les règles multisites</td>
+          </tr>
+          <tr>
+            <td>Redirect missing</td>
+            <td>Retour anticipé dans le code</td>
+            <td>Assurez-vous que la classe Redirect s’exécute après le callback</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>Informations utiles à inclure dans les rapports de bug</h4>
+
+      <ul>
+        <li>Lignes de journal pertinentes (masquées)</li>
+        <li>Fournisseur utilisé (Google/Naver/etc.)</li>
+        <li>Mode de redirection / URL personnalisée</li>
+        <li>État de l’enregistrement des journaux de débogage</li>
+        <li>Environnement WordPress (site unique, multisite, plugins de cache)</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <h2>🌍 Guides des fournisseurs</h2>
+
+  <p>
+    Développez chaque fournisseur ci-dessous et collez le contenu du guide en français que vous avez
+    préparé pour ce fournisseur.
+  </p>
+
+  <hr>
+
+  <details class="seslp-guide-accordion" open>
+    <summary><strong>Google</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>Scopes recommandés :</strong> <code>openid email profile</code></li>
+        <li><strong>Règle de Redirect URI :</strong> <code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Préparation (liste de vérification obligatoire)</h4>
+
+      <p>(1) <strong>HTTPS recommandé / pratiquement indispensable</strong> (utilisez des certificats de développement fiables pour les environnements locaux).</p>
+      <p>(2) La Redirect URI doit <strong>correspondre exactement à 100 %</strong> à la valeur enregistrée dans la console. Ex. : <code>https://example.com/?social_login=google</code></p>
+      <p>(3) En mode test, seuls les <strong>utilisateurs de test</strong> peuvent se connecter (jusqu’à 100 utilisateurs).</p>
+      <p>(4) Lorsque vous utilisez des URL de page d’accueil, de politique de confidentialité ou de conditions d’utilisation, l’enregistrement des <strong>domaines de l’application (Authorized domains)</strong> et la <strong>vérification de propriété</strong> peuvent être nécessaires.</p>
+
+      <h4>2) Configuration du projet / écran de consentement</h4>
+
+      <p>(1) Accédez à <strong>Google Cloud Console</strong>.<br><a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">https://console.cloud.google.com/apis/credentials</a></p>
+      <p>(2) Sélectionnez le projet en haut → <strong>Créer un nouveau projet</strong> (si nécessaire).</p>
+      <p>(3) Dans la barre latérale, allez dans <strong>APIs &amp; Services → OAuth consent screen</strong>.</p>
+      <p>(4) Sélectionnez le <strong>type d’utilisateur</strong> : généralement <strong>External</strong>.</p>
+      <p>(5) Saisissez les <strong>informations de l’application</strong> : nom de l’application, e-mail d’assistance utilisateur, logo (facultatif).</p>
+
+      <p>(6) Section <strong>App domain</strong></p>
+      <ul>
+        <li>Saisissez l’URL de la page d’accueil de l’application, l’URL de la politique de confidentialité et l’URL des conditions d’utilisation</li>
+        <li>Ajoutez le <strong>domaine racine (par ex. example.com)</strong> à <strong>Authorized domains</strong> → <strong>Save</strong></li>
+        <li>Si nécessaire, effectuez la <strong>vérification de propriété du domaine</strong> via Search Console.</li>
+      </ul>
+
+      <p>(7) Configurez les <strong>Scopes</strong></p>
+      <ul>
+        <li><strong>Recommandés :</strong> <code>openid</code>, <code>email</code>, <code>profile</code></li>
+        <li>Les scopes sensibles ou restreints peuvent nécessiter une vérification avant la mise en production.</li>
+      </ul>
+
+      <p>(8) Ajoutez des <strong>utilisateurs de test</strong> (adresses e-mail autorisées à se connecter en mode test).</p>
+      <p>(9) <strong>Save</strong>.</p>
+
+      <p><strong>Remarque :</strong> L’utilisation des scopes de base uniquement (<code>openid email profile</code>) permet souvent une mise en service (publication) <strong>sans examen</strong>.</p>
+
+      <h4>3) Créer un client OAuth (application Web)</h4>
+
+      <p>(1) Barre latérale : <strong>APIs &amp; Services → Credentials</strong>.</p>
+      <p>(2) En haut : <strong>+ Create Credentials → OAuth client ID</strong>.</p>
+      <p>(3) Type d’application : <code>Web application</code>.</p>
+      <p>(4) Saisissez un <strong>nom</strong> facilement identifiable (par ex. <code>SESLP – Front</code>).</p>
+
+      <p>(5) Ajoutez les <strong>Authorized redirect URIs</strong></p>
+      <ul>
+        <li><code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <p>(6) Cliquez sur <strong>Create</strong>, puis copiez le <strong>Client ID / Client Secret</strong> affiché.</p>
+
+      <p><strong>(Facultatif)</strong> Les Authorized JavaScript origins ne sont généralement pas nécessaires pour ce plugin utilisant le code grant.</p>
+
+      <h4>4) Configuration WordPress (plugin)</h4>
+
+      <p>(1) Administration WP → onglet <strong>SESLP Settings → Google</strong>.</p>
+      <p>(2) Collez le <strong>Client ID / Client Secret</strong> → <strong>Save</strong>.</p>
+      <p>(3) Testez avec le <strong>bouton de connexion Google</strong> sur le frontend du site.</p>
+
+      <h4>5) Passer du mode test à la production</h4>
+
+      <p>(1) Vérifiez <strong>OAuth consent screen → Publishing status</strong>.</p>
+      <p>(2) Pour passer du mode test à la production :</p>
+      <ul>
+        <li>Vérifiez que les informations de l’application (logo, domaine, politiques, conditions) sont exactes.</li>
+        <li>Supprimez les scopes inutiles et ne conservez que les nécessaires.</li>
+        <li>Soumettez une demande d’examen si vous utilisez des scopes sensibles.</li>
+      </ul>
+      <p>(3) Après le passage en production, tous les comptes Google peuvent se connecter.</p>
+
+      <h4>6) Erreurs courantes &amp; solutions</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ Se produit si la Redirect URI enregistrée dans la console et l’URI réelle de la requête diffèrent, même légèrement (y compris le protocole, le sous-domaine, le slash ou la requête). Corrigez-les pour qu’elles correspondent exactement.</p>
+
+      <p>(2) <strong>access_denied / disallowed_useragent</strong></p>
+      <p>→ Restrictions liées au navigateur ou à l’environnement in-app. Réessayez dans un navigateur classique.</p>
+
+      <p>(3) <strong>invalid_client / unauthorized_client</strong></p>
+      <p>→ Faute de frappe dans le Client ID/Secret ou problème d’état de l’application (supprimée/désactivée). Réémettez ou revérifiez les identifiants.</p>
+
+      <p>(4) <strong>L’e-mail est vide</strong></p>
+      <p>→ Vérifiez si le scope <code>email</code> est inclus, si l’écran de consentement s’affiche correctement et les paramètres de visibilité/sécurité de l’e-mail du compte. Expliquez clairement l’usage de l’autorisation e-mail dans l’écran de consentement.</p>
+
+      <p><strong>Vérifier les journaux :</strong></p>
+      <ul>
+        <li><code>wp-content/SESLP-debug.log</code> (débogage du plugin activé)</li>
+        <li><code>wp-content/debug.log</code> (<code>WP_DEBUG</code>, <code>WP_DEBUG_LOG = true</code>)</li>
+      </ul>
+
+      <h4>7) Liste de vérification récapitulative</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Écran de consentement OAuth : configurer les infos de l’application / domaine / politiques / conditions / scopes / utilisateurs de test</li>
+        <li><input type="checkbox" disabled> Identifiants : créer un client <strong>Web Application</strong></li>
+        <li><input type="checkbox" disabled> Enregistrer la Redirect URI : <code>https://{domain}/?social_login=google</code></li>
+        <li><input type="checkbox" disabled> SESLP : enregistrer le Client ID/Secret et tester la connexion</li>
+        <li><input type="checkbox" disabled> Modifier le statut de publication lors du passage en production (soumettre un examen si nécessaire)</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Facebook</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>URI de redirection :</strong> <code>https://{domain}/?social_login=facebook</code></li>
+        <li><strong>Autorisations demandées (recommandées) :</strong> <code>public_profile</code>, <code>email</code></li>
+        <li><strong>Facebook n’utilise pas</strong> <code>openid</code>.</li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Créer une application et ajouter un produit</h4>
+
+      <p>(1) Accédez à <strong>Meta for Developers</strong> → Connectez-vous<br><a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer">https://developers.facebook.com/</a></p>
+      <p>(2) Cliquez sur <strong>Create App</strong> → Sélectionnez un type général (par ex. Consumer) → Créez l’application</p>
+      <p>(3) Dans la barre latérale gauche, ajoutez <strong>Facebook Login</strong> depuis <strong>Products</strong></p>
+      <p>(4) Allez dans <strong>Settings</strong> → Vérifiez les éléments suivants :</p>
+
+      <ul>
+        <li><strong>Client OAuth Login :</strong> ON</li>
+        <li><strong>Web OAuth Login :</strong> ON</li>
+        <li><strong>Valid OAuth Redirect URIs :</strong></li>
+        <li>Ajoutez <code>https://{domain}/?social_login=facebook</code></li>
+        <li><strong>(Optionnel) Enforce HTTPS :</strong> recommandé par défaut</li>
+      </ul>
+
+      <h4>2) Paramètres de base de l’application (App Settings → Basic)</h4>
+
+      <p>(1) <strong>App Domains :</strong> <code>example.com</code> (domaine des URL de politique/conditions/page d’accueil)</p>
+      <p>(2) <strong>URL de politique de confidentialité :</strong> page publique accessible</p>
+      <p>(3) <strong>URL des conditions d’utilisation :</strong> page publique accessible</p>
+      <p>(4) <strong>Suppression des données utilisateur :</strong> fournir une URL de guide ou un endpoint de suppression</p>
+      <p>(5) <strong>Catégorie / Icône de l’application :</strong> configurer correctement, puis <strong>Save</strong></p>
+
+      <h4>3) Scopes (autorisations) et examen de l’application</h4>
+
+      <p>(1) Les autorisations de base requises pour la connexion standard sont <strong><code>public_profile</code></strong> ; l’e-mail optionnel est <strong><code>email</code></strong></p>
+      <p>(2) Dans la plupart des cas, <strong><code>email</code> peut être utilisé sans examen</strong>, mais des exceptions peuvent exister selon la région/le compte</p>
+      <p>(3) Les <strong>autorisations avancées</strong> (pages, publicités, etc.) nécessitent un <strong>App Review</strong> et une <strong>Business Verification</strong></p>
+
+      <h4>4) Changer de mode (Development → Live)</h4>
+
+      <p>En haut ou dans les paramètres de l’application, passez <strong>App Mode : Development → Live</strong></p>
+
+      <h4>5) Liste de vérification avant de passer en Live</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Préparer l’URL de politique de confidentialité / conditions / suppression des données</li>
+        <li><input type="checkbox" disabled> Saisir correctement les Valid OAuth Redirect URIs</li>
+        <li><input type="checkbox" disabled> Supprimer les autorisations inutiles, demander uniquement celles nécessaires</li>
+        <li><input type="checkbox" disabled> (Si nécessaire) Compléter l’App Review / Business Verification</li>
+      </ul>
+
+      <h4>6) Paramètres WordPress (SESLP)</h4>
+
+      <p>(1) Admin WP → <strong>SESLP Settings → Facebook</strong></p>
+      <p>(2) Saisissez <strong>App ID / App Secret</strong> → Enregistrer</p>
+      <p>(3) Testez avec le <strong>bouton de connexion Facebook</strong> sur le frontend</p>
+
+      <h4>7) Dépannage</h4>
+
+      <p>(1) <strong>Can't Load URL / erreur redirect_uri</strong></p>
+      <p>→ Assurez-vous que <strong>l’URI est exactement identique</strong> dans <strong>Valid OAuth Redirect URIs</strong> (protocole, sous-domaine, slash, paramètres)</p>
+
+      <p>(2) <strong>email null</strong></p>
+      <p>→ L’utilisateur n’a pas d’e-mail enregistré sur Facebook ou celui-ci est privé. Préparez une <strong>logique de liaison basée sur l’ID</strong> et expliquez clairement l’utilisation de l’e-mail dans l’écran de consentement</p>
+
+      <p>(3) <strong>Erreurs liées aux autorisations</strong></p>
+      <p>→ Si les scopes demandés dépassent les autorisations de base, un <strong>App Review / Business Verification</strong> est requis</p>
+
+      <p>(4) <strong>Impossible de passer en Live</strong></p>
+      <p>→ Si l’URL de politique/conditions/suppression des données est <strong>manquante ou non publique</strong>. Vous devez fournir une URL publique</p>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LinkedIn</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>URI de redirection :</strong> <code>https://{domain}/?social_login=linkedin</code></li>
+        <li><strong>Configuration requise :</strong> Activer OpenID Connect (OIDC)</li>
+        <li><strong>Scopes recommandés :</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+        <li>LinkedIn <strong>supprime progressivement</strong> les anciens scopes (<code>r_liteprofile</code>, <code>r_emailaddress</code>).</li>
+        <li>Les nouvelles applications <strong>doivent utiliser les scopes standard OIDC</strong>.</li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Créer une application</h4>
+
+      <p>(1) Accédez à <strong>LinkedIn Developers Console</strong></p>
+      <p>→ <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener noreferrer">https://www.linkedin.com/developers/apps</a></p>
+      <p>(2) Connectez-vous avec votre compte LinkedIn</p>
+      <p>(3) Cliquez sur <strong>Create app</strong></p>
+      <p>(4) Remplissez les champs requis :</p>
+
+      <ul>
+        <li><strong>Nom de l’application :</strong> par ex. <code>MySite LinkedIn Login</code></li>
+        <li><strong>Page LinkedIn :</strong> sélectionner ou « None »</li>
+        <li><strong>Logo de l’application :</strong> PNG/JPG 100×100+</li>
+        <li><strong>URL de la politique de confidentialité / e-mail professionnel :</strong> valides et publics</li>
+      </ul>
+
+      <p>(5) Cliquez sur <strong>Create app</strong></p>
+
+      <p><strong>Mode développement</strong> par défaut → permet de tester immédiatement la connexion avec <code>openid</code>, <code>profile</code>, <code>email</code> <strong>sans publication</strong></p>
+
+      <h4>2) Activer OpenID Connect (OIDC)</h4>
+
+      <p>(1) Allez dans l’onglet <strong>Products</strong></p>
+      <p>(2) Trouvez <strong>Sign In with LinkedIn using OpenID Connect</strong></p>
+      <p>(3) Cliquez sur <strong>Add product</strong> → approuvé instantanément</p>
+      <p>(4) Les paramètres OIDC apparaissent dans l’onglet <strong>Auth</strong></p>
+
+      <p><strong>Scopes OIDC requis</strong></p>
+      <ul>
+        <li><code>openid</code> → jeton ID</li>
+        <li><code>profile</code> → nom, photo, titre</li>
+        <li><code>email</code> → adresse e-mail</li>
+      </ul>
+
+      <h4>3) Paramètres OAuth 2.0 (onglet Auth)</h4>
+
+      <p>(1) Accédez à <strong>Auth → OAuth 2.0 settings</strong></p>
+      <p>(2) Ajoutez dans <strong>Redirect URLs</strong> :</p>
+      <p>→ <code>https://{domain}/?social_login=linkedin</code></p>
+      <p>(3) <strong>Correspondance exacte requise</strong> (protocole, sous-domaine, slash, requête)</p>
+      <p>(4) Enregistrez plusieurs URL si nécessaire :</p>
+      <ul>
+        <li>Local : <code>https://localhost:3000/?social_login=linkedin</code></li>
+        <li>Staging : <code>https://staging.example.com/?social_login=linkedin</code></li>
+        <li>Production : <code>https://example.com/?social_login=linkedin</code></li>
+      </ul>
+      <p>(5) Cliquez sur <strong>Save</strong></p>
+
+      <h4>4) Obtenir Client ID / Client Secret</h4>
+
+      <p>(1) Dans l’onglet <strong>Auth</strong>, trouvez :</p>
+      <ul>
+        <li><strong>Client ID</strong></li>
+        <li><strong>Client Secret</strong></li>
+      </ul>
+      <p>(2) Admin WordPress → <strong>SESLP Settings → LinkedIn</strong></p>
+      <p>(3) Collez les deux → <strong>Save</strong></p>
+      <p>(4) Testez avec le <strong>bouton de connexion LinkedIn</strong> sur le frontend</p>
+
+      <p><strong>Sécurité :</strong></p>
+      <ul>
+        <li>Ne jamais exposer le Client Secret</li>
+        <li>Utilisez <strong>Regenerate secret</strong> en cas de compromission</li>
+      </ul>
+
+      <h4>5) Explication des scopes</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Scope</th>
+            <th>Description</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>openid</code></td>
+            <td>Retourne un jeton ID conforme OIDC</td>
+            <td><strong>Requis</strong></td>
+          </tr>
+          <tr>
+            <td><code>profile</code></td>
+            <td>Nom, photo, titre, etc.</td>
+            <td><strong>Requis</strong></td>
+          </tr>
+          <tr>
+            <td><code>email</code></td>
+            <td>Adresse e-mail</td>
+            <td><strong>Requis</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>Anciennes scopes (<code>r_liteprofile</code>, <code>r_emailaddress</code>)</strong></p>
+      <ul>
+        <li><strong>Obsolètes après 2024</strong></li>
+        <li><strong>Non disponibles pour les nouvelles applications</strong></li>
+      </ul>
+
+      <h4>6) Dépannage</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ Les URI diffèrent même légèrement → assurez une <strong>correspondance à 100 %</strong></p>
+
+      <p>(2) <strong>invalid_client</strong></p>
+      <p>→ ID/Secret incorrect ou application inactive → vérifier ou régénérer</p>
+
+      <p>(3) <strong>email NULL</strong></p>
+      <p>→ L’utilisateur a refusé ou le scope <code>email</code> est manquant → expliquer l’utilisation dans l’écran de consentement</p>
+
+      <p>(4) <strong>insufficient_scope</strong></p>
+      <p>→ Scope demandé non approuvé → vérifier que OIDC est activé</p>
+
+      <p>(5) <strong>OIDC non activé</strong></p>
+      <p>→ Produit <strong>Sign In with LinkedIn using OpenID Connect</strong> manquant dans Products</p>
+
+      <p><strong>Journaux :</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) Liste de vérification récapitulative</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Application créée</li>
+        <li><input type="checkbox" disabled> Produit <strong>OpenID Connect</strong> ajouté</li>
+        <li><input type="checkbox" disabled> URI de redirection enregistrée exactement</li>
+        <li><input type="checkbox" disabled> Client ID/Secret enregistrés dans SESLP</li>
+        <li><input type="checkbox" disabled> Scopes : <code>openid profile email</code> (sans anciens scopes)</li>
+        <li><input type="checkbox" disabled> Test effectué sur frontend HTTPS</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>Remarque :</strong></p>
+      <ul>
+        <li>SESLP prend entièrement en charge le <strong>flux OIDC</strong>.</li>
+        <li>L’ancien OAuth 2.0 n’est <strong>plus pris en charge</strong>.</li>
+        <li>Utilisez toujours <strong>OpenID Connect</strong> pour les nouvelles intégrations.</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Naver</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>URI de redirection :</strong> <code>https://{domain}/?social_login=naver</code></li>
+        <li><strong>Scopes recommandés :</strong> Profil de base (<code>name</code>), e-mail (<code>email</code>)</li>
+        <li>Naver utilise l’API <strong>Naver Login (네아로)</strong>, <strong>HTTPS requis</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Enregistrement de l’application</h4>
+
+      <p>(1) Accédez au <strong>Naver Developer Center</strong></p>
+      <p>→ <a href="https://developers.naver.com/apps/" target="_blank" rel="noopener noreferrer">https://developers.naver.com/apps/</a></p>
+      <p>(2) Connectez-vous avec votre compte Naver</p>
+      <p>(3) Cliquez sur <strong>Application → Register Application</strong></p>
+      <p>(4) Remplissez les champs requis :</p>
+
+      <ul>
+        <li><strong>Nom de l’application :</strong> par ex. <code>MySite Naver Login</code></li>
+        <li><strong>Utilisation de l’API :</strong> sélectionnez <code>Naver Login (네아로)</code></li>
+        <li><strong>Ajouter un environnement → Web</strong></li>
+        <li><strong>URL du service :</strong> <code>https://example.com</code></li>
+        <li><strong>URL de callback :</strong> <code>https://example.com/?social_login=naver</code></li>
+      </ul>
+
+      <p>(5) Acceptez les conditions → <strong>Register</strong></p>
+
+      <p><strong>Remarque :</strong></p>
+      <ul>
+        <li><strong>HTTPS obligatoire</strong> → HTTP non autorisé</li>
+        <li><strong>Les sous-domaines doivent être enregistrés séparément</strong></li>
+      </ul>
+
+      <h4>2) Obtenir le Client ID / Client Secret</h4>
+
+      <p>(1) Accédez à <strong>My Applications</strong></p>
+      <p>(2) Cliquez sur l’application → copiez le <strong>Client ID</strong> et le <strong>Client Secret</strong></p>
+
+      <h4>3) Paramètres WordPress (plugin)</h4>
+
+      <p>(1) Admin WP → <strong>SESLP Settings → Naver</strong></p>
+      <p>(2) Collez le <strong>Client ID / Client Secret</strong></p>
+      <p>(3) Assurez-vous que l’<strong>URI de redirection</strong> correspond exactement : <code>https://{domain}/?social_login=naver</code></p>
+      <p>(4) <strong>Save</strong> → testez avec le <strong>bouton de connexion Naver</strong> sur le frontend</p>
+
+      <h4>4) Autorisations et fourniture des données</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Donnée</th>
+            <th>Scope</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nom</td>
+            <td><code>name</code></td>
+            <td>Par défaut</td>
+          </tr>
+          <tr>
+            <td>E-mail</td>
+            <td><code>email</code></td>
+            <td>Par défaut</td>
+          </tr>
+          <tr>
+            <td>Genre, date de naissance</td>
+            <td>Séparé</td>
+            <td><strong>Examen requis</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul>
+        <li>Les utilisateurs peuvent <strong>accepter/refuser</strong> sur l’écran de consentement</li>
+        <li>Si l’e-mail est refusé → <code>email = null</code> → utiliser une <strong>liaison basée sur l’ID</strong></li>
+        <li>Les données sensibles nécessitent un <strong>examen de l’application Naver</strong></li>
+      </ul>
+
+      <h4>5) Dépannage</h4>
+
+      <p>(1) <strong>Redirect URI mismatch</strong></p>
+      <p>→ Même une légère différence → assurez une <strong>correspondance à 100 %</strong></p>
+
+      <p>(2) <strong>Erreur HTTP</strong></p>
+      <p>→ Utiliser <strong>HTTPS</strong> obligatoirement</p>
+
+      <p>(3) <strong>Erreur de sous-domaine</strong></p>
+      <p>→ Enregistrer chaque sous-domaine séparément</p>
+
+      <p>(4) <strong>email NULL</strong></p>
+      <p>→ Refus utilisateur ou e-mail privé → prévoir une logique basée sur l’ID</p>
+
+      <p>(5) <strong>Examen requis</strong></p>
+      <p>→ Connexion de base : <strong>pas d’examen</strong><br>→ Données supplémentaires : <strong>examen requis</strong></p>
+
+      <p><strong>Journaux :</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>6) Liste de vérification récapitulative</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Application enregistrée dans Naver Developer Center</li>
+        <li><input type="checkbox" disabled> <strong>URL de callback</strong> enregistrée correctement</li>
+        <li><input type="checkbox" disabled> <strong>HTTPS</strong> utilisé</li>
+        <li><input type="checkbox" disabled> Sous-domaines enregistrés séparément (si nécessaire)</li>
+        <li><input type="checkbox" disabled> Client ID/Secret enregistrés dans SESLP</li>
+        <li><input type="checkbox" disabled> Test du comportement acceptation/refus de l’e-mail</li>
+        <li><input type="checkbox" disabled> Test de connexion frontend effectué</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>Remarque :</strong></p>
+      <ul>
+        <li>SESLP prend entièrement en charge <strong>Naver Login (네아로)</strong>.</li>
+        <li>La connexion de base (<code>name</code>, <code>email</code>) est <strong>disponible sans examen</strong>.</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Kakao</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+
+      <ul>
+        <li><strong>URI de redirection :</strong> <code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>Scopes recommandés :</strong> <code>profile_nickname</code>, <code>profile_image</code>, <code>account_email</code></li>
+        <li><code>account_email</code> disponible <strong>uniquement après vérification d’identité ou d’entreprise</strong></li>
+        <li><strong>HTTPS requis</strong>, <strong>activation du Client Secret obligatoire</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Créer une application</h4>
+
+      <p>(1) Accédez à <strong>Kakao Developers</strong></p>
+      <p>→ <a href="https://developers.kakao.com/" target="_blank" rel="noopener noreferrer">https://developers.kakao.com/</a></p>
+
+      <p>(2) Connectez-vous → <strong>My Applications → Add New App</strong></p>
+
+      <p>(3) Saisissez :</p>
+      <ul>
+        <li>Nom de l’application, nom de l’entreprise</li>
+        <li>Catégorie</li>
+        <li>Accepter la politique d’exploitation</li>
+      </ul>
+
+      <p>(4) <strong>Save</strong></p>
+
+      <h4>2) Activer Kakao Login</h4>
+
+      <p>(1) <strong>Product Settings &gt; Kakao Login</strong></p>
+      <p>(2) Activer <strong>Enable Kakao Login</strong> → <strong>ON</strong></p>
+
+      <p>(3) <strong>Enregistrer l’URI de redirection</strong></p>
+      <ul>
+        <li><code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>Save</strong></li>
+      </ul>
+
+      <p>(4) Le domaine doit correspondre au <strong>Platform site domain</strong></p>
+
+      <h4>3) Éléments de consentement (Scopes)</h4>
+
+      <p>(1) <strong>Consent Items</strong></p>
+      <p>(2) Ajouter et configurer :</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Scope</th>
+            <th>Description</th>
+            <th>Type de consentement</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profile_nickname</code></td>
+            <td>Pseudonyme</td>
+            <td>Obligatoire/Optionnel</td>
+            <td>Basique</td>
+          </tr>
+          <tr>
+            <td><code>profile_image</code></td>
+            <td>Image de profil</td>
+            <td>Obligatoire/Optionnel</td>
+            <td>Basique</td>
+          </tr>
+          <tr>
+            <td><code>account_email</code></td>
+            <td>Email</td>
+            <td><strong>Optionnel</strong></td>
+            <td><strong>Vérification requise</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>(3) Indiquer clairement l’<strong>objectif</strong> pour chacun</p>
+      <p>(4) <strong>Save</strong></p>
+
+      <p><strong>Remarque :</strong> Les scopes sensibles nécessitent une <strong>vérification</strong></p>
+
+      <h4>4) Enregistrer la plateforme Web</h4>
+
+      <p>(1) <strong>App Settings &gt; Platform</strong></p>
+      <p>(2) <strong>Register Web Platform</strong></p>
+      <p>(3) Domaine du site : <code>https://{domain}</code></p>
+      <p>(4) <strong>Save</strong> → doit correspondre au domaine de l’URI de redirection</p>
+
+      <h4>5) Sécurité – Générer et activer le Client Secret</h4>
+
+      <p>(1) <strong>Product Settings &gt; Security</strong></p>
+      <p>(2) <strong>Use Client Secret</strong> → <strong>ON</strong></p>
+      <p>(3) <strong>Generate Secret</strong> → copier la valeur</p>
+      <p>(4) <strong>Activation Status</strong> → <strong>Active</strong></p>
+      <p>(5) <strong>Save</strong></p>
+
+      <p><strong>Important :</strong> Il faut <strong>activer</strong> après génération</p>
+
+      <h4>6) Obtenir la clé REST API (Client ID)</h4>
+
+      <p>(1) <strong>App Keys</strong></p>
+      <p>(2) Copier la <strong>REST API Key</strong> → l’utiliser comme <strong>Client ID</strong></p>
+
+      <h4>7) Paramètres WordPress</h4>
+
+      <p>(1) Admin WP → <strong>SESLP Settings → Kakao</strong></p>
+      <p>(2) <strong>Client ID</strong> = REST API Key<br>
+        <strong>Client Secret</strong> = Secret généré</p>
+
+      <p>(3) <strong>Save</strong></p>
+      <p>(4) Tester avec le <strong>bouton de connexion Kakao</strong></p>
+
+      <h4>8) Dépannage</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → correspondance à 100 % requise</p>
+      <p>(2) <strong>invalid_client</strong> → Secret non activé ou erreur de saisie</p>
+      <p>(3) <strong>email vide</strong> → utilisateur refusé ou non vérifié</p>
+      <p>(4) <strong>Domain mismatch</strong> → plateforme vs URI de redirection</p>
+      <p>(5) <strong>HTTP interdit</strong> → <strong>HTTPS uniquement</strong></p>
+
+      <p><strong>Journaux :</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>9) Liste de vérification récapitulative</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Kakao Login activé</li>
+        <li><input type="checkbox" disabled> URI de redirection enregistrée</li>
+        <li><input type="checkbox" disabled> Domaine de la plateforme Web enregistré</li>
+        <li><input type="checkbox" disabled> Éléments de consentement configurés</li>
+        <li><input type="checkbox" disabled> Client Secret généré et activé</li>
+        <li><input type="checkbox" disabled> REST API Key / Secret enregistrés dans SESLP</li>
+        <li><input type="checkbox" disabled> Test effectué sur frontend HTTPS</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LINE</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>URI de redirection :</strong> <code>https://{domain}/?social_login=line</code></li>
+        <li><strong>Requis :</strong> Activer OpenID Connect, <strong>demander et obtenir l’approbation pour l’autorisation e-mail</strong></li>
+        <li><strong>Scopes recommandés :</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+        <li><strong>HTTPS obligatoire</strong>, <strong>l’autorisation e-mail nécessite une approbation</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Créer un provider et un channel</h4>
+
+      <p>(1) Accédez à la <strong>console LINE Developers</strong></p>
+      <p>→ <a href="https://developers.line.biz/console/" target="_blank" rel="noopener noreferrer">https://developers.line.biz/console/</a></p>
+
+      <p>(2) Connectez-vous avec un <strong>compte LINE Business</strong> (les comptes personnels ne sont pas autorisés)</p>
+      <p>(3) Cliquez sur <strong>Create a new provider</strong> → saisissez le nom → <strong>Create</strong></p>
+      <p>(4) Dans le provider → onglet <strong>Channels</strong></p>
+      <p>(5) Sélectionnez <strong>Create a LINE Login channel</strong></p>
+
+      <p>(6) Configurez :</p>
+      <ul>
+        <li><strong>Type de channel :</strong> <code>LINE Login</code></li>
+        <li><strong>Provider :</strong> sélectionner le provider créé</li>
+        <li><strong>Région :</strong> pays cible (ex. <code>South Korea</code>, <code>Japan</code>)</li>
+        <li><strong>Nom / description / icône :</strong> affichés sur l’écran de consentement</li>
+      </ul>
+
+      <p>(7) Acceptez les conditions → <strong>Create</strong></p>
+
+      <h4>2) Activer OpenID Connect et demander l’autorisation e-mail</h4>
+
+      <p>(1) Accédez à <strong>OpenID Connect</strong> dans le menu de gauche</p>
+      <p>(2) Cliquez sur <strong>Apply</strong> à côté de <strong>Email address permission</strong></p>
+
+      <p>(3) Remplissez la demande :</p>
+      <ul>
+        <li><strong>URL de la politique de confidentialité</strong> (doit être accessible publiquement)</li>
+        <li>Téléverser une <strong>capture d’écran de la politique de confidentialité</strong></li>
+        <li>Soumettre</li>
+      </ul>
+
+      <p>(4) Le scope <strong><code>email</code></strong> fonctionne uniquement après approbation<br>
+        → L’approbation prend généralement 1 à 3 jours ouvrables</p>
+
+      <h4>3) Enregistrer l’URL de callback et publier le channel</h4>
+
+      <p>(1) Accédez à <strong>LINE Login</strong> dans le menu de gauche</p>
+
+      <p>(2) Saisissez l’<strong>URL de callback</strong> :</p>
+      <p>→ <code>https://{domain}/?social_login=line</code></p>
+
+      <p>(3) <strong>Correspondance exacte requise</strong> :</p>
+      <ul>
+        <li>Protocole : <code>https://</code> (<strong>HTTP non autorisé</strong>)</li>
+        <li>Domaine, chemin, paramètres doivent correspondre à <strong>100 %</strong></li>
+      </ul>
+
+      <p>(4) Cliquez sur <strong>Save</strong></p>
+
+      <p>(5) Passez le statut du channel à <strong>Published</strong></p>
+      <ul>
+        <li><strong>Mode développement :</strong> test uniquement</li>
+        <li><strong>Published :</strong> service en production</li>
+      </ul>
+
+      <h4>4) Obtenir le Channel ID / Secret</h4>
+
+      <p>(1) En haut du channel ou dans <strong>Basic settings</strong></p>
+      <p>(2) <strong>Channel ID</strong> → SESLP <strong>Client ID</strong><br>
+        <strong>Channel Secret</strong> → SESLP <strong>Client Secret</strong></p>
+
+      <h4>5) Paramètres WordPress</h4>
+
+      <p>(1) Admin WP → <strong>SESLP Settings → LINE</strong></p>
+      <p>(2) <strong>Client ID</strong> ← Channel ID<br>
+        <strong>Client Secret</strong> ← Channel Secret</p>
+
+      <p>(3) <strong>Save</strong></p>
+      <p>(4) Tester avec le <strong>bouton de connexion LINE</strong> sur le frontend</p>
+
+      <h4>6) Dépannage</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → même une légère différence provoque une erreur → <strong>correspondance à 100 %</strong></p>
+      <p>(2) <strong>invalid_client</strong> → erreur dans le secret ou channel <strong>non publié</strong></p>
+      <p>(3) <strong>email NULL</strong> → <strong>autorisation e-mail non approuvée</strong> ou refus utilisateur</p>
+      <p>(4) <strong>HTTP non autorisé</strong> → <strong>HTTPS requis</strong> (localhost HTTPS possible)</p>
+      <p>(5) <strong>Limitation du mode développement</strong> → seuls les comptes de test peuvent se connecter</p>
+
+      <p><strong>Journaux :</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) Liste de vérification récapitulative</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Création du <strong>Provider + channel LINE Login</strong> avec un compte Business</li>
+        <li><input type="checkbox" disabled> <strong>Autorisation e-mail demandée et approuvée</strong></li>
+        <li><input type="checkbox" disabled> <strong>URL de callback</strong> enregistrée exactement</li>
+        <li><input type="checkbox" disabled> <strong>HTTPS utilisé</strong>, statut <strong>Published</strong></li>
+        <li><input type="checkbox" disabled> Channel ID/Secret enregistrés dans SESLP</li>
+        <li><input type="checkbox" disabled> Test de connexion frontend terminé</li>
+      </ul>
+
+      <p><strong>Remarque :</strong> SESLP prend entièrement en charge</p>
+      <ul>
+        <li><strong>LINE Login v2.1 + OpenID Connect</strong>.</li>
+        <li><strong>La collecte de l’e-mail nécessite une approbation préalable</strong>.</li>
+      </ul>
+    </div>
+  </details>
+</div>

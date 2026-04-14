@@ -1,0 +1,961 @@
+<div class="seslp-guide-doc">
+
+  <blockquote>
+    <p>
+      이 문서는 <strong>Simple Easy Social Login (SESLP)</strong> 플러그인에서
+      각 소셜 로그인 공급자(Google, Facebook, LinkedIn, Naver, Kakao, Line)를 설정하는 방법을 안내합니다.
+    </p>
+    <p>
+      모든 로그인은 <strong>OAuth 2.0 또는 OpenID Connect(OIDC)</strong> 표준에 기반하며,<br>
+      각 플랫폼의 콘솔에서 발급받은 <strong>Client ID / Secret</strong>을 입력해야 합니다.
+    </p>
+  </blockquote>
+
+  <hr>
+
+  <h2>🔧 공통 설정 가이드</h2>
+
+  <h4>1) <strong>Redirect URI 규칙:</strong></h4>
+
+  <p><code>https://{도메인}/?social_login={provider}</code></p>
+
+  <p>예:</p>
+
+  <ul>
+    <li>Google → <code>https://example.com/?social_login=google</code></li>
+    <li>Facebook → <code>https://example.com/?social_login=facebook</code></li>
+    <li>LinkedIn → <code>https://example.com/?social_login=linkedin</code></li>
+    <li>Naver → <code>https://example.com/?social_login=naver</code></li>
+    <li>Kakao → <code>https://example.com/?social_login=kakao</code></li>
+    <li>LINE → <code>https://example.com/?social_login=line</code></li>
+  </ul>
+
+  <h4>2) <strong>HTTPS 필수</strong></h4>
+
+  <p>대부분의 공급자는 HTTPS가 필요하며, <code>http://</code> 리디렉트는 거부됩니다.</p>
+
+  <h4>3) <strong>정확한 일치</strong></h4>
+
+  <p>
+    Redirect URI는 콘솔에 등록된 값과 <strong>100% 일치</strong>해야 합니다<br>
+    (프로토콜, 서브도메인, 경로, 쿼리 문자열까지 포함).
+  </p>
+
+  <h4>4) <strong>이메일 비공개 사용자 처리</strong></h4>
+
+  <p>
+    일부 공급자는 사용자가 이메일 제공을 거부할 수 있습니다.
+    이 경우 플러그인은 내부적으로 고유 ID 기반 사용자 연결을 지원합니다.
+  </p>
+
+  <h4>5) <strong>로그 확인 경로</strong></h4>
+
+  <ul>
+    <li><code>/wp-content/SESLP-debug.log</code></li>
+    <li><code>/wp-content/debug.log</code> (<code>WP_DEBUG_LOG = true</code>)</li>
+  </ul>
+
+  <h2>🐞 디버그 로그 및 문제 해결</h2>
+
+  <p>
+    SESLP는 OAuth 및 소셜 로그인 문제를 진단하는 데 도움이 되는 전용 디버그 로그 파일을 제공합니다.
+  </p>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>SESLP 디버그 로그 읽는 방법</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+
+      <h4>로그 파일 위치</h4>
+
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code> (SESLP 디버그 로그)</li>
+        <li><code>/wp-content/debug.log</code> (<code>WP_DEBUG_LOG = true</code>)</li>
+      </ul>
+
+      <h4>로그 형식</h4>
+
+      <pre><code>[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}</code></pre>
+
+      <ul>
+        <li><code>Z</code>: UTC 또는 워드프레스 로컬 시간대 (예: KST) — SESLP 설정에서 선택 가능</li>
+        <li>개인정보 보호: 이메일 / 토큰 / 시크릿 값은 자동으로 마스킹 처리됨 (예: <code>r********@g****.com</code>)</li>
+      </ul>
+
+      <h4>OAuth 흐름 로그 (일반적)</h4>
+
+      <p><strong>1) OAuth 시작</strong></p>
+
+      <pre><code>[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}</code></pre>
+
+      <p>의미: CSRF 보호를 위한 state 토큰이 생성되었습니다. <code>ttl</code>은 <strong>10분간 유효</strong>합니다.</p>
+
+      <p><strong>2) 콜백 진입</strong></p>
+
+      <pre><code>[DEBUG] Auth route triggered {"provider":"google","has_code":1}</code></pre>
+
+      <p>의미: 콜백 라우트에 진입했습니다. <code>has_code:1</code> → OAuth <code>code</code> 값을 수신했습니다.</p>
+
+      <p><strong>3) State 검증</strong></p>
+
+      <p>성공:</p>
+      <pre><code>[DEBUG] State validated {"provider":"google","state":"906****23"}</code></pre>
+
+      <p>실패:</p>
+      <pre><code>[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}</code></pre>
+
+      <p><strong>4) 토큰 교환</strong></p>
+
+      <pre><code>[DEBUG] Token response (google) {"has_access_token":1}</code></pre>
+
+      <p>의미: 액세스 토큰을 정상적으로 획득했습니다.</p>
+
+      <p>실패:</p>
+      <pre><code>[ERROR] Token request failed (google) {"error":"..."}</code></pre>
+
+      <p><strong>5) 사용자 정보 요청</strong></p>
+
+      <pre><code>[ERROR] Userinfo request failed (google)
+[WARNING] Invalid userinfo (google)</code></pre>
+
+      <p><strong>6) 사용자 연결 (Linker)</strong></p>
+
+      <pre><code>[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+[INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}</code></pre>
+
+      <p><strong>7) 리디렉션</strong></p>
+
+      <pre><code>[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}</code></pre>
+
+      <h4>빠른 참조 테이블</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>로그 메시지 (요약)</th>
+            <th>원인 추정</th>
+            <th>조치 방법</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State validation failed</td>
+            <td>타임아웃, 탭 전환, 중복 요청</td>
+            <td>빠르게 재시도, 시크릿/프라이빗 모드 사용</td>
+          </tr>
+          <tr>
+            <td>Token request failed</td>
+            <td>Client ID/Secret/Redirect 오류, 요청 차단</td>
+            <td>개발자 콘솔, 방화벽, 서버 시간 확인</td>
+          </tr>
+          <tr>
+            <td>Userinfo invalid</td>
+            <td>스코프 누락 또는 이메일 비공개</td>
+            <td><code>email, profile</code> 스코프 추가, 사용자 동의</td>
+          </tr>
+          <tr>
+            <td>User create failed</td>
+            <td>계정 충돌 또는 워드프레스 제한</td>
+            <td>기존 사용자, 멀티사이트 규칙 확인</td>
+          </tr>
+          <tr>
+            <td>Redirect missing</td>
+            <td>코드 내 조기 return</td>
+            <td>콜백 이후 Redirect 클래스 실행 여부 확인</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>버그 리포트에 포함하면 좋은 정보</h4>
+
+      <ul>
+        <li>관련 로그 라인 (마스킹된 상태)</li>
+        <li>사용한 Provider (Google / Naver 등)</li>
+        <li>리디렉션 모드 / 커스텀 URL</li>
+        <li>디버그 로그 활성화 상태</li>
+        <li>워드프레스 환경 (단일 사이트, 멀티사이트, 캐시 플러그인)</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <h2>🌍 Provider별 설정 가이드</h2>
+
+<blockquote>
+  <p>
+    아래의 각 공급자를 확장하고 해당 공급자를 위해 준비한 한국어 가이드 콘텐츠를 확인하세요.
+  </p>
+</blockquote>
+
+<hr>
+
+<details class="seslp-guide-accordion" open>
+  <summary><strong>Google (구글)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>권장 스코프:</strong> <code>openid email profile</code></li>
+      <li><strong>Redirect URI 규칙:</strong> <code>https://{도메인}/?social_login=google</code></li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 준비 사항 (필수 체크리스트)</h4>
+
+    <ul>
+      <li><strong>HTTPS 권장/사실상 필수</strong> (로컬은 신뢰된 개발용 인증서 사용)</li>
+      <li>Redirect URI는 콘솔에 등록한 값과 <strong>100% 일치</strong>해야 합니다<br>
+        예) <code>https://example.com/?social_login=google</code>
+      </li>
+      <li>테스트 모드에서는 <strong>테스트 사용자만 로그인 가능</strong> (최대 100명)</li>
+      <li>앱 도메인(Authorized domains) 등록 및 <strong>소유권 검증</strong>이 필요할 수 있음</li>
+    </ul>
+
+    <h4>2) 프로젝트 / 동의 화면 설정</h4>
+
+    <p>(1) <strong>Google Cloud Console</strong> 접속</p>
+    <p>→ <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">https://console.cloud.google.com/apis/credentials</a></p>
+
+    <p>(2) 프로젝트 선택 → <strong>새 프로젝트 생성</strong></p>
+    <p>(3) <strong>API 및 서비스 → OAuth 동의 화면</strong></p>
+    <p>(4) 사용자 유형: <strong>외부(External)</strong></p>
+
+    <p>(5) 앱 정보 입력</p>
+    <ul>
+      <li>앱 이름</li>
+      <li>사용자 지원 이메일</li>
+      <li>(선택) 로고</li>
+    </ul>
+
+    <p>(6) 앱 도메인 설정</p>
+    <ul>
+      <li>홈페이지 / 개인정보처리방침 / 약관 URL 입력</li>
+      <li><strong>Authorized domains</strong>에 루트 도메인 추가</li>
+      <li>필요 시 Search Console로 도메인 검증</li>
+    </ul>
+
+    <p>(7) 스코프 설정</p>
+    <ul>
+      <li>권장: <code>openid</code>, <code>email</code>, <code>profile</code></li>
+      <li>민감 스코프는 운영 전 검토 필요</li>
+    </ul>
+
+    <p>(8) 테스트 사용자 추가</p>
+    <p>(9) 저장</p>
+
+    <blockquote>
+      <p>기본 스코프만 사용하면 검토 없이 운영 가능한 경우가 많습니다.</p>
+    </blockquote>
+
+    <h4>3) OAuth 클라이언트 생성 (웹 애플리케이션)</h4>
+
+    <p>(1) <strong>API 및 서비스 → 사용자 인증 정보</strong></p>
+    <p>(2) <strong>OAuth 클라이언트 ID 생성</strong></p>
+    <p>(3) 애플리케이션 유형: <strong>웹 애플리케이션</strong></p>
+    <p>(4) 이름 설정 (예: SESLP – Front)</p>
+
+    <p>(5) Redirect URI 추가</p>
+    <ul>
+      <li><code>https://{도메인}/?social_login=google</code></li>
+    </ul>
+
+    <p>(6) 생성 → Client ID / Secret 복사</p>
+
+    <blockquote>
+      <p>JavaScript origin 설정은 일반적으로 필요 없습니다.</p>
+    </blockquote>
+
+    <h4>4) 워드프레스 설정</h4>
+
+    <p>(1) WP 관리자 → <strong>SESLP 설정 → Google</strong></p>
+    <p>(2) Client ID / Secret 입력 → 저장</p>
+    <p>(3) 프론트에서 로그인 테스트</p>
+
+    <h4>5) 테스트 → 운영 전환</h4>
+
+    <p>(1) OAuth 동의 화면 게시 상태 확인</p>
+
+    <p>(2) 운영 전환 시 체크</p>
+    <ul>
+      <li>앱 정보 / 도메인 / 정책 정확성</li>
+      <li>불필요 스코프 제거</li>
+      <li>필요 시 검토 요청</li>
+    </ul>
+
+    <p>(3) 운영 전환 후 전체 사용자 로그인 가능</p>
+
+    <h4>6) 자주 발생하는 오류</h4>
+
+    <p><strong>redirect_uri_mismatch</strong></p>
+    <p>→ URI 불일치 (프로토콜/서브도메인/쿼리 포함)</p>
+
+    <p><strong>access_denied / disallowed_useragent</strong></p>
+    <p>→ 브라우저 환경 문제 → 일반 브라우저 사용</p>
+
+    <p><strong>invalid_client</strong></p>
+    <p>→ Client ID/Secret 오류</p>
+
+    <p><strong>email 없음</strong></p>
+    <p>→ email 스코프 또는 사용자 설정 문제</p>
+
+    <p><strong>로그 확인:</strong></p>
+    <ul>
+      <li><code>wp-content/SESLP-debug.log</code></li>
+      <li><code>wp-content/debug.log</code></li>
+    </ul>
+
+    <h4>7) 요약 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> OAuth 동의 화면 설정 완료</li>
+      <li><input type="checkbox" disabled> 웹 애플리케이션 클라이언트 생성</li>
+      <li><input type="checkbox" disabled> Redirect URI 등록</li>
+      <li><input type="checkbox" disabled> SESLP 설정 입력 및 테스트</li>
+      <li><input type="checkbox" disabled> 운영 전환 준비 완료</li>
+    </ul>
+
+  </div>
+</details>
+
+<hr>
+
+<details class="seslp-guide-accordion">
+  <summary><strong>Facebook (페이스북)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>Redirect URI:</strong> <code>https://{도메인}/?social_login=facebook</code></li>
+      <li><strong>요청 권한(권장):</strong> <code>public_profile</code>, <code>email</code></li>
+      <li>Facebook은 <code>openid</code>를 사용하지 않습니다.</li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 앱 생성 및 제품 추가</h4>
+
+    <p>(1) <strong>Meta for Developers</strong> 접속 → 로그인</p>
+    <p>→ <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer">https://developers.facebook.com/</a></p>
+
+    <p>(2) <strong>Create App</strong> → 일반(Consumer 등) 유형 선택 → 앱 생성</p>
+    <p>(3) 왼쪽 <strong>Products</strong>에서 <strong>Facebook Login</strong> 추가</p>
+
+    <p>(4) <strong>Settings(설정)</strong> 진입 → 아래 항목 점검</p>
+
+    <ul>
+      <li><strong>Client OAuth Login:</strong> ON</li>
+      <li><strong>Web OAuth Login:</strong> ON</li>
+      <li><strong>Valid OAuth Redirect URIs:</strong>
+        <ul>
+          <li><code>https://{도메인}/?social_login=facebook</code></li>
+        </ul>
+      </li>
+      <li>(선택) <strong>Enforce HTTPS:</strong> 기본 권장</li>
+    </ul>
+
+    <h4>2) 앱 기본 설정 (App Settings → Basic)</h4>
+
+    <ul>
+      <li><strong>App Domains:</strong> <code>example.com</code></li>
+      <li><strong>Privacy Policy URL:</strong> 공개 접근 가능한 정책 페이지</li>
+      <li><strong>Terms of Service URL:</strong> 공개 접근 가능한 약관 페이지</li>
+      <li><strong>User Data Deletion:</strong> 삭제 지침 URL 또는 엔드포인트 제공</li>
+      <li><strong>Category / App Icon:</strong> 설정 후 <strong>Save</strong></li>
+    </ul>
+
+    <h4>3) 스코프(권한) 및 App Review</h4>
+
+    <ul>
+      <li>기본 권한: <code>public_profile</code></li>
+      <li>선택 권한: <code>email</code></li>
+      <li><code>email</code>은 대부분 검수 없이 사용 가능 (예외 존재)</li>
+      <li>고급 권한은 <strong>App Review / Business Verification 필요</strong></li>
+    </ul>
+
+    <h4>4) 모드 전환 (개발 → 운영)</h4>
+
+    <p>앱 설정에서 <strong>Development → Live</strong>로 전환</p>
+
+    <h4>5) Live 전환 전 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> Privacy Policy / Terms / Data Deletion URL 준비</li>
+      <li><input type="checkbox" disabled> Redirect URI 정확 입력</li>
+      <li><input type="checkbox" disabled> 불필요 권한 제거</li>
+      <li><input type="checkbox" disabled> 필요 시 App Review 완료</li>
+    </ul>
+
+    <h4>6) 워드프레스 설정 (SESLP)</h4>
+
+    <p>(1) WP 관리자 → <strong>SESLP 설정 → Facebook</strong></p>
+    <p>(2) <strong>App ID / App Secret</strong> 입력 → 저장</p>
+    <p>(3) 프론트에서 로그인 테스트</p>
+
+    <h4>7) 트러블슈팅</h4>
+
+    <p><strong>Can't Load URL / redirect_uri 에러</strong></p>
+    <p>→ Redirect URI가 콘솔 값과 정확히 일치하는지 확인</p>
+
+    <p><strong>email null</strong></p>
+    <p>→ 이메일 비공개 또는 미등록 → ID 기반 연결 필요</p>
+
+    <p><strong>권한 오류</strong></p>
+    <p>→ 고급 권한 사용 시 App Review 필요</p>
+
+    <p><strong>Live 전환 불가</strong></p>
+    <p>→ 정책/약관/데이터 삭제 URL 누락 또는 비공개</p>
+
+  </div>
+</details>
+
+<hr>
+
+<details class="seslp-guide-accordion">
+  <summary><strong>LinkedIn (링크드인)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>Redirect URI:</strong> <code>https://{도메인}/?social_login=linkedin</code></li>
+      <li><strong>필수 설정:</strong> OpenID Connect(OIDC) 활성화</li>
+      <li><strong>권장 스코프:</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+      <li>LinkedIn은 기존 <code>r_liteprofile</code>, <code>r_emailaddress</code> 스코프를 <strong>점진적으로 폐기</strong>하고 있으며, 신규 앱은 <strong>반드시 OIDC 표준 스코프</strong>를 사용해야 합니다.</li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 애플리케이션 생성</h4>
+
+    <p>(1) <strong>LinkedIn Developers 콘솔</strong> 접속</p>
+    <p>→ <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener noreferrer">https://www.linkedin.com/developers/apps</a></p>
+
+    <p>(2) LinkedIn 계정으로 로그인</p>
+    <p>(3) <strong>Create app</strong> 클릭</p>
+
+    <p>(4) 필수 항목 입력</p>
+    <ul>
+      <li><strong>App name:</strong> 서비스명 (예: <code>MySite LinkedIn Login</code>)</li>
+      <li><strong>LinkedIn Page:</strong> 회사 페이지 (없으면 “None” 선택)</li>
+      <li><strong>App logo:</strong> 100×100 이상 PNG/JPG</li>
+      <li><strong>Privacy Policy URL:</strong> 공개 접근 가능한 개인정보처리방침</li>
+      <li><strong>Business Email:</strong> 검증 가능한 이메일</li>
+    </ul>
+
+    <p>(5) <strong>Create app</strong> 클릭 → 앱 생성 완료</p>
+
+    <blockquote>
+      <p><strong>Development Mode</strong>가 기본 적용되어 <code>openid</code>, <code>profile</code>, <code>email</code> 기반 로그인 테스트를 <strong>즉시 진행</strong>할 수 있습니다.</p>
+    </blockquote>
+
+    <h4>2) OpenID Connect(OIDC) 활성화</h4>
+
+    <p>(1) 생성된 앱 페이지에서 <strong>Products</strong> 탭으로 이동</p>
+    <p>(2) <strong>Sign In with LinkedIn using OpenID Connect</strong> 항목 찾기</p>
+    <p>(3) <strong>Add product</strong> 클릭 → 승인 후 OIDC 사용 가능</p>
+    <p>(4) <strong>Auth</strong> 탭에서 OIDC 관련 설정 확인 가능</p>
+
+    <blockquote>
+      <p><strong>OIDC 스코프 사용 필수</strong></p>
+      <ul>
+        <li><code>openid</code> → ID 토큰 발급</li>
+        <li><code>profile</code> → 이름, 사진, 헤드라인 등</li>
+        <li><code>email</code> → 이메일 주소</li>
+      </ul>
+    </blockquote>
+
+    <h4>3) OAuth 2.0 설정 (Auth 탭)</h4>
+
+    <p>(1) <strong>Auth → OAuth 2.0 settings</strong> 이동</p>
+
+    <p>(2) <strong>Redirect URLs</strong> 섹션에 아래 URI 추가</p>
+    <p>→ <code>https://{도메인}/?social_login=linkedin</code></p>
+
+    <p>(3) <strong>정확한 일치</strong> 확인 (프로토콜, 서브도메인, 슬래시, 쿼리 포함)</p>
+
+    <p>(4) 여러 환경 사용 시 각각 등록</p>
+    <ul>
+      <li>로컬(Local): <code>https://localhost:3000/?social_login=linkedin</code></li>
+      <li>스테이징(Staging): <code>https://staging.example.com/?social_login=linkedin</code></li>
+      <li>운영(Production): <code>https://example.com/?social_login=linkedin</code></li>
+    </ul>
+
+    <p>(5) <strong>Save</strong> 클릭</p>
+
+    <h4>4) Client ID / Client Secret 확인 및 입력</h4>
+
+    <p>(1) <strong>Auth</strong> 탭 상단에서 확인</p>
+    <ul>
+      <li><strong>Client ID</strong></li>
+      <li><strong>Client Secret</strong></li>
+    </ul>
+
+    <p>(2) 워드프레스 관리자 → <strong>SESLP 설정 → LinkedIn</strong> 탭</p>
+    <p>(3) 두 값 붙여넣기 → <strong>저장</strong></p>
+    <p>(4) 프론트엔드에서 <strong>LinkedIn 로그인 버튼</strong>으로 실제 테스트</p>
+
+    <blockquote>
+      <p><strong>보안 주의</strong></p>
+      <ul>
+        <li>Client Secret은 절대 노출하지 마세요.</li>
+        <li>필요 시 <strong>Regenerate secret</strong>으로 재발급하세요.</li>
+      </ul>
+    </blockquote>
+
+    <h4>5) 스코프(Scopes) 및 권한 설명</h4>
+
+    <table>
+      <thead>
+        <tr>
+          <th>스코프</th>
+          <th>설명</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>openid</code></td>
+          <td>OpenID Connect 표준 ID 토큰 반환</td>
+          <td><strong>필수</strong></td>
+        </tr>
+        <tr>
+          <td><code>profile</code></td>
+          <td>이름, 사진, 헤드라인 등 프로필 정보</td>
+          <td><strong>필수</strong></td>
+        </tr>
+        <tr>
+          <td><code>email</code></td>
+          <td>이메일 주소 반환</td>
+          <td><strong>필수</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      <p><strong>구형 스코프 (<code>r_liteprofile</code>, <code>r_emailaddress</code>)</strong></p>
+      <p>→ <strong>2024년 이후 점진적 폐기 예정</strong><br>
+         → 신규 앱은 <strong>사용 불가</strong>, 기존 앱도 OIDC 전환 권장</p>
+    </blockquote>
+
+    <h4>6) 트러블슈팅 및 유의사항</h4>
+
+    <p>(1) <strong>redirect_uri_mismatch</strong></p>
+    <p>→ 등록된 URI와 요청 URI가 <strong>조금이라도 다를 경우</strong> 발생<br>
+       → 프로토콜, 서브도메인, 슬래시, 쿼리까지 <strong>100% 일치</strong> 확인</p>
+
+    <p>(2) <strong>invalid_client</strong></p>
+    <p>→ Client ID/Secret 오타 또는 앱 비활성 상태<br>
+       → 재확인 또는 <strong>Regenerate secret</strong></p>
+
+    <p>(3) <strong>email NULL</strong></p>
+    <p>→ 사용자 동의 거부 또는 <code>email</code> 스코프 누락<br>
+       → 동의 화면에서 이메일 사용 목적을 명확히 설명</p>
+
+    <p>(4) <strong>insufficient_scope</strong></p>
+    <p>→ 요청 스코프가 앱에 승인되지 않음<br>
+       → OIDC 활성화 및 스코프 재확인</p>
+
+    <p>(5) <strong>OIDC not enabled</strong></p>
+    <p>→ Products 탭에서 <strong>OpenID Connect</strong>를 추가하지 않음</p>
+
+    <p><strong>로그 확인 경로:</strong></p>
+    <ul>
+      <li><code>/wp-content/SESLP-debug.log</code> (SESLP 디버그 ON 시)</li>
+      <li><code>/wp-content/debug.log</code> (WP_DEBUG = true)</li>
+    </ul>
+
+    <h4>7) 요약 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> 앱 생성 완료 (<code>https://www.linkedin.com/developers/apps</code>)</li>
+      <li><input type="checkbox" disabled> <strong>Sign In with LinkedIn using OpenID Connect</strong> 제품 추가</li>
+      <li><input type="checkbox" disabled> Redirect URI 정확히 등록 (<code>https://{도메인}/?social_login=linkedin</code>)</li>
+      <li><input type="checkbox" disabled> Client ID / Secret → SESLP 입력 및 저장</li>
+      <li><input type="checkbox" disabled> 스코프: <code>openid profile email</code> (구형 스코프 사용 금지)</li>
+      <li><input type="checkbox" disabled> HTTPS 환경에서 프론트엔드 로그인 테스트 완료</li>
+    </ul>
+
+    <hr>
+
+    <blockquote>
+      <p><strong>참고</strong></p>
+      <ul>
+        <li>SESLP는 <strong>OIDC 인증 흐름</strong>에 완벽 대응합니다.</li>
+        <li>기존 OAuth 2.0 방식은 <strong>더 이상 지원되지 않습니다.</strong></li>
+        <li>신규 개발 시 반드시 <strong>OpenID Connect</strong>를 사용하세요.</li>
+      </ul>
+    </blockquote>
+
+  </div>
+</details>
+
+<hr>
+
+<details class="seslp-guide-accordion">
+  <summary><strong>Naver (네이버)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>Redirect URI:</strong> <code>https://{도메인}/?social_login=naver</code></li>
+      <li><strong>권장 스코프:</strong> 기본 프로필(<code>name</code>), 이메일(<code>email</code>)</li>
+      <li>네이버는 <strong>네아로(Naver Login)</strong> API를 사용하며, <strong>HTTPS 필수</strong></li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 애플리케이션 등록</h4>
+
+    <p>(1) <strong>네이버 개발자 센터</strong> 접속</p>
+    <p>→ <a href="https://developers.naver.com/apps/" target="_blank" rel="noopener noreferrer">https://developers.naver.com/apps/</a></p>
+
+    <p>(2) 네이버 계정으로 로그인</p>
+    <p>(3) <strong>Application → 애플리케이션 등록</strong> 클릭</p>
+
+    <p>(4) 필수 항목 입력</p>
+    <ul>
+      <li><strong>애플리케이션 이름:</strong> 서비스명 (예: <code>MySite Naver Login</code>)</li>
+      <li><strong>사용 API:</strong> 네아로 (Naver Login)</li>
+      <li><strong>환경 추가 → 웹(Web)</strong></li>
+      <ul>
+        <li><strong>서비스 URL:</strong> <code>https://example.com</code></li>
+        <li><strong>Callback URL:</strong> <code>https://example.com/?social_login=naver</code></li>
+      </ul>
+    </ul>
+
+    <p>(5) 약관 동의 후 <strong>등록</strong> → 앱 생성 완료</p>
+
+    <blockquote>
+      <p><strong>주의</strong></p>
+      <ul>
+        <li><strong>HTTPS 필수</strong> → HTTP 등록 시 오류 발생</li>
+        <li><strong>서브도메인별 별도 등록 필요</strong><br>
+          예: <code>blog.example.com</code> ≠ <code>example.com</code>
+        </li>
+      </ul>
+    </blockquote>
+
+    <h4>2) Client ID / Client Secret 확인</h4>
+
+    <p>(1) 내 애플리케이션 목록 이동</p>
+    <p>(2) 앱 선택 → <strong>Client ID / Client Secret</strong> 확인</p>
+    <p>(3) 두 값 복사</p>
+
+    <h4>3) 워드프레스 설정 (SESLP)</h4>
+
+    <p>(1) WP 관리자 → <strong>SESLP 설정 → Naver</strong></p>
+    <p>(2) Client ID / Secret 입력</p>
+
+    <p>(3) Redirect URI 일치 확인</p>
+    <p>→ <code>https://{도메인}/?social_login=naver</code></p>
+
+    <p>(4) 저장 후 로그인 테스트</p>
+
+    <h4>4) 권한 및 정보 제공 설정</h4>
+
+    <table>
+      <thead>
+        <tr>
+          <th>정보</th>
+          <th>스코프</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>이름</td>
+          <td><code>name</code></td>
+          <td>기본 제공</td>
+        </tr>
+        <tr>
+          <td>이메일</td>
+          <td><code>email</code></td>
+          <td>기본 제공</td>
+        </tr>
+        <tr>
+          <td>성별, 생일</td>
+          <td>별도 요청</td>
+          <td><strong>검수 필요</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      <ul>
+        <li>사용자는 동의 화면에서 정보 제공을 선택할 수 있습니다.</li>
+        <li>이메일 거부 시 <code>email = null</code> → ID 기반 계정 연결 필요</li>
+        <li>민감 정보는 앱 검수 후 사용 가능</li>
+      </ul>
+    </blockquote>
+
+    <h4>5) 트러블슈팅 및 유의사항</h4>
+
+    <p><strong>Redirect URI mismatch</strong></p>
+    <p>→ 등록값과 요청값 불일치</p>
+
+    <p><strong>HTTPS 오류</strong></p>
+    <p>→ HTTP 사용 불가</p>
+
+    <p><strong>서브도메인 문제</strong></p>
+    <p>→ 각각 별도 등록 필요</p>
+
+    <p><strong>email NULL</strong></p>
+    <p>→ 사용자 거부 → ID 기반 처리</p>
+
+    <p><strong>앱 검수 필요</strong></p>
+    <p>→ 추가 정보 요청 시 필요</p>
+
+    <p><strong>로그 확인:</strong></p>
+    <ul>
+      <li><code>/wp-content/SESLP-debug.log</code></li>
+      <li><code>/wp-content/debug.log</code></li>
+    </ul>
+
+    <h4>6) 요약 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> 네이버 앱 등록 완료</li>
+      <li><input type="checkbox" disabled> Callback URL 등록</li>
+      <li><input type="checkbox" disabled> HTTPS 사용</li>
+      <li><input type="checkbox" disabled> 서브도메인 등록 (필요 시)</li>
+      <li><input type="checkbox" disabled> Client ID / Secret 입력</li>
+      <li><input type="checkbox" disabled> 이메일 동작 테스트</li>
+      <li><input type="checkbox" disabled> 프론트 로그인 테스트 완료</li>
+    </ul>
+
+    <hr>
+
+    <blockquote>
+      <p><strong>참고</strong></p>
+      <ul>
+        <li>SESLP는 네아로(Naver Login) 인증 흐름을 완벽 지원합니다.</li>
+        <li>기본 로그인은 검수 없이 즉시 사용 가능합니다.</li>
+      </ul>
+    </blockquote>
+
+  </div>
+</details>
+
+<hr>
+
+<details class="seslp-guide-accordion">
+  <summary><strong>Kakao (카카오)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>Redirect URI:</strong> <code>https://{도메인}/?social_login=kakao</code></li>
+      <li><strong>권장 스코프:</strong> <code>profile_nickname</code>, <code>profile_image</code>, <code>account_email</code></li>
+      <li><code>account_email</code>은 실명/사업자 인증 후 사용 가능</li>
+      <li><strong>HTTPS 필수</strong>, <strong>Client Secret 활성화 필수</strong></li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 애플리케이션 생성</h4>
+
+    <p>(1) <strong>Kakao Developers</strong></p>
+    <p>→ <a href="https://developers.kakao.com/" target="_blank">https://developers.kakao.com/</a></p>
+
+    <p>(2) 로그인 → <strong>내 애플리케이션 → 추가</strong></p>
+
+    <ul>
+      <li>앱 이름</li>
+      <li>회사명</li>
+      <li>카테고리</li>
+      <li>약관 동의</li>
+    </ul>
+
+    <p>(4) 저장</p>
+
+    <h4>2) 카카오 로그인 활성화</h4>
+
+    <ul>
+      <li><strong>제품 설정 → 카카오 로그인</strong></li>
+      <li>활성화 ON</li>
+      <li>Redirect URI 등록</li>
+    </ul>
+
+    <p><code>https://{도메인}/?social_login=kakao</code></p>
+
+    <h4>3) 동의 항목 설정</h4>
+
+    <table>
+      <thead>
+        <tr>
+          <th>스코프</th>
+          <th>설명</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>profile_nickname</code></td>
+          <td>닉네임</td>
+          <td>기본</td>
+        </tr>
+        <tr>
+          <td><code>profile_image</code></td>
+          <td>프로필 이미지</td>
+          <td>기본</td>
+        </tr>
+        <tr>
+          <td><code>account_email</code></td>
+          <td>이메일</td>
+          <td>인증 필요</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <blockquote>
+      <ul>
+        <li>민감 정보는 인증 후 사용 가능</li>
+        <li>동의 목적 명확히 작성</li>
+      </ul>
+    </blockquote>
+
+    <h4>4) 플랫폼 도메인 등록</h4>
+
+    <p><strong>앱 설정 → 플랫폼</strong></p>
+    <p><code>https://{도메인}</code></p>
+
+    <h4>5) Client Secret 생성</h4>
+
+    <ul>
+      <li>보안 → Client Secret ON</li>
+      <li>Secret 생성</li>
+      <li>활성화</li>
+    </ul>
+
+    <blockquote>
+      <p>활성화 안 하면 <strong>invalid_client</strong> 오류 발생</p>
+    </blockquote>
+
+    <h4>6) REST API 키</h4>
+
+    <p>REST API Key → Client ID</p>
+
+    <h4>7) 워드프레스 설정</h4>
+
+    <p>SESLP → Kakao</p>
+    <p>Client ID / Secret 입력 → 저장</p>
+
+    <h4>8) 트러블슈팅</h4>
+
+    <p><strong>redirect_uri_mismatch</strong></p>
+    <p>→ URI 불일치</p>
+
+    <p><strong>invalid_client</strong></p>
+    <p>→ Secret 미활성화</p>
+
+    <p><strong>email NULL</strong></p>
+    <p>→ 사용자 거부</p>
+
+    <p><strong>HTTPS 필요</strong></p>
+
+    <h4>9) 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> 로그인 활성화</li>
+      <li><input type="checkbox" disabled> Redirect URI 등록</li>
+      <li><input type="checkbox" disabled> 도메인 등록</li>
+      <li><input type="checkbox" disabled> Secret 활성화</li>
+      <li><input type="checkbox" disabled> 테스트 완료</li>
+    </ul>
+
+    <hr>
+
+    <blockquote>
+      <p>SESLP는 Kakao OAuth + Client Secret 흐름 완벽 지원</p>
+    </blockquote>
+
+  </div>
+</details>
+
+<hr>
+
+<details class="seslp-guide-accordion">
+  <summary><strong>LINE (라인)</strong></summary>
+
+  <div class="seslp-guide-accordion__body">
+
+    <ul>
+      <li><strong>Redirect URI:</strong> <code>https://{도메인}/?social_login=line</code></li>
+      <li><strong>필수:</strong> OpenID Connect + 이메일 승인</li>
+      <li><strong>스코프:</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+      <li><strong>HTTPS 필수</strong></li>
+    </ul>
+
+    <hr>
+
+    <h4>1) 채널 생성</h4>
+
+    <p><a href="https://developers.line.biz/console/" target="_blank">LINE Developers</a></p>
+
+    <ul>
+      <li>비즈니스 계정 로그인</li>
+      <li>Provider 생성</li>
+      <li>LINE Login 채널 생성</li>
+    </ul>
+
+    <h4>2) 이메일 권한 신청</h4>
+
+    <ul>
+      <li>OpenID Connect 메뉴</li>
+      <li>Email permission Apply</li>
+      <li>정책 URL 제출</li>
+    </ul>
+
+    <p>→ 승인 후 사용 가능</p>
+
+    <h4>3) Callback URL</h4>
+
+    <p><code>https://{도메인}/?social_login=line</code></p>
+
+    <ul>
+      <li>정확히 일치 필요</li>
+      <li>HTTPS 필수</li>
+    </ul>
+
+    <h4>4) Publish</h4>
+
+    <ul>
+      <li>Development → 테스트용</li>
+      <li>Published → 실제 서비스</li>
+    </ul>
+
+    <h4>5) Channel ID / Secret</h4>
+
+    <p>→ SESLP에 입력</p>
+
+    <h4>6) 트러블슈팅</h4>
+
+    <p><strong>redirect_uri_mismatch</strong></p>
+    <p>→ URI 불일치</p>
+
+    <p><strong>invalid_client</strong></p>
+    <p>→ Secret 오류</p>
+
+    <p><strong>email NULL</strong></p>
+    <p>→ 승인 안 됨</p>
+
+    <h4>7) 체크리스트</h4>
+
+    <ul>
+      <li><input type="checkbox" disabled> 채널 생성</li>
+      <li><input type="checkbox" disabled> 이메일 승인</li>
+      <li><input type="checkbox" disabled> Callback 등록</li>
+      <li><input type="checkbox" disabled> Published 상태</li>
+      <li><input type="checkbox" disabled> 테스트 완료</li>
+    </ul>
+
+    <hr>
+
+    <blockquote>
+      <p>SESLP는 LINE OpenID Connect 완벽 지원</p>
+    </blockquote>
+
+  </div>
+</details>

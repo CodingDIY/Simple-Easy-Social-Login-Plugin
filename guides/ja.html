@@ -1,0 +1,942 @@
+<div class="seslp-guide-doc">
+  <blockquote>
+    <p>
+      このドキュメントでは、<strong>Simple Easy Social Login (SESLP)</strong> プラグインで
+      各ソーシャルログインプロバイダー（Google、Facebook、LinkedIn、Naver、Kakao、LINE）を
+      設定する方法を説明します。
+    </p>
+    <p>
+      すべてのサインインは <strong>OAuth 2.0 / OpenID Connect (OIDC)</strong> に基づいています。<br>
+      各プロバイダーのコンソールでアプリ（クライアント）を作成し、
+      <strong>Client ID / Client Secret</strong> を SESLP に入力する必要があります。
+    </p>
+  </blockquote>
+
+  <hr>
+
+  <h2>🔧 共通設定ガイド</h2>
+
+  <h4>1) <strong>Redirect URI のルール:</strong></h4>
+
+  <p><code>https://{your-domain}/?social_login={provider}</code></p>
+
+  <p>例:</p>
+
+  <ul>
+    <li>Google → <code>https://example.com/?social_login=google</code></li>
+    <li>Facebook → <code>https://example.com/?social_login=facebook</code></li>
+    <li>LinkedIn → <code>https://example.com/?social_login=linkedin</code></li>
+    <li>Naver → <code>https://example.com/?social_login=naver</code></li>
+    <li>Kakao → <code>https://example.com/?social_login=kakao</code></li>
+    <li>LINE → <code>https://example.com/?social_login=line</code></li>
+  </ul>
+
+  <h4>2) <strong>HTTPS が必要です。</strong></h4>
+
+  <p>ほとんどのプロバイダーは HTTPS を必須としており、<code>http://</code> のリダイレクトは拒否されます。</p>
+
+  <h4>3) <strong>完全一致</strong></h4>
+
+  <p>
+    コンソールに登録した Redirect URI は、SESLP が送信する値と <strong>100%</strong> 一致している必要があります
+    （プロトコル、サブドメイン、パス、末尾スラッシュ、クエリ文字列を含む）。
+  </p>
+
+  <h4>4) <strong>メールアドレスが取得できない場合があります</strong></h4>
+
+  <p>
+    一部のプロバイダーでは、ユーザーがメールアドレスの共有を拒否できます。
+    SESLP は安定したプロバイダー ID を使ってアカウントを紐付けることができます。
+  </p>
+
+  <h4>5) <strong>ログの確認場所</strong></h4>
+
+  <ul>
+    <li><code>/wp-content/SESLP-debug.log</code></li>
+    <li><code>/wp-content/debug.log</code> (<code>WP_DEBUG_LOG = true</code>)</li>
+  </ul>
+
+  <h2>🐞 デバッグログとトラブルシューティング</h2>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>SESLP デバッグログの読み方</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <h4>ログファイルの場所</h4>
+
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code>（SESLP デバッグログ）</li>
+        <li><code>/wp-content/debug.log</code>（<code>WP_DEBUG_LOG = true</code>）</li>
+      </ul>
+
+      <h4>ログ形式</h4>
+
+      <pre><code>[YYYY-MM-DD HH:MM:SS Z] [LEVEL] Message {"key":"value",...}</code></pre>
+
+      <ul>
+        <li><code>Z</code>: UTC または WordPress のローカル時刻（例: KST）— SESLP 設定で選択可能</li>
+        <li>
+          プライバシー: メールアドレス / トークン / シークレットは自動的にマスクされます
+          （例: <code>r********@g****.com</code>）
+        </li>
+      </ul>
+
+      <h4>OAuth フローのログ（一般例）</h4>
+
+      <p><strong>1) OAuth 開始</strong></p>
+
+      <pre><code>[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}</code></pre>
+
+      <p>
+        意味: CSRF 保護用の state トークンが作成されました。<code>ttl</code> は 10 分間有効です。
+      </p>
+
+      <p><strong>2) Callback triggered</strong></p>
+
+      <pre><code>[DEBUG] Auth route triggered {"provider":"google","has_code":1}</code></pre>
+
+      <p>意味: コールバックに到達しました。<code>has_code:1</code> → OAuth の <code>code</code> を受信しています。</p>
+
+      <p><strong>3) State 検証</strong></p>
+
+      <p>成功:</p>
+      <pre><code>[DEBUG] State validated {"provider":"google","state":"906****23"}</code></pre>
+
+      <p>失敗:</p>
+      <pre><code>[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}</code></pre>
+
+      <p><strong>4) トークン交換</strong></p>
+
+      <pre><code>[DEBUG] Token response (google) {"has_access_token":1}</code></pre>
+
+      <p>意味: トークンを取得しました。</p>
+
+      <p>失敗:</p>
+      <pre><code>[ERROR] Token request failed (google) {"error":"..."}</code></pre>
+
+      <p><strong>5) ユーザー情報リクエスト</strong></p>
+
+      <pre><code>[ERROR] Userinfo request failed (google)
+  [WARNING] Invalid userinfo (google)</code></pre>
+
+      <p><strong>6) ユーザー紐付け</strong></p>
+
+      <pre><code>[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+  [INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}</code></pre>
+
+      <p><strong>7) リダイレクト</strong></p>
+
+      <pre><code>[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}</code></pre>
+
+      <h4>クイック参照表</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ログメッセージ（要約）</th>
+            <th>考えられる原因</th>
+            <th>対応方法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State validation failed</td>
+            <td>タイムアウト、タブ切り替え、重複リクエスト</td>
+            <td>すぐに再試行する、プライベートモードを使う</td>
+          </tr>
+          <tr>
+            <td>Token request failed</td>
+            <td>Client ID / Secret / Redirect の誤り、リクエストのブロック</td>
+            <td>開発者コンソール、ファイアウォール、サーバー時刻を確認する</td>
+          </tr>
+          <tr>
+            <td>Userinfo invalid</td>
+            <td>スコープ不足、またはメールアドレスが非公開</td>
+            <td><code>email, profile</code> スコープを追加し、ユーザーの同意を得る</td>
+          </tr>
+          <tr>
+            <td>User create failed</td>
+            <td>アカウント競合、または WordPress 側の制限</td>
+            <td>既存ユーザーやマルチサイトのルールを確認する</td>
+          </tr>
+          <tr>
+            <td>Redirect missing</td>
+            <td>コード内で早期 return が発生している</td>
+            <td>コールバック後に Redirect クラスが実行されることを確認する</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>バグレポートに含めると役立つ情報</h4>
+
+      <ul>
+        <li>関連するログ行（マスク済み）</li>
+        <li>使用したプロバイダー（Google / Naver など）</li>
+        <li>リダイレクトモード / カスタム URL</li>
+        <li>デバッグログの有効状態</li>
+        <li>WordPress 環境（シングルサイト、マルチサイト、キャッシュプラグイン）</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <h2>🌍 プロバイダーガイド</h2>
+
+  <p>
+    以下の各プロバイダーを展開し、該当プロバイダー用に準備したガイド内容を貼り付けてください。
+  </p>
+
+  <hr>
+
+  <details class="seslp-guide-accordion" open>
+    <summary><strong>Google</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>推奨スコープ:</strong> <code>openid email profile</code></li>
+        <li><strong>Redirect URI ルール:</strong> <code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 事前準備（必須チェックリスト）</h4>
+
+      <p>(1) <strong>HTTPS 推奨 / 必須</strong>（ローカル環境では信頼できる証明書を使用）</p>
+      <p>(2) Redirect URI はコンソールに登録した値と<strong>100% 完全一致</strong>している必要があります。例: <code>https://example.com/?social_login=google</code></p>
+      <p>(3) テストモードでは <strong>テストユーザーのみ</strong>ログイン可能（最大100人）</p>
+      <p>(4) アプリのホームページ / プライバシーポリシー / 利用規約 URL を使用する場合、<strong>アプリドメイン（Authorized domains）登録</strong>および<strong>所有権確認</strong>が必要になる場合があります</p>
+
+      <h4>2) プロジェクト / 同意画面の設定</h4>
+
+      <p>(1) <strong>Google Cloud Console</strong> にアクセス<br>
+        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">
+          https://console.cloud.google.com/apis/credentials
+        </a>
+      </p>
+      <p>(2) 上部でプロジェクトを選択 → 必要に応じて<strong>新規プロジェクト作成</strong></p>
+      <p>(3) サイドバー: <strong>API とサービス → OAuth 同意画面</strong></p>
+      <p>(4) <strong>ユーザータイプ</strong>選択: 通常は <strong>External</strong></p>
+      <p>(5) <strong>アプリ情報</strong>入力: アプリ名、サポートメール、（任意）ロゴ</p>
+
+      <p>(6) <strong>アプリドメイン</strong>セクション</p>
+      <ul>
+        <li>ホームページ、プライバシーポリシー、利用規約 URL を入力</li>
+        <li><strong>ルートドメイン（例: example.com）</strong>を<strong>Authorized domains</strong>に追加 → <strong>保存</strong></li>
+        <li>必要に応じて Search Console で<strong>ドメイン所有権確認</strong>を実施</li>
+      </ul>
+
+      <p>(7) <strong>スコープ設定</strong></p>
+      <ul>
+        <li><strong>推奨:</strong> <code>openid</code>, <code>email</code>, <code>profile</code></li>
+        <li>機密 / 制限スコープは公開前に審査が必要な場合があります</li>
+      </ul>
+
+      <p>(8) <strong>テストユーザー</strong>追加（テストモードでログイン可能なメール）</p>
+      <p>(9) <strong>保存</strong></p>
+
+      <p><strong>注意:</strong> 基本スコープ（<code>openid email profile</code>）のみ使用する場合、多くの場合<strong>審査なしで公開可能</strong>です。</p>
+
+      <h4>3) OAuth クライアント作成（Web アプリ）</h4>
+
+      <p>(1) サイドバー: <strong>API とサービス → 認証情報</strong></p>
+      <p>(2) 上部: <strong>+ 認証情報を作成 → OAuth クライアント ID</strong></p>
+      <p>(3) アプリケーションの種類: <code>Web application</code></p>
+      <p>(4) 分かりやすい<strong>名前</strong>を入力（例: <code>SESLP – Front</code>）</p>
+
+      <p>(5) <strong>承認済みのリダイレクト URI</strong>追加</p>
+      <ul>
+        <li><code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <p>(6) <strong>作成</strong>をクリックし、表示された<strong>Client ID / Client Secret</strong>をコピー</p>
+
+      <p><strong>（任意）</strong> JavaScript のオリジンは、このプラグイン（認可コードフロー）では通常不要です。</p>
+
+      <h4>4) WordPress（プラグイン）設定</h4>
+
+      <p>(1) WP 管理画面 → <strong>SESLP Settings → Google</strong> タブ</p>
+      <p>(2) <strong>Client ID / Client Secret</strong> を貼り付け → <strong>保存</strong></p>
+      <p>(3) フロントエンドの<strong>Google ログインボタン</strong>でテスト</p>
+
+      <h4>5) テストから本番への切り替え</h4>
+
+      <p>(1) <strong>OAuth 同意画面 → 公開ステータス</strong>を確認</p>
+      <p>(2) 本番に切り替えるには:</p>
+      <ul>
+        <li>アプリ情報（ロゴ / ドメイン / ポリシー / 利用規約）を確認</li>
+        <li>不要なスコープを削除し、必要なもののみ残す</li>
+        <li>機密スコープ使用時は審査を申請</li>
+      </ul>
+      <p>(3) 本番化後は、すべての Google アカウントでログイン可能</p>
+
+      <h4>6) よくあるエラーと対処方法</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ コンソールに登録した URI と実際のリクエスト URI が少しでも異なると発生（プロトコル / サブドメイン / スラッシュ / クエリ含む）。完全一致させてください。</p>
+
+      <p>(2) <strong>access_denied / disallowed_useragent</strong></p>
+      <p>→ ブラウザ / アプリ内制限。通常のブラウザで再試行</p>
+
+      <p>(3) <strong>invalid_client / unauthorized_client</strong></p>
+      <p>→ Client ID / Secret の誤り、またはアプリ状態（削除 / 無効）。再発行または確認</p>
+
+      <p>(4) <strong>メールが取得できない</strong></p>
+      <p>→ <code>email</code> スコープの有無、同意画面、アカウント設定を確認。メール取得の目的を明確に説明してください。</p>
+
+      <p><strong>ログ確認:</strong></p>
+      <ul>
+        <li><code>wp-content/SESLP-debug.log</code>（プラグインデバッグ ON）</li>
+        <li><code>wp-content/debug.log</code>（<code>WP_DEBUG</code>, <code>WP_DEBUG_LOG = true</code>）</li>
+      </ul>
+
+      <h4>7) 最終チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> OAuth 同意画面: アプリ情報 / ドメイン / ポリシー / 利用規約 / スコープ / テストユーザー設定</li>
+        <li><input type="checkbox" disabled> 認証情報: <strong>Web Application</strong> クライアント作成</li>
+        <li><input type="checkbox" disabled> Redirect URI 登録: <code>https://{domain}/?social_login=google</code></li>
+        <li><input type="checkbox" disabled> SESLP: Client ID / Secret 保存およびログインテスト</li>
+        <li><input type="checkbox" disabled> 本番公開時にステータス変更（必要に応じて審査申請）</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Facebook</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>リダイレクトURI:</strong> <code>https://{domain}/?social_login=facebook</code></li>
+        <li><strong>要求される権限（推奨）:</strong> <code>public_profile</code>, <code>email</code></li>
+        <li><strong>Facebookは</strong> <code>openid</code> を使用しません。</li>
+      </ul>
+
+      <hr>
+
+      <h4>1) アプリの作成とプロダクトの追加</h4>
+
+      <p>(1) <strong>Meta for Developers</strong> にアクセス → ログイン<br>
+        <a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer">
+          https://developers.facebook.com/
+        </a>
+      </p>
+      <p>(2) <strong>Create App</strong> をクリック → 一般タイプ（例: Consumer）を選択 → アプリ作成</p>
+      <p>(3) 左側メニューの <strong>Products</strong> から <strong>Facebook Login</strong> を追加</p>
+      <p>(4) <strong>Settings</strong> に移動 → 以下を確認:</p>
+
+      <ul>
+        <li><strong>Client OAuth Login:</strong> ON</li>
+        <li><strong>Web OAuth Login:</strong> ON</li>
+        <li><strong>Valid OAuth Redirect URIs:</strong></li>
+        <li><code>https://{domain}/?social_login=facebook</code> を追加</li>
+        <li><strong>（任意）HTTPSの強制:</strong> 通常は推奨</li>
+      </ul>
+
+      <h4>2) 基本設定（App Settings → Basic）</h4>
+
+      <p>(1) <strong>App Domains:</strong> <code>example.com</code>（ポリシー / 利用規約 / ホームページのドメイン）</p>
+      <p>(2) <strong>プライバシーポリシーURL:</strong> 公開されたページ</p>
+      <p>(3) <strong>利用規約URL:</strong> 公開されたページ</p>
+      <p>(4) <strong>ユーザーデータ削除:</strong> ガイドURLまたは削除エンドポイントを提供</p>
+      <p>(5) <strong>カテゴリ / アプリアイコン:</strong> 設定後 <strong>保存</strong></p>
+
+      <h4>3) スコープ（権限）とアプリ審査</h4>
+
+      <p>(1) 標準ログインに必要な基本権限は <strong><code>public_profile</code></strong>、オプションのメールは <strong><code>email</code></strong></p>
+      <p>(2) 多くの場合、<strong><code>email</code> は審査なしで使用可能</strong>ですが、地域やアカウントによって例外があります</p>
+      <p>(3) ページや広告などの<strong>高度な権限</strong>は <strong>App Review</strong> および <strong>Business Verification</strong> が必要です</p>
+
+      <h4>4) モード切替（Development → Live）</h4>
+
+      <p>画面上部または設定画面で <strong>App Mode: Development → Live</strong> に変更</p>
+
+      <h4>5) Live切替前チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> プライバシーポリシー / 利用規約 / データ削除URLの準備</li>
+        <li><input type="checkbox" disabled> Valid OAuth Redirect URIs を正確に登録</li>
+        <li><input type="checkbox" disabled> 不要な権限を削除し、必要なもののみ使用</li>
+        <li><input type="checkbox" disabled> （必要に応じて）App Review / Business Verification 完了</li>
+      </ul>
+
+      <h4>6) WordPress 設定（SESLP）</h4>
+
+      <p>(1) WP管理画面 → <strong>SESLP Settings → Facebook</strong></p>
+      <p>(2) <strong>App ID / App Secret</strong> を入力 → 保存</p>
+      <p>(3) フロントエンドの <strong>Facebookログインボタン</strong> でテスト</p>
+
+      <h4>7) トラブルシューティング</h4>
+
+      <p>(1) <strong>Can't Load URL / redirect_uri エラー</strong></p>
+      <p>→ <strong>Valid OAuth Redirect URIs</strong> に登録されたURIが完全一致しているか確認（プロトコル、サブドメイン、スラッシュ、クエリ含む）</p>
+
+      <p>(2) <strong>email null</strong></p>
+      <p>→ ユーザーがFacebookにメールを登録していない、または非公開設定。<strong>IDベースのアカウント連携ロジック</strong>を用意し、同意画面でメール利用目的を明確に説明</p>
+
+      <p>(3) <strong>権限関連エラー</strong></p>
+      <p>→ 要求スコープが基本範囲を超える場合、<strong>App Review / Business Verification</strong> が必要</p>
+
+      <p>(4) <strong>Liveに切り替えできない</strong></p>
+      <p>→ ポリシー / 利用規約 / データ削除URLが<strong>未設定または非公開</strong>。公開URLを設定する必要があります</p>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LinkedIn</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>リダイレクトURI:</strong> <code>https://{domain}/?social_login=linkedin</code></li>
+        <li><strong>必須設定:</strong> OpenID Connect（OIDC）を有効化</li>
+        <li><strong>推奨スコープ:</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+        <li>LinkedIn は従来スコープ（<code>r_liteprofile</code>, <code>r_emailaddress</code>）を<strong>廃止中</strong></li>
+        <li>新規アプリは<strong>OIDC標準スコープを使用する必要があります</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) アプリの作成</h4>
+
+      <p>(1) <strong>LinkedIn Developers Console</strong> にアクセス</p>
+      <p>→ <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener noreferrer">https://www.linkedin.com/developers/apps</a></p>
+      <p>(2) LinkedInアカウントでログイン</p>
+      <p>(3) <strong>Create app</strong> をクリック</p>
+      <p>(4) 必須項目を入力:</p>
+
+      <ul>
+        <li><strong>アプリ名:</strong> 例: <code>MySite LinkedIn Login</code></li>
+        <li><strong>LinkedInページ:</strong> 選択または「None」</li>
+        <li><strong>アプリロゴ:</strong> 100×100以上 PNG/JPG</li>
+        <li><strong>プライバシーポリシーURL / ビジネスメール:</strong> 有効かつ公開されているもの</li>
+      </ul>
+
+      <p>(5) <strong>Create app</strong> をクリック</p>
+
+      <p><strong>デフォルトで開発モード</strong> → <code>openid</code>, <code>profile</code>, <code>email</code> ログインを<strong>公開せずにテスト可能</strong></p>
+
+      <h4>2) OpenID Connect（OIDC）の有効化</h4>
+
+      <p>(1) <strong>Products</strong> タブへ移動</p>
+      <p>(2) <strong>Sign In with LinkedIn using OpenID Connect</strong> を探す</p>
+      <p>(3) <strong>Add product</strong> をクリック → 即時承認</p>
+      <p>(4) OIDC設定は <strong>Auth</strong> タブに表示</p>
+
+      <p><strong>必要なOIDCスコープ</strong></p>
+      <ul>
+        <li><code>openid</code> → IDトークン</li>
+        <li><code>profile</code> → 名前・写真・見出し</li>
+        <li><code>email</code> → メールアドレス</li>
+      </ul>
+
+      <h4>3) OAuth 2.0 設定（Authタブ）</h4>
+
+      <p>(1) <strong>Auth → OAuth 2.0 settings</strong> へ移動</p>
+      <p>(2) <strong>Redirect URLs</strong> に追加:</p>
+      <p>→ <code>https://{domain}/?social_login=linkedin</code></p>
+      <p>(3) <strong>完全一致必須</strong>（プロトコル・サブドメイン・スラッシュ・クエリ）</p>
+      <p>(4) 必要に応じて複数登録:</p>
+      <ul>
+        <li>ローカル: <code>https://localhost:3000/?social_login=linkedin</code></li>
+        <li>ステージング: <code>https://staging.example.com/?social_login=linkedin</code></li>
+        <li>本番: <code>https://example.com/?social_login=linkedin</code></li>
+      </ul>
+      <p>(5) <strong>Save</strong></p>
+
+      <h4>4) Client ID / Client Secret の取得</h4>
+
+      <p>(1) <strong>Auth</strong> タブで確認:</p>
+      <ul>
+        <li><strong>Client ID</strong></li>
+        <li><strong>Client Secret</strong></li>
+      </ul>
+      <p>(2) WordPress管理画面 → <strong>SESLP Settings → LinkedIn</strong></p>
+      <p>(3) 貼り付け → <strong>保存</strong></p>
+      <p>(4) フロントエンドの <strong>LinkedInログインボタン</strong> でテスト</p>
+
+      <p><strong>セキュリティ:</strong></p>
+      <ul>
+        <li>Client Secret を公開しない</li>
+        <li>漏洩した場合は <strong>Regenerate secret</strong> を使用</li>
+      </ul>
+
+      <h4>5) スコープ説明</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>スコープ</th>
+            <th>説明</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>openid</code></td>
+            <td>OIDC標準のIDトークンを返す</td>
+            <td><strong>必須</strong></td>
+          </tr>
+          <tr>
+            <td><code>profile</code></td>
+            <td>名前・写真・見出しなど</td>
+            <td><strong>必須</strong></td>
+          </tr>
+          <tr>
+            <td><code>email</code></td>
+            <td>メールアドレス</td>
+            <td><strong>必須</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>従来スコープ（<code>r_liteprofile</code>, <code>r_emailaddress</code>）</strong></p>
+      <ul>
+        <li><strong>2024年以降廃止</strong></li>
+        <li><strong>新規アプリでは使用不可</strong></li>
+      </ul>
+
+      <h4>6) トラブルシューティング</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ URIのわずかな違いでもエラー → <strong>100%一致</strong>を確認</p>
+
+      <p>(2) <strong>invalid_client</strong></p>
+      <p>→ ID/Secret誤りまたはアプリ無効 → 再確認または再生成</p>
+
+      <p>(3) <strong>email NULL</strong></p>
+      <p>→ ユーザー拒否またはスコープ不足 → 同意画面で説明</p>
+
+      <p>(4) <strong>insufficient_scope</strong></p>
+      <p>→ スコープ未承認 → OIDC有効化を確認</p>
+
+      <p>(5) <strong>OIDC未有効</strong></p>
+      <p>→ Productsに OIDC が追加されていない</p>
+
+      <p><strong>ログ:</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) 最終チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> アプリ作成済み</li>
+        <li><input type="checkbox" disabled> <strong>OpenID Connect</strong> プロダクト追加</li>
+        <li><input type="checkbox" disabled> Redirect URI 正確登録</li>
+        <li><input type="checkbox" disabled> Client ID / Secret を SESLP に保存</li>
+        <li><input type="checkbox" disabled> スコープ: <code>openid profile email</code>（従来スコープなし）</li>
+        <li><input type="checkbox" disabled> HTTPS環境でテスト完了</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>注意:</strong></p>
+      <ul>
+        <li>SESLP は <strong>OIDCフロー</strong> を完全サポート</li>
+        <li>従来の OAuth 2.0 は <strong>非対応</strong></li>
+        <li>新規連携では必ず <strong>OpenID Connect</strong> を使用してください</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Naver</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>リダイレクトURI:</strong> <code>https://{domain}/?social_login=naver</code></li>
+        <li><strong>推奨スコープ:</strong> 基本プロフィール（<code>name</code>）、メール（<code>email</code>）</li>
+        <li>Naver は <strong>Naver Login（ネイバーログイン / 네아로）</strong> API を使用し、<strong>HTTPS 必須</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) アプリケーション登録</h4>
+
+      <p>(1) <strong>Naver Developer Center</strong> にアクセス</p>
+      <p>→ <a href="https://developers.naver.com/apps/" target="_blank" rel="noopener noreferrer">https://developers.naver.com/apps/</a></p>
+      <p>(2) Naver アカウントでログイン</p>
+      <p>(3) <strong>Application → アプリケーション登録</strong> をクリック</p>
+      <p>(4) 必須項目を入力:</p>
+
+      <ul>
+        <li><strong>アプリケーション名:</strong> 例: <code>MySite Naver Login</code></li>
+        <li><strong>API 使用:</strong> <code>Naver Login（ネイバーログイン / 네아로）</code> を選択</li>
+        <li><strong>環境追加 → Web</strong></li>
+        <li><strong>サービスURL:</strong> <code>https://example.com</code></li>
+        <li><strong>コールバックURL:</strong> <code>https://example.com/?social_login=naver</code></li>
+      </ul>
+
+      <p>(5) 利用規約に同意 → <strong>登録</strong></p>
+
+      <p><strong>注意:</strong></p>
+      <ul>
+        <li><strong>HTTPS 必須</strong> → HTTP は使用不可</li>
+        <li><strong>サブドメインは個別に登録が必要</strong></li>
+      </ul>
+
+      <h4>2) Client ID / Client Secret の取得</h4>
+
+      <p>(1) <strong>My Applications</strong> に移動</p>
+      <p>(2) アプリをクリック → <strong>Client ID</strong> と <strong>Client Secret</strong> をコピー</p>
+
+      <h4>3) WordPress（プラグイン）設定</h4>
+
+      <p>(1) WP管理画面 → <strong>SESLP Settings → Naver</strong></p>
+      <p>(2) <strong>Client ID / Client Secret</strong> を貼り付け</p>
+      <p>(3) <strong>リダイレクトURI</strong> が完全一致していることを確認: <code>https://{domain}/?social_login=naver</code></p>
+      <p>(4) <strong>保存</strong> → フロントエンドの<strong>Naverログインボタン</strong>でテスト</p>
+
+      <h4>4) 権限およびデータ提供</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>データ</th>
+            <th>スコープ</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>名前</td>
+            <td><code>name</code></td>
+            <td>デフォルト</td>
+          </tr>
+          <tr>
+            <td>メール</td>
+            <td><code>email</code></td>
+            <td>デフォルト</td>
+          </tr>
+          <tr>
+            <td>性別、生年月日</td>
+            <td>別途</td>
+            <td><strong>審査が必要</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul>
+        <li>ユーザーは同意画面で <strong>許可 / 拒否</strong> が可能</li>
+        <li>メール拒否の場合 → <code>email = null</code> → <strong>IDベースの連携ロジック</strong>を使用</li>
+        <li>機密データは <strong>Naver アプリ審査</strong> が必要</li>
+      </ul>
+
+      <h4>5) トラブルシューティング</h4>
+
+      <p>(1) <strong>リダイレクトURI不一致</strong></p>
+      <p>→ わずかな違いでもエラー → <strong>100%一致</strong>を確認</p>
+
+      <p>(2) <strong>HTTP エラー</strong></p>
+      <p>→ 必ず <strong>HTTPS</strong> を使用</p>
+
+      <p>(3) <strong>サブドメインエラー</strong></p>
+      <p>→ 各サブドメインを個別に登録</p>
+
+      <p>(4) <strong>email NULL</strong></p>
+      <p>→ ユーザー拒否または非公開 → IDベース処理を準備</p>
+
+      <p>(5) <strong>審査が必要</strong></p>
+      <p>→ 基本ログイン: <strong>審査不要</strong><br>→ 追加データ: <strong>審査必要</strong></p>
+
+      <p><strong>ログ:</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>6) 最終チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Naver Developer Center にアプリ登録</li>
+        <li><input type="checkbox" disabled> <strong>コールバックURL</strong>を正確に登録</li>
+        <li><input type="checkbox" disabled> <strong>HTTPS</strong> を使用</li>
+        <li><input type="checkbox" disabled> サブドメイン個別登録（必要な場合）</li>
+        <li><input type="checkbox" disabled> Client ID / Secret を SESLP に保存</li>
+        <li><input type="checkbox" disabled> メール同意 / 拒否の動作確認</li>
+        <li><input type="checkbox" disabled> フロントエンドログインテスト完了</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>注意:</strong></p>
+      <ul>
+        <li>SESLP は <strong>Naver Login（ネイバーログイン / 네아로）</strong> を完全サポートします。</li>
+        <li>基本ログイン（<code>name</code>, <code>email</code>）は <strong>審査なしで利用可能</strong> です。</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Kakao</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+
+      <ul>
+        <li><strong>リダイレクトURI:</strong> <code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>推奨スコープ:</strong> <code>profile_nickname</code>、<code>profile_image</code>、<code>account_email</code></li>
+        <li><code>account_email</code> は<strong>本人確認またはビジネス認証後にのみ利用可能</strong></li>
+        <li><strong>HTTPS 必須</strong>、<strong>Client Secret の有効化が必須</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) アプリケーションの作成</h4>
+
+      <p>(1) <strong>Kakao Developers</strong> にアクセス</p>
+      <p>→ <a href="https://developers.kakao.com/" target="_blank" rel="noopener noreferrer">https://developers.kakao.com/</a></p>
+
+      <p>(2) ログイン → <strong>My Applications → 新しいアプリの追加</strong></p>
+
+      <p>(3) 以下を入力:</p>
+      <ul>
+        <li>アプリ名、会社名</li>
+        <li>カテゴリ</li>
+        <li>運用ポリシーに同意</li>
+      </ul>
+
+      <p>(4) <strong>保存</strong></p>
+
+      <h4>2) Kakao Login の有効化</h4>
+
+      <p>(1) <strong>Product Settings &gt; Kakao Login</strong></p>
+      <p>(2) <strong>Enable Kakao Login</strong> を <strong>ON</strong></p>
+
+      <p>(3) <strong>リダイレクトURIの登録</strong></p>
+      <ul>
+        <li><code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>保存</strong></li>
+      </ul>
+
+      <p>(4) ドメインは<strong>Platformサイトドメインと一致する必要があります</strong></p>
+
+      <h4>3) 同意項目（スコープ）</h4>
+
+      <p>(1) <strong>同意項目</strong></p>
+      <p>(2) 追加および設定:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>スコープ</th>
+            <th>説明</th>
+            <th>同意タイプ</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profile_nickname</code></td>
+            <td>ニックネーム</td>
+            <td>必須 / 任意</td>
+            <td>基本</td>
+          </tr>
+          <tr>
+            <td><code>profile_image</code></td>
+            <td>プロフィール画像</td>
+            <td>必須 / 任意</td>
+            <td>基本</td>
+          </tr>
+          <tr>
+            <td><code>account_email</code></td>
+            <td>メール</td>
+            <td><strong>任意</strong></td>
+            <td><strong>認証が必要</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>(3) 各項目の<strong>利用目的</strong>を明確に記載</p>
+      <p>(4) <strong>保存</strong></p>
+
+      <p><strong>注意:</strong> 機密スコープは<strong>認証（審査）が必要</strong></p>
+
+      <h4>4) Webプラットフォームの登録</h4>
+
+      <p>(1) <strong>App Settings &gt; Platform</strong></p>
+      <p>(2) <strong>Webプラットフォーム登録</strong></p>
+      <p>(3) サイトドメイン: <code>https://{domain}</code></p>
+      <p>(4) <strong>保存</strong> → リダイレクトURIのドメインと一致する必要あり</p>
+
+      <h4>5) セキュリティ – Client Secret の生成と有効化</h4>
+
+      <p>(1) <strong>Product Settings &gt; Security</strong></p>
+      <p>(2) <strong>Use Client Secret</strong> → <strong>ON</strong></p>
+      <p>(3) <strong>Secret生成</strong> → 値をコピー</p>
+      <p>(4) <strong>Activation Status</strong> → <strong>Active</strong></p>
+      <p>(5) <strong>保存</strong></p>
+
+      <p><strong>重要:</strong> 生成後は必ず<strong>有効化</strong>が必要</p>
+
+      <h4>6) REST API Key（Client ID）の取得</h4>
+
+      <p>(1) <strong>App Keys</strong></p>
+      <p>(2) <strong>REST API Key</strong> をコピー → <strong>Client ID</strong>として使用</p>
+
+      <h4>7) WordPress 設定</h4>
+
+      <p>(1) WP管理画面 → <strong>SESLP Settings → Kakao</strong></p>
+      <p>(2) <strong>Client ID</strong> = REST API Key<br>
+        <strong>Client Secret</strong> = 生成した Secret</p>
+
+      <p>(3) <strong>保存</strong></p>
+      <p>(4) <strong>Kakaoログインボタン</strong>でテスト</p>
+
+      <h4>8) トラブルシューティング</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → 完全一致（100%）が必要</p>
+      <p>(2) <strong>invalid_client</strong> → Secret未有効化または入力ミス</p>
+      <p>(3) <strong>email empty</strong> → ユーザー拒否または未認証</p>
+      <p>(4) <strong>ドメイン不一致</strong> → Platform と Redirect URI の差異</p>
+      <p>(5) <strong>HTTP禁止</strong> → <strong>HTTPSのみ対応</strong></p>
+
+      <p><strong>ログ:</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>9) 最終チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> Kakao Login 有効化済み</li>
+        <li><input type="checkbox" disabled> リダイレクトURI登録済み</li>
+        <li><input type="checkbox" disabled> Webプラットフォームドメイン登録済み</li>
+        <li><input type="checkbox" disabled> 同意項目設定済み</li>
+        <li><input type="checkbox" disabled> Client Secret 生成＋有効化済み</li>
+        <li><input type="checkbox" disabled> REST API Key / Secret を SESLP に保存</li>
+        <li><input type="checkbox" disabled> HTTPS環境でテスト完了</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LINE</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>リダイレクトURI:</strong> <code>https://{domain}/?social_login=line</code></li>
+        <li><strong>必須:</strong> OpenID Connect を有効化し、<strong>メールアドレス権限を申請・承認取得すること</strong></li>
+        <li><strong>推奨スコープ:</strong> <code>openid</code>, <code>profile</code>, <code>email</code></li>
+        <li><strong>HTTPS 必須</strong>、<strong>メール権限には承認が必要</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) Provider と Channel の作成</h4>
+
+      <p>(1) <strong>LINE Developers Console</strong> にアクセス</p>
+      <p>→ <a href="https://developers.line.biz/console/" target="_blank" rel="noopener noreferrer">https://developers.line.biz/console/</a></p>
+
+      <p>(2) <strong>LINE ビジネスアカウント</strong>でログイン（個人アカウント不可）</p>
+      <p>(3) <strong>Create a new provider</strong> をクリック → 名前入力 → <strong>Create</strong></p>
+      <p>(4) 作成した Provider の下で → <strong>Channels</strong> タブ</p>
+      <p>(5) <strong>Create a LINE Login channel</strong> を選択</p>
+
+      <p>(6) 設定内容:</p>
+      <ul>
+        <li><strong>Channel type:</strong> <code>LINE Login</code></li>
+        <li><strong>Provider:</strong> 作成した Provider を選択</li>
+        <li><strong>Region:</strong> 対象国（例: <code>South Korea</code>, <code>Japan</code>）</li>
+        <li><strong>Name / description / icon:</strong> 同意画面に表示されます</li>
+      </ul>
+
+      <p>(7) 利用規約に同意 → <strong>Create</strong></p>
+
+      <h4>2) OpenID Connect の有効化とメール権限申請</h4>
+
+      <p>(1) 左メニューの <strong>OpenID Connect</strong> へ移動</p>
+      <p>(2) <strong>Email address permission</strong> の横にある <strong>Apply</strong> をクリック</p>
+
+      <p>(3) 申請内容を入力:</p>
+      <ul>
+        <li><strong>プライバシーポリシー URL</strong>（公開アクセス可能であること）</li>
+        <li><strong>プライバシーポリシーのスクリーンショット</strong>をアップロード</li>
+        <li>送信</li>
+      </ul>
+
+      <p>(4) <strong><code>email</code> スコープは承認後にのみ利用可能</strong><br>
+        → 承認には通常 1〜3 営業日かかります</p>
+
+      <h4>3) Callback URL の登録と Channel の公開</h4>
+
+      <p>(1) 左メニューの <strong>LINE Login</strong> へ移動</p>
+
+      <p>(2) <strong>Callback URL</strong> を入力:</p>
+      <p>→ <code>https://{domain}/?social_login=line</code></p>
+
+      <p>(3) <strong>完全一致が必要</strong>:</p>
+      <ul>
+        <li>プロトコル: <code>https://</code>（<strong>HTTP 不可</strong>）</li>
+        <li>ドメイン、パス、クエリ文字列が <strong>100% 一致</strong>している必要があります</li>
+      </ul>
+
+      <p>(4) <strong>Save</strong> をクリック</p>
+
+      <p>(5) Channel の状態を <strong>Published</strong> に変更</p>
+      <ul>
+        <li><strong>Development mode:</strong> テスト専用</li>
+        <li><strong>Published:</strong> 本番サービス</li>
+      </ul>
+
+      <h4>4) Channel ID / Secret の取得</h4>
+
+      <p>(1) Channel 上部または <strong>Basic settings</strong></p>
+      <p>(2) <strong>Channel ID</strong> → SESLP の <strong>Client ID</strong><br>
+        <strong>Channel Secret</strong> → SESLP の <strong>Client Secret</strong></p>
+
+      <h4>5) WordPress 設定</h4>
+
+      <p>(1) WP管理画面 → <strong>SESLP Settings → LINE</strong></p>
+      <p>(2) <strong>Client ID</strong> ← Channel ID<br>
+        <strong>Client Secret</strong> ← Channel Secret</p>
+
+      <p>(3) <strong>Save</strong></p>
+      <p>(4) フロントエンドの <strong>LINE ログインボタン</strong> でテスト</p>
+
+      <h4>6) トラブルシューティング</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → わずかな違いでもエラー → <strong>100% 一致</strong>を確認</p>
+      <p>(2) <strong>invalid_client</strong> → Secret の入力ミス、または <strong>Published ではない</strong></p>
+      <p>(3) <strong>email NULL</strong> → <strong>メール権限が未承認</strong>、またはユーザーが拒否</p>
+      <p>(4) <strong>HTTP 不可</strong> → <strong>HTTPS 必須</strong>（localhost の HTTPS は可）</p>
+      <p>(5) <strong>Development mode の制限</strong> → テストアカウントのみログイン可能</p>
+
+      <p><strong>ログ:</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) 最終チェックリスト</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> <strong>Provider + LINE Login channel</strong> をビジネスアカウントで作成</li>
+        <li><input type="checkbox" disabled> <strong>メール権限の申請と承認完了</strong></li>
+        <li><input type="checkbox" disabled> <strong>Callback URL</strong> を正確に登録</li>
+        <li><input type="checkbox" disabled> <strong>HTTPS を使用</strong>し、<strong>Published 状態</strong>に変更</li>
+        <li><input type="checkbox" disabled> Channel ID / Secret を SESLP に保存</li>
+        <li><input type="checkbox" disabled> フロントエンドのログインテスト完了</li>
+      </ul>
+
+      <p><strong>注意:</strong> SESLP は以下を完全サポートします</p>
+      <ul>
+        <li><strong>LINE Login v2.1 + OpenID Connect</strong></li>
+        <li><strong>メール取得には事前承認が必要</strong></li>
+      </ul>
+    </div>
+  </details>
+</div>

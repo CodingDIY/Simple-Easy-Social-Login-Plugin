@@ -1,0 +1,933 @@
+<div class="seslp-guide-doc">
+  <blockquote>
+    <p>
+      本文件說明如何在 <strong>Simple Easy Social Login（SESLP）</strong> 外掛中，
+      設定各個社群登入服務提供商（Google、Facebook、LinkedIn、Naver、Kakao、LINE）。
+    </p>
+    <p>
+      所有登入皆基於 <strong>OAuth 2.0 / OpenID Connect（OIDC）</strong>。<br>
+      您必須在各提供商的開發者控制台中建立應用程式（Client），
+      並將 <strong>Client ID / Client Secret</strong> 輸入至 SESLP。
+    </p>
+  </blockquote>
+
+  <hr>
+
+  <h2>🔧 通用設定指南</h2>
+
+  <h4>1) <strong>Redirect URI 規則：</strong></h4>
+
+  <p><code>https://{your-domain}/?social_login={provider}</code></p>
+
+  <p>範例：</p>
+
+  <ul>
+    <li>Google → <code>https://example.com/?social_login=google</code></li>
+    <li>Facebook → <code>https://example.com/?social_login=facebook</code></li>
+    <li>LinkedIn → <code>https://example.com/?social_login=linkedin</code></li>
+    <li>Naver → <code>https://example.com/?social_login=naver</code></li>
+    <li>Kakao → <code>https://example.com/?social_login=kakao</code></li>
+    <li>LINE → <code>https://example.com/?social_login=line</code></li>
+  </ul>
+
+  <h4>2) <strong>必須使用 HTTPS。</strong></h4>
+
+  <p>大多數提供商要求使用 HTTPS，並會拒絕 <code>http://</code> 的重導請求。</p>
+
+  <h4>3) <strong>完全一致匹配</strong></h4>
+
+  <p>
+    控制台中設定的 Redirect URI 必須與 SESLP 發送的 URI <strong>100% 完全一致</strong>
+    （包含協議、子網域、路徑、結尾斜線與查詢參數）。
+  </p>
+
+  <h4>4) <strong>Email 可能不可用</strong></h4>
+
+  <p>
+    部分提供商允許使用者拒絕分享電子郵件。SESLP 可改用穩定的提供商 ID
+    來進行帳號綁定。
+  </p>
+
+  <h4>5) <strong>日誌查看位置</strong></h4>
+
+  <ul>
+    <li><code>/wp-content/SESLP-debug.log</code></li>
+    <li><code>/wp-content/debug.log</code>（<code>WP_DEBUG_LOG = true</code>）</li>
+  </ul>
+
+  <h2>🐞 偵錯日誌與疑難排解</h2>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>如何閱讀 SESLP 偵錯日誌</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <h4>日誌檔案位置</h4>
+
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code>（SESLP 偵錯日誌）</li>
+        <li><code>/wp-content/debug.log</code>（<code>WP_DEBUG_LOG = true</code>）</li>
+      </ul>
+
+      <h4>日誌格式</h4>
+
+      <pre><code>[YYYY-MM-DD HH:MM:SS Z] [LEVEL] 訊息 {"key":"value",...}</code></pre>
+
+      <ul>
+        <li><code>Z</code>：UTC 或 WordPress 本地時間（例如 KST）— 可於 SESLP 設定中選擇</li>
+        <li>
+          隱私：電子郵件 / Token / Secret 會自動遮罩
+          （例如：<code>r********@g****.com</code>）
+        </li>
+      </ul>
+
+      <h4>OAuth 流程日誌（常見）</h4>
+
+      <p><strong>1) OAuth 開始</strong></p>
+
+      <pre><code>[DEBUG] State created {"provider":"google","state":"906****23","ttl":"10min"}</code></pre>
+
+      <p>
+        說明：建立 CSRF 防護用的 state token。<code>ttl</code> 有效期限為 10 分鐘。
+      </p>
+
+      <p><strong>2) Callback 觸發</strong></p>
+
+      <pre><code>[DEBUG] Auth route triggered {"provider":"google","has_code":1}</code></pre>
+
+      <p>說明：已進入回調。<code>has_code:1</code> → 已取得 OAuth <code>code</code>。</p>
+
+      <p><strong>3) State 驗證</strong></p>
+
+      <p>成功：</p>
+      <pre><code>[DEBUG] State validated {"provider":"google","state":"906****23"}</code></pre>
+
+      <p>失敗：</p>
+      <pre><code>[WARNING] State validation failed: not found/expired {"provider":"google","state":"906****23"}</code></pre>
+
+      <p><strong>4) Token 交換</strong></p>
+
+      <pre><code>[DEBUG] Token response (google) {"has_access_token":1}</code></pre>
+
+      <p>說明：成功取得 Token。</p>
+
+      <p>失敗：</p>
+      <pre><code>[ERROR] Token request failed (google) {"error":"..."}</code></pre>
+
+      <p><strong>5) 使用者資訊請求</strong></p>
+
+      <pre><code>[ERROR] Userinfo request failed (google)
+  [WARNING] Invalid userinfo (google)</code></pre>
+
+      <p><strong>6) 使用者關聯</strong></p>
+
+      <pre><code>[DEBUG] Linker: signing in user {"user_id":45,"provider":"google","created":0}
+  [INFO]  Login success (google) {"user_id":45,"email":"r********@g****.com"}</code></pre>
+
+      <p><strong>7) 重導</strong></p>
+
+      <pre><code>[DEBUG] Redirect decision {"mode":"profile","user_id":45,"url":"https://example.com/wp-admin/profile.php"}</code></pre>
+
+      <h4>快速參考表</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>日誌訊息（簡述）</th>
+            <th>可能原因</th>
+            <th>處理方式</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State validation failed</td>
+            <td>逾時、切換分頁、重複請求</td>
+            <td>快速重試，或使用無痕模式</td>
+          </tr>
+          <tr>
+            <td>Token request failed</td>
+            <td>Client ID/Secret/Redirect 錯誤，或請求被阻擋</td>
+            <td>檢查開發者控制台、防火牆、伺服器時間</td>
+          </tr>
+          <tr>
+            <td>Userinfo invalid</td>
+            <td>缺少 scope 或 email 為私密</td>
+            <td>加入 <code>email, profile</code> scope，並取得使用者同意</td>
+          </tr>
+          <tr>
+            <td>User create failed</td>
+            <td>帳號衝突或 WordPress 限制</td>
+            <td>檢查既有使用者、多站點設定</td>
+          </tr>
+          <tr>
+            <td>Redirect missing</td>
+            <td>程式過早 return</td>
+            <td>確認 Redirect 類別在 callback 後執行</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4>回報錯誤時建議提供資訊</h4>
+
+      <ul>
+        <li>相關日誌內容（已遮罩）</li>
+        <li>使用的提供商（Google / Naver 等）</li>
+        <li>Redirect 模式 / 自訂 URL</li>
+        <li>偵錯日誌是否啟用</li>
+        <li>WordPress 環境（單站 / 多站 / 快取外掛等）</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <h2>🌍 提供商指南</h2>
+
+  <p>
+    請展開下方各個提供商，並貼上您為該提供商準備好的英文指南內容。
+  </p>
+
+  <hr>
+
+  <details class="seslp-guide-accordion" open>
+    <summary><strong>Google</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>推荐权限范围：</strong> <code>openid email profile</code></li>
+        <li><strong>Redirect URI 规则：</strong> <code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 准备工作（必备检查清单）</h4>
+
+      <p>(1) <strong>建议/必须使用 HTTPS</strong>（本地环境请使用可信的开发证书）。</p>
+      <p>(2) Redirect URI 必须与控制台中注册的值<strong>100% 完全一致</strong>。例如：<code>https://example.com/?social_login=google</code></p>
+      <p>(3) 在测试模式下，仅<strong>测试用户</strong>可以登录（最多 100 个用户）。</p>
+      <p>(4) 使用应用主页/隐私政策/服务条款 URL 时，可能需要进行<strong>应用域名（Authorized domains）注册</strong>及<strong>域名所有权验证</strong>。</p>
+
+      <h4>2) 项目 / 同意屏幕设置</h4>
+
+      <p>(1) 访问 <strong>Google Cloud Console</strong>。<br><a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">https://console.cloud.google.com/apis/credentials</a></p>
+      <p>(2) 顶部选择项目 → <strong>创建新项目</strong>（如有需要）。</p>
+      <p>(3) 侧边栏：进入 <strong>APIs &amp; Services → OAuth consent screen</strong>。</p>
+      <p>(4) 选择 <strong>User Type</strong>：通常为 <strong>External</strong>。</p>
+      <p>(5) 填写 <strong>应用信息</strong>：应用名称、用户支持邮箱、（可选）Logo。</p>
+
+      <p>(6) <strong>应用域名</strong> 部分</p>
+      <ul>
+        <li>填写应用主页 URL、隐私政策 URL、服务条款 URL</li>
+        <li>将<strong>根域名（例如 example.com）</strong>添加到 <strong>Authorized domains</strong> → <strong>保存</strong></li>
+        <li>如有需要，通过 Search Console 完成<strong>域名所有权验证</strong></li>
+      </ul>
+
+      <p>(7) 配置 <strong>Scopes</strong></p>
+      <ul>
+        <li><strong>推荐：</strong> <code>openid</code>、<code>email</code>、<code>profile</code></li>
+        <li>敏感/受限权限在上线前可能需要审核</li>
+      </ul>
+
+      <p>(8) 添加<strong>测试用户</strong>（测试模式下允许登录的邮箱）。</p>
+      <p>(9) <strong>保存</strong>。</p>
+
+      <p><strong>注意：</strong>仅使用基础权限（<code>openid email profile</code>）通常可以<strong>无需审核</strong>即可发布使用。</p>
+
+      <h4>3) 创建 OAuth 客户端（Web 应用）</h4>
+
+      <p>(1) 侧边栏：<strong>APIs &amp; Services → Credentials</strong>。</p>
+      <p>(2) 顶部：<strong>+ Create Credentials → OAuth client ID</strong>。</p>
+      <p>(3) 应用类型：<code>Web application</code>。</p>
+      <p>(4) 输入一个易于区分的<strong>名称</strong>（例如：<code>SESLP – Front</code>）。</p>
+
+      <p>(5) 添加<strong>Authorized redirect URIs</strong></p>
+      <ul>
+        <li><code>https://{domain}/?social_login=google</code></li>
+      </ul>
+
+      <p>(6) 点击 <strong>Create</strong>，然后复制生成的 <strong>Client ID / Client Secret</strong>。</p>
+
+      <p><strong>（可选）</strong>本插件使用授权码模式，一般不需要配置 Authorized JavaScript origins。</p>
+
+      <h4>4) WordPress（插件）设置</h4>
+
+      <p>(1) WP 后台 → <strong>SESLP Settings → Google</strong> 标签页。</p>
+      <p>(2) 粘贴 <strong>Client ID / Client Secret</strong> → <strong>保存</strong>。</p>
+      <p>(3) 在网站前端点击<strong>Google 登录按钮</strong>进行测试。</p>
+
+      <h4>5) 从测试切换到正式环境</h4>
+
+      <p>(1) 查看 <strong>OAuth consent screen → Publishing status</strong>。</p>
+      <p>(2) 切换到正式环境前：</p>
+      <ul>
+        <li>确认应用信息（Logo/域名/隐私政策/条款）填写完整且正确</li>
+        <li>移除不必要的权限，仅保留必需权限</li>
+        <li>如使用敏感权限，提交审核申请</li>
+      </ul>
+      <p>(3) 切换后，所有 Google 账户均可登录。</p>
+
+      <h4>6) 常见错误与解决方案</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ 当控制台中注册的 Redirect URI 与实际请求 URI 有任何差异（协议、子域、路径、参数等）时会发生。请确保完全一致。</p>
+
+      <p>(2) <strong>access_denied / disallowed_useragent</strong></p>
+      <p>→ 浏览器或内嵌环境限制。请使用普通浏览器重试。</p>
+
+      <p>(3) <strong>invalid_client / unauthorized_client</strong></p>
+      <p>→ Client ID/Secret 输入错误或应用状态异常（被删除/禁用）。请重新检查或生成。</p>
+
+      <p>(4) <strong>Email 为空</strong></p>
+      <p>→ 检查是否包含 <code>email</code> 权限、同意屏幕展示情况以及账户邮箱可见性设置。请在同意页面中明确说明邮箱用途。</p>
+
+      <p><strong>日志查看：</strong></p>
+      <ul>
+        <li><code>wp-content/SESLP-debug.log</code>（插件调试开启）</li>
+        <li><code>wp-content/debug.log</code>（<code>WP_DEBUG</code>, <code>WP_DEBUG_LOG = true</code>）</li>
+      </ul>
+
+      <h4>7) 总结检查清单</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> OAuth 同意屏幕：配置应用信息/域名/政策/条款/权限/测试用户</li>
+        <li><input type="checkbox" disabled> Credentials：创建 <strong>Web Application</strong> 客户端</li>
+        <li><input type="checkbox" disabled> 注册 Redirect URI：<code>https://{domain}/?social_login=google</code></li>
+        <li><input type="checkbox" disabled> SESLP：保存 Client ID/Secret 并测试登录</li>
+        <li><input type="checkbox" disabled> 上线前切换发布状态（必要时提交审核）</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Facebook</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>Redirect URI：</strong> <code>https://{domain}/?social_login=facebook</code></li>
+        <li><strong>請求權限（建議）：</strong> <code>public_profile</code>、<code>email</code></li>
+        <li><strong>Facebook 不使用</strong> <code>openid</code>。</li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 建立應用程式並新增產品</h4>
+
+      <p>(1) 前往 <strong>Meta for Developers</strong> → 登入<br><a href="https://developers.facebook.com/" target="_blank" rel="noopener noreferrer">https://developers.facebook.com/</a></p>
+      <p>(2) 點擊 <strong>Create App</strong> → 選擇一般類型（例如 Consumer）→ 建立應用程式</p>
+      <p>(3) 在左側選單中，從 <strong>Products</strong> 新增 <strong>Facebook Login</strong></p>
+      <p>(4) 前往 <strong>Settings</strong> → 確認以下項目：</p>
+
+      <ul>
+        <li><strong>Client OAuth Login：</strong> 開啟（ON）</li>
+        <li><strong>Web OAuth Login：</strong> 開啟（ON）</li>
+        <li><strong>Valid OAuth Redirect URIs：</strong></li>
+        <li>新增 <code>https://{domain}/?social_login=facebook</code></li>
+        <li><strong>（選填）Enforce HTTPS：</strong> 預設建議啟用</li>
+      </ul>
+
+      <h4>2) 基本應用設定（App Settings → Basic）</h4>
+
+      <p>(1) <strong>App Domains：</strong> <code>example.com</code>（應用程式政策/條款/首頁所屬網域）</p>
+      <p>(2) <strong>Privacy Policy URL：</strong> 可公開存取的隱私權政策頁面</p>
+      <p>(3) <strong>Terms of Service URL：</strong> 可公開存取的服務條款頁面</p>
+      <p>(4) <strong>User Data Deletion：</strong> 提供說明頁或資料刪除端點</p>
+      <p>(5) <strong>Category / App Icon：</strong> 設定完成後點擊 <strong>Save</strong></p>
+
+      <h4>3) 權限（Scopes）與應用審核</h4>
+
+      <p>(1) 一般登入所需的基本權限為 <strong><code>public_profile</code></strong>；選填電子郵件為 <strong><code>email</code></strong></p>
+      <p>(2) 多數情況下，<strong><code>email</code> 可在無需審核的情況下使用</strong>，但可能依地區/帳號有所不同</p>
+      <p>(3) <strong>進階權限</strong>（如 pages/ads）需通過 <strong>App Review</strong> 與 <strong>Business Verification</strong></p>
+
+      <h4>4) 切換模式（Development → Live）</h4>
+
+      <p>在應用程式上方或設定區，將 <strong>App Mode：Development → Live</strong></p>
+
+      <h4>5) 切換為 Live 前檢查清單</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> 準備隱私政策 / 條款 / 資料刪除頁面</li>
+        <li><input type="checkbox" disabled> 正確填寫 Valid OAuth Redirect URIs</li>
+        <li><input type="checkbox" disabled> 移除不必要權限，僅保留必要項目</li>
+        <li><input type="checkbox" disabled>（如需要）完成 App Review / Business Verification</li>
+      </ul>
+
+      <h4>6) WordPress 設定（SESLP）</h4>
+
+      <p>(1) WP 後台 → <strong>SESLP Settings → Facebook</strong></p>
+      <p>(2) 輸入 <strong>App ID / App Secret</strong> → 儲存</p>
+      <p>(3) 在前端使用 <strong>Facebook 登入按鈕</strong> 測試</p>
+
+      <h4>7) 疑難排解</h4>
+
+      <p>(1) <strong>Can't Load URL / redirect_uri error</strong></p>
+      <p>→ 請確認在 <strong>Valid OAuth Redirect URIs</strong> 中註冊的 URI 與實際請求<strong>完全一致</strong>（包含協議、子網域、斜線與查詢參數）</p>
+
+      <p>(2) <strong>email 為 null</strong></p>
+      <p>→ 使用者未在 Facebook 註冊電子郵件或設定為私密。請準備<strong>基於 ID 的帳號綁定邏輯</strong>，並在同意畫面中清楚說明電子郵件用途</p>
+
+      <p>(3) <strong>權限相關錯誤</strong></p>
+      <p>→ 若請求權限超出基本範圍，需進行 <strong>App Review / Business Verification</strong></p>
+
+      <p>(4) <strong>無法切換為 Live</strong></p>
+      <p>→ 若隱私政策 / 條款 / 資料刪除頁面<strong>未提供或不可公開存取</strong>，則無法切換，需提供公開網址</p>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LinkedIn</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>Redirect URI：</strong> <code>https://{domain}/?social_login=linkedin</code></li>
+        <li><strong>必要設定：</strong> 啟用 OpenID Connect（OIDC）</li>
+        <li><strong>建議權限範圍：</strong> <code>openid</code>、<code>profile</code>、<code>email</code></li>
+        <li>LinkedIn 正在<strong>逐步淘汰</strong>舊版權限（<code>r_liteprofile</code>、<code>r_emailaddress</code>）。</li>
+        <li>新應用<strong>必須使用 OIDC 標準權限</strong>。</li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 建立應用程式</h4>
+
+      <p>(1) 前往 <strong>LinkedIn Developers Console</strong></p>
+      <p>→ <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener noreferrer">https://www.linkedin.com/developers/apps</a></p>
+      <p>(2) 使用 LinkedIn 帳號登入</p>
+      <p>(3) 點擊 <strong>Create app</strong></p>
+      <p>(4) 填寫必要資訊：</p>
+
+      <ul>
+        <li><strong>應用名稱：</strong>例如 <code>MySite LinkedIn Login</code></li>
+        <li><strong>LinkedIn 頁面：</strong>選擇或「None」</li>
+        <li><strong>應用圖示：</strong>100×100 以上 PNG/JPG</li>
+        <li><strong>隱私政策 URL / 商業電子郵件：</strong>必須有效且可公開存取</li>
+      </ul>
+
+      <p>(5) 點擊 <strong>Create app</strong></p>
+
+      <p><strong>預設為開發模式</strong> → 可立即測試 <code>openid</code>、<code>profile</code>、<code>email</code> 登入，<strong>無需發布</strong></p>
+
+      <h4>2) 啟用 OpenID Connect（OIDC）</h4>
+
+      <p>(1) 前往 <strong>Products</strong> 分頁</p>
+      <p>(2) 找到 <strong>Sign In with LinkedIn using OpenID Connect</strong></p>
+      <p>(3) 點擊 <strong>Add product</strong> → 即時核准</p>
+      <p>(4) OIDC 設定會顯示在 <strong>Auth</strong> 分頁中</p>
+
+      <p><strong>OIDC 必要權限</strong></p>
+      <ul>
+        <li><code>openid</code> → 回傳 ID Token</li>
+        <li><code>profile</code> → 姓名、照片、標題等</li>
+        <li><code>email</code> → 電子郵件地址</li>
+      </ul>
+
+      <h4>3) OAuth 2.0 設定（Auth 分頁）</h4>
+
+      <p>(1) 前往 <strong>Auth → OAuth 2.0 settings</strong></p>
+      <p>(2) 在 <strong>Redirect URLs</strong> 中新增：</p>
+      <p>→ <code>https://{domain}/?social_login=linkedin</code></p>
+      <p>(3) <strong>必須完全一致</strong>（協議、子網域、斜線、查詢參數）</p>
+      <p>(4) 如有需要，可註冊多個：</p>
+      <ul>
+        <li>本地：<code>https://localhost:3000/?social_login=linkedin</code></li>
+        <li>測試環境：<code>https://staging.example.com/?social_login=linkedin</code></li>
+        <li>正式環境：<code>https://example.com/?social_login=linkedin</code></li>
+      </ul>
+      <p>(5) 點擊 <strong>Save</strong></p>
+
+      <h4>4) 取得 Client ID / Client Secret</h4>
+
+      <p>(1) 在 <strong>Auth</strong> 分頁中找到：</p>
+      <ul>
+        <li><strong>Client ID</strong></li>
+        <li><strong>Client Secret</strong></li>
+      </ul>
+      <p>(2) WordPress 後台 → <strong>SESLP Settings → LinkedIn</strong></p>
+      <p>(3) 貼上後 → <strong>儲存</strong></p>
+      <p>(4) 在前端測試 <strong>LinkedIn 登入按鈕</strong></p>
+
+      <p><strong>安全性：</strong></p>
+      <ul>
+        <li>切勿公開 Client Secret</li>
+        <li>如有外洩，請使用 <strong>Regenerate secret</strong></li>
+      </ul>
+
+      <h4>5) 權限說明</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>權限</th>
+            <th>說明</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>openid</code></td>
+            <td>回傳 OIDC 標準 ID Token</td>
+            <td><strong>必需</strong></td>
+          </tr>
+          <tr>
+            <td><code>profile</code></td>
+            <td>姓名、照片、標題等</td>
+            <td><strong>必需</strong></td>
+          </tr>
+          <tr>
+            <td><code>email</code></td>
+            <td>電子郵件地址</td>
+            <td><strong>必需</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p><strong>舊版權限（<code>r_liteprofile</code>、<code>r_emailaddress</code>）</strong></p>
+      <ul>
+        <li><strong>已於 2024 年後棄用</strong></li>
+        <li><strong>新應用無法使用</strong></li>
+      </ul>
+
+      <h4>6) 疑難排解</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong></p>
+      <p>→ URI 有任何差異都會導致錯誤 → 請確認 <strong>100% 完全一致</strong></p>
+
+      <p>(2) <strong>invalid_client</strong></p>
+      <p>→ ID/Secret 錯誤或應用未啟用 → 請重新確認或重新產生</p>
+
+      <p>(3) <strong>email 為 NULL</strong></p>
+      <p>→ 使用者拒絕或未包含 <code>email</code> 權限 → 請在同意畫面說明用途</p>
+
+      <p>(4) <strong>insufficient_scope</strong></p>
+      <p>→ 請求的權限未核准 → 確認 OIDC 已啟用</p>
+
+      <p>(5) <strong>未啟用 OIDC</strong></p>
+      <p>→ Products 中缺少 <strong>Sign In with LinkedIn using OpenID Connect</strong></p>
+
+      <p><strong>日誌：</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) 總結檢查清單</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> 已建立應用程式</li>
+        <li><input type="checkbox" disabled> 已新增 <strong>OpenID Connect</strong> 產品</li>
+        <li><input type="checkbox" disabled> 已正確註冊 Redirect URI</li>
+        <li><input type="checkbox" disabled> 已在 SESLP 儲存 Client ID/Secret</li>
+        <li><input type="checkbox" disabled> 權限：<code>openid profile email</code>（無舊版權限）</li>
+        <li><input type="checkbox" disabled> 已在 HTTPS 前端測試</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>注意：</strong></p>
+      <ul>
+        <li>SESLP 完全支援 <strong>OIDC 流程</strong>。</li>
+        <li>舊版 OAuth 2.0 <strong>已不再支援</strong>。</li>
+        <li>新整合請務必使用 <strong>OpenID Connect</strong>。</li>
+      </ul>
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Naver</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>Redirect URI：</strong> <code>https://{domain}/?social_login=naver</code></li>
+        <li><strong>建議權限範圍：</strong> 基本資料（<code>name</code>）、電子郵件（<code>email</code>）</li>
+        <li>Naver 使用 <strong>Naver Login（네아로）</strong> API，<strong>必須使用 HTTPS</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 應用程式註冊</h4>
+
+      <p>(1) 前往 <strong>Naver Developer Center</strong></p>
+      <p>→ <a href="https://developers.naver.com/apps/" target="_blank" rel="noopener noreferrer">https://developers.naver.com/apps/</a></p>
+      <p>(2) 使用 Naver 帳號登入</p>
+      <p>(3) 點擊 <strong>Application → Register Application</strong></p>
+      <p>(4) 填寫必要資訊：</p>
+
+      <ul>
+        <li><strong>應用名稱：</strong>例如 <code>MySite Naver Login</code></li>
+        <li><strong>API 使用：</strong>選擇 <code>Naver Login（네아로）</code></li>
+        <li><strong>新增環境 → Web</strong></li>
+        <li><strong>服務 URL：</strong> <code>https://example.com</code></li>
+        <li><strong>Callback URL：</strong> <code>https://example.com/?social_login=naver</code></li>
+      </ul>
+
+      <p>(5) 同意條款 → <strong>Register</strong></p>
+
+      <p><strong>注意：</strong></p>
+      <ul>
+        <li><strong>必須使用 HTTPS</strong> → 不允許 HTTP</li>
+        <li><strong>子網域需個別註冊</strong></li>
+      </ul>
+
+      <h4>2) 取得 Client ID / Client Secret</h4>
+
+      <p>(1) 前往 <strong>My Applications</strong></p>
+      <p>(2) 點擊應用程式 → 複製 <strong>Client ID</strong> 與 <strong>Client Secret</strong></p>
+
+      <h4>3) WordPress（外掛）設定</h4>
+
+      <p>(1) WP 後台 → <strong>SESLP Settings → Naver</strong></p>
+      <p>(2) 貼上 <strong>Client ID / Client Secret</strong></p>
+      <p>(3) 確認 <strong>Redirect URI</strong> 完全一致：<code>https://{domain}/?social_login=naver</code></p>
+      <p>(4) <strong>Save</strong> → 在前端使用 <strong>Naver 登入按鈕</strong>測試</p>
+
+      <h4>4) 權限與資料提供</h4>
+
+      <table>
+        <thead>
+          <tr>
+            <th>資料</th>
+            <th>權限</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>姓名</td>
+            <td><code>name</code></td>
+            <td>預設</td>
+          </tr>
+          <tr>
+            <td>電子郵件</td>
+            <td><code>email</code></td>
+            <td>預設</td>
+          </tr>
+          <tr>
+            <td>性別、生日</td>
+            <td>額外項目</td>
+            <td><strong>需要審核</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul>
+        <li>使用者可在同意畫面中<strong>同意或拒絕</strong></li>
+        <li>若拒絕 email → <code>email = null</code> → 請使用<strong>基於 ID 的帳號綁定</strong></li>
+        <li>敏感資料需通過 <strong>Naver 應用審核</strong></li>
+      </ul>
+
+      <h4>5) 疑難排解</h4>
+
+      <p>(1) <strong>Redirect URI 不匹配</strong></p>
+      <p>→ 只要有細微差異都會出錯 → 請確保 <strong>100% 完全一致</strong></p>
+
+      <p>(2) <strong>HTTP 錯誤</strong></p>
+      <p>→ 必須使用 <strong>HTTPS</strong></p>
+
+      <p>(3) <strong>子網域錯誤</strong></p>
+      <p>→ 每個子網域需個別註冊</p>
+
+      <p>(4) <strong>email 為 NULL</strong></p>
+      <p>→ 使用者拒絕或設為私密 → 請準備 ID 綁定邏輯</p>
+
+      <p>(5) <strong>需要審核</strong></p>
+      <p>→ 基本登入：<strong>不需審核</strong><br>→ 額外資料：<strong>需要審核</strong></p>
+
+      <p><strong>日誌：</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>6) 總結檢查清單</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> 已在 Naver Developer Center 註冊應用程式</li>
+        <li><input type="checkbox" disabled> <strong>Callback URL</strong> 已正確註冊</li>
+        <li><input type="checkbox" disabled> 已使用 <strong>HTTPS</strong></li>
+        <li><input type="checkbox" disabled> 子網域已分別註冊（如需要）</li>
+        <li><input type="checkbox" disabled> Client ID/Secret 已儲存於 SESLP</li>
+        <li><input type="checkbox" disabled> 已測試 email 同意/拒絕行為</li>
+        <li><input type="checkbox" disabled> 前端登入測試完成</li>
+      </ul>
+
+      <hr>
+
+      <p><strong>注意：</strong></p>
+      <ul>
+        <li>SESLP 完全支援 <strong>Naver Login（네아로）</strong>。</li>
+        <li>基本登入（<code>name</code>、<code>email</code>）<strong>無需審核即可使用</strong>。</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>Kakao</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+
+      <ul>
+        <li><strong>Redirect URI：</strong> <code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>建議權限範圍：</strong> <code>profile_nickname</code>、<code>profile_image</code>、<code>account_email</code></li>
+        <li><code>account_email</code> <strong>僅可在完成身分驗證或企業驗證後使用</strong></li>
+        <li><strong>必須使用 HTTPS</strong>，且<strong>必須啟用 Client Secret</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 建立應用程式</h4>
+
+      <p>(1) 前往 <strong>Kakao Developers</strong></p>
+      <p>→ <a href="https://developers.kakao.com/" target="_blank" rel="noopener noreferrer">https://developers.kakao.com/</a></p>
+
+      <p>(2) 登入 → <strong>My Applications → Add New App</strong></p>
+
+      <p>(3) 輸入：</p>
+      <ul>
+        <li>App Name、Company Name</li>
+        <li>Category</li>
+        <li>同意 Operation Policy</li>
+      </ul>
+
+      <p>(4) <strong>Save</strong></p>
+
+      <h4>2) 啟用 Kakao Login</h4>
+
+      <p>(1) <strong>Product Settings &gt; Kakao Login</strong></p>
+      <p>(2) 將 <strong>Enable Kakao Login</strong> 切換為 <strong>ON</strong></p>
+
+      <p>(3) <strong>註冊 Redirect URI</strong></p>
+      <ul>
+        <li><code>https://{domain}/?social_login=kakao</code></li>
+        <li><strong>Save</strong></li>
+      </ul>
+
+      <p>(4) 網域必須與 <strong>Platform site domain</strong> 一致</p>
+
+      <h4>3) 同意項目（Scopes）</h4>
+
+      <p>(1) <strong>Consent Items</strong></p>
+      <p>(2) 新增並設定：</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Scope</th>
+            <th>說明</th>
+            <th>同意類型</th>
+            <th>備註</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>profile_nickname</code></td>
+            <td>暱稱</td>
+            <td>必填 / 選填</td>
+            <td>基本資料</td>
+          </tr>
+          <tr>
+            <td><code>profile_image</code></td>
+            <td>個人資料圖片</td>
+            <td>必填 / 選填</td>
+            <td>基本資料</td>
+          </tr>
+          <tr>
+            <td><code>account_email</code></td>
+            <td>電子郵件</td>
+            <td><strong>選填</strong></td>
+            <td><strong>需要驗證</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>(3) 為每一項清楚說明其<strong>用途</strong></p>
+      <p>(4) <strong>Save</strong></p>
+
+      <p><strong>注意：</strong>敏感權限需要<strong>驗證</strong></p>
+
+      <h4>4) 註冊 Web 平台</h4>
+
+      <p>(1) <strong>App Settings &gt; Platform</strong></p>
+      <p>(2) <strong>Register Web Platform</strong></p>
+      <p>(3) 網站網域：<code>https://{domain}</code></p>
+      <p>(4) <strong>Save</strong> → 必須與 Redirect URI 的網域一致</p>
+
+      <h4>5) 安全性 – 產生並啟用 Client Secret</h4>
+
+      <p>(1) <strong>Product Settings &gt; Security</strong></p>
+      <p>(2) <strong>Use Client Secret</strong> → <strong>ON</strong></p>
+      <p>(3) <strong>Generate Secret</strong> → 複製其值</p>
+      <p>(4) <strong>Activation Status</strong> → <strong>Active</strong></p>
+      <p>(5) <strong>Save</strong></p>
+
+      <p><strong>重要：</strong>產生後必須<strong>啟用</strong></p>
+
+      <h4>6) 取得 REST API Key（Client ID）</h4>
+
+      <p>(1) <strong>App Keys</strong></p>
+      <p>(2) 複製 <strong>REST API Key</strong> → 作為 <strong>Client ID</strong> 使用</p>
+
+      <h4>7) WordPress 設定</h4>
+
+      <p>(1) WP 後台 → <strong>SESLP Settings → Kakao</strong></p>
+      <p>(2) <strong>Client ID</strong> = REST API Key<br>
+        <strong>Client Secret</strong> = 產生的 Secret</p>
+
+      <p>(3) <strong>Save</strong></p>
+      <p>(4) 使用 <strong>Kakao Login Button</strong> 進行測試</p>
+
+      <h4>8) 疑難排解</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → 必須 100% 完全一致</p>
+      <p>(2) <strong>invalid_client</strong> → Secret 未啟用或輸入錯誤</p>
+      <p>(3) <strong>email empty</strong> → 使用者拒絕提供或尚未驗證</p>
+      <p>(4) <strong>Domain mismatch</strong> → Platform 與 Redirect URI 網域不一致</p>
+      <p>(5) <strong>HTTP forbidden</strong> → <strong>僅支援 HTTPS</strong></p>
+
+      <p><strong>日誌：</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>9) 總結檢查清單</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> 已啟用 Kakao Login</li>
+        <li><input type="checkbox" disabled> 已註冊 Redirect URI</li>
+        <li><input type="checkbox" disabled> 已註冊 Web 平台網域</li>
+        <li><input type="checkbox" disabled> 已設定同意項目</li>
+        <li><input type="checkbox" disabled> 已產生並啟用 Client Secret</li>
+        <li><input type="checkbox" disabled> 已將 REST API Key / Secret 儲存到 SESLP</li>
+        <li><input type="checkbox" disabled> 已在 HTTPS 前端完成測試</li>
+      </ul>
+
+    </div>
+  </details>
+
+  <hr>
+
+  <details class="seslp-guide-accordion">
+    <summary><strong>LINE</strong></summary>
+
+    <div class="seslp-guide-accordion__body">
+      <ul>
+        <li><strong>Redirect URI：</strong> <code>https://{domain}/?social_login=line</code></li>
+        <li><strong>必要條件：</strong>啟用 OpenID Connect，並<strong>申請且取得電子郵件權限核准</strong></li>
+        <li><strong>建議權限範圍：</strong> <code>openid</code>、<code>profile</code>、<code>email</code></li>
+        <li><strong>必須使用 HTTPS</strong>，且<strong>電子郵件權限需要核准</strong></li>
+      </ul>
+
+      <hr>
+
+      <h4>1) 建立 Provider 與 Channel</h4>
+
+      <p>(1) 前往 <strong>LINE Developers Console</strong></p>
+      <p>→ <a href="https://developers.line.biz/console/" target="_blank" rel="noopener noreferrer">https://developers.line.biz/console/</a></p>
+
+      <p>(2) 使用 <strong>LINE Business Account</strong> 登入（不允許個人帳號）</p>
+      <p>(3) 點擊 <strong>Create a new provider</strong> → 輸入名稱 → <strong>Create</strong></p>
+      <p>(4) 在該 Provider 下 → <strong>Channels</strong> 分頁</p>
+      <p>(5) 選擇 <strong>Create a LINE Login channel</strong></p>
+
+      <p>(6) 設定內容：</p>
+      <ul>
+        <li><strong>Channel type：</strong> <code>LINE Login</code></li>
+        <li><strong>Provider：</strong> 選擇已建立的 Provider</li>
+        <li><strong>Region：</strong> 目標國家（例如 <code>South Korea</code>、<code>Japan</code>）</li>
+        <li><strong>Name / description / icon：</strong> 顯示於同意畫面</li>
+      </ul>
+
+      <p>(7) 同意條款 → <strong>Create</strong></p>
+
+      <h4>2) 啟用 OpenID Connect 並申請電子郵件權限</h4>
+
+      <p>(1) 前往左側選單中的 <strong>OpenID Connect</strong></p>
+      <p>(2) 在 <strong>Email address permission</strong> 旁點擊 <strong>Apply</strong></p>
+
+      <p>(3) 填寫申請資料：</p>
+      <ul>
+        <li><strong>隱私政策 URL</strong>（必須可公開存取）</li>
+        <li>上傳<strong>隱私政策螢幕截圖</strong></li>
+        <li>送出</li>
+      </ul>
+
+      <p>(4) <strong><code>email</code> 權限僅於核准後可用</strong><br>
+        → 核准通常需要 1～3 個工作天</p>
+
+      <h4>3) 註冊 Callback URL 並發布 Channel</h4>
+
+      <p>(1) 前往左側選單中的 <strong>LINE Login</strong></p>
+
+      <p>(2) 輸入 <strong>Callback URL</strong>：</p>
+      <p>→ <code>https://{domain}/?social_login=line</code></p>
+
+      <p>(3) <strong>必須完全一致</strong>：</p>
+      <ul>
+        <li>協議：<code>https://</code>（<strong>不允許 HTTP</strong>）</li>
+        <li>網域、路徑、查詢字串必須 <strong>100% 一致</strong></li>
+      </ul>
+
+      <p>(4) 點擊 <strong>Save</strong></p>
+
+      <p>(5) 將 Channel 狀態改為 <strong>Published</strong></p>
+      <ul>
+        <li><strong>Development mode：</strong> 僅供測試</li>
+        <li><strong>Published：</strong> 正式上線服務</li>
+      </ul>
+
+      <h4>4) 取得 Channel ID / Secret</h4>
+
+      <p>(1) 在 Channel 頁面頂部或 <strong>Basic settings</strong></p>
+      <p>(2) <strong>Channel ID</strong> → SESLP 的 <strong>Client ID</strong><br>
+        <strong>Channel Secret</strong> → SESLP 的 <strong>Client Secret</strong></p>
+
+      <h4>5) WordPress 設定</h4>
+
+      <p>(1) WP 後台 → <strong>SESLP Settings → LINE</strong></p>
+      <p>(2) <strong>Client ID</strong> ← Channel ID<br>
+        <strong>Client Secret</strong> ← Channel Secret</p>
+
+      <p>(3) <strong>Save</strong></p>
+      <p>(4) 在前端使用 <strong>LINE login button</strong> 進行測試</p>
+
+      <h4>6) 疑難排解</h4>
+
+      <p>(1) <strong>redirect_uri_mismatch</strong> → 只要有些微差異就會報錯 → 請確認 <strong>100% 一致</strong></p>
+      <p>(2) <strong>invalid_client</strong> → Secret 輸入錯誤，或 Channel <strong>尚未 Published</strong></p>
+      <p>(3) <strong>email NULL</strong> → <strong>電子郵件權限尚未核准</strong>，或使用者已拒絕</p>
+      <p>(4) <strong>不允許 HTTP</strong> → <strong>必須使用 HTTPS</strong>（localhost 的 HTTPS 可接受）</p>
+      <p>(5) <strong>Development mode 限制</strong> → 僅測試帳號可登入</p>
+
+      <p><strong>日誌：</strong></p>
+      <ul>
+        <li><code>/wp-content/SESLP-debug.log</code></li>
+        <li><code>/wp-content/debug.log</code></li>
+      </ul>
+
+      <h4>7) 總結檢查清單</h4>
+
+      <ul>
+        <li><input type="checkbox" disabled> 已使用 Business Account 建立 <strong>Provider + LINE Login channel</strong></li>
+        <li><input type="checkbox" disabled> <strong>電子郵件權限已申請並核准</strong></li>
+        <li><input type="checkbox" disabled> <strong>Callback URL</strong> 已正確註冊</li>
+        <li><input type="checkbox" disabled> 已使用 <strong>HTTPS</strong>，且狀態為 <strong>Published</strong></li>
+        <li><input type="checkbox" disabled> Channel ID / Secret 已儲存至 SESLP</li>
+        <li><input type="checkbox" disabled> 前端登入測試完成</li>
+      </ul>
+
+      <p><strong>注意：</strong>SESLP 完整支援</p>
+      <ul>
+        <li><strong>LINE Login v2.1 + OpenID Connect</strong>。</li>
+        <li><strong>收集電子郵件需要事先核准</strong>。</li>
+      </ul>
+    </div>
+  </details>
+</div>

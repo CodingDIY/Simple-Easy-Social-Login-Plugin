@@ -7,13 +7,12 @@ if (!defined('ABSPATH')) {
 
 /**
  * Admin "Guide" subpage controller.
- * - Renders localized Markdown via a template file: templates/guide-page.php
- * - Primary docs: /assets/md/{locale}.md (hyphen or underscore)
- * - Optional Parsedown: assets/md/Parsedown.php
+ * - Renders localized HTML guide files via a template file: templates/guide-page.php
+ * - Primary docs: /guides/{locale}.html
  */
 class SESLP_Guides {
-  private const GUIDE_DIR_PRIMARY = 'assets/md';
-  private const FALLBACK_LOCALE   = 'en-US';
+  private const GUIDE_DIR_PRIMARY = 'guides';
+  private const FALLBACK_LOCALE   = 'en_US';
 
   /** Register submenu under plugin top-level if available; otherwise under Settings. */
   public static function register_menu(): void {
@@ -51,16 +50,15 @@ class SESLP_Guides {
 
     $plugin_root = $plugin->dir;
     $locale_full = get_user_locale() ?: get_locale(); // e.g., ko_KR
-    $locale_norm = str_replace('_', '-', $locale_full); // ko-KR
-    $lang_only   = strstr($locale_norm, '-', true) ?: $locale_norm; // ko
+    $lang_only   = strstr($locale_full, '_', true) ?: $locale_full; // ko
 
-    // Build candidate file list (hyphen/underscore + primary/legacy dirs).
-    $md_file = self::locate_markdown($plugin_root, $locale_norm, $lang_only);
+    // Build candidate file list using locale-specific HTML guides.
+    $guide_file = self::locate_guide_file($plugin_root, $locale_full, $lang_only);
 
-    // Load md (or not-found message), convert to HTML.
-    $markdown = $md_file ? (string) @file_get_contents($md_file) : self::not_found_message();
-    $html     = self::markdown_to_html($markdown, $plugin_root);
+    // Load HTML guide file (or fallback not-found message).
+    $html = $guide_file ? (string) @file_get_contents($guide_file) : self::not_found_message_html();
 
+    $html = self::replace_guide_placeholders($html);
     // Force guide links to open in a new tab with safe rel attribute.
     $html = preg_replace_callback(
       '/<a\s+([^>]*href="[^"]+"[^>]*)>/i',
@@ -98,60 +96,90 @@ class SESLP_Guides {
     // Provide data to template in scoped variables.
     $page_title = __('SESLP Guide', 'simple-easy-social-login-oauth-login');
     $guide_html = $html;
-    $guide_file = $md_file;
 
     // Isolate scope
     include $template;
   }
 
-  /** Find the best matching Markdown file by locale. */
-  private static function locate_markdown(string $root, string $locale_norm, string $lang_only): ?string {
+  /** Replace guide placeholders with the current site URL and host. */
+  private static function replace_guide_placeholders(string $html): string {
+    $site_url  = home_url('/');
+    $site_url  = untrailingslashit($site_url);
+    $site_host = wp_parse_url($site_url, PHP_URL_HOST);
+    $site_host = is_string($site_host) ? $site_host : '';
+
+    $replacements = [
+      '{your-domain}'       => $site_url,
+      '{domain}'            => $site_host ?: 'example.com',
+      'https://example.com' => $site_url,
+      'http://example.com'  => $site_url,
+      'example.com'         => $site_host ?: 'example.com',
+    ];
+
+    return strtr($html, $replacements);
+  }
+
+  /** Find the best matching HTML guide file by locale. */
+  private static function locate_guide_file(string $root, string $locale_full, string $lang_only): ?string {
     $candidates = [];
-    foreach ([$locale_norm, str_replace('-', '_', $locale_norm), $lang_only, self::FALLBACK_LOCALE] as $loc) {
-      $candidates[] = $root . self::GUIDE_DIR_PRIMARY . '/' . $loc . '.md';
+
+    foreach ([$locale_full, $lang_only, self::FALLBACK_LOCALE] as $loc) {
+      $candidates[] = $root . self::GUIDE_DIR_PRIMARY . '/' . $loc . '.html';
     }
+
     foreach ($candidates as $path) {
-      if (file_exists($path)) return $path;
-    }
-    return null;
-  }
-
-  /** Small info message as Markdown. */
-  private static function not_found_message(): string {
-    return "### " . esc_html__('Guide not found', 'simple-easy-social-login-oauth-login') . "\n\n"
-         . esc_html__('Please add a localized Markdown file under assets/md/{locale}.md', 'simple-easy-social-login-oauth-login');
-  }
-
-  /** Markdown → HTML using Parsedown located under assets/md/Parsedown.php (no fallback). */
-  private static function markdown_to_html(string $md, string $plugin_root): string {
-    $parsedown_path = $plugin_root . 'assets/md/Parsedown.php';
-
-    if (file_exists($parsedown_path)) {
-      require_once $parsedown_path;
-
-      if (class_exists('SESLP_Parsedown')) {
-        $seslp_pd = new SESLP_Parsedown();
-        $seslp_pd->setBreaksEnabled(true);
-
-        return $seslp_pd->text($md);
+      if (file_exists($path)) {
+        return $path;
       }
     }
 
-    return wpautop(esc_html($md));
+    return null;
+  }
+
+  /** Small info message as HTML. */
+  private static function not_found_message_html(): string {
+    return '<h3>'
+         . esc_html__('Guide not found', 'simple-easy-social-login-oauth-login')
+         . '</h3><p>'
+         . esc_html__('Please add a localized HTML guide file under guides/{locale}.html', 'simple-easy-social-login-oauth-login')
+         . '</p>';
   }
 
   /** Allowed tags for admin output. */
   private static function kses_allowed_tags(): array {
-    return [
-      'h1'=>[], 'h2'=>[], 'h3'=>[], 'h4'=>[], 'h5'=>[], 'h6'=>[],
-      'p'=>['class'=>[]], 'br'=>[], 'hr'=>[],
-      'ul'=>['class'=>[]], 'ol'=>['class'=>[]], 'li'=>[],
-      'strong'=>[], 'em'=>[], 'b'=>[], 'i'=>[], 'u'=>[],
-      'a'=>['href'=>[], 'target'=>[], 'rel'=>[], 'class'=>[]],
-      'code'=>['class'=>[]], 'pre'=>['class'=>[]],
-      'blockquote'=>['cite'=>[]], 'span'=>['class'=>[]],
-      'table'=>['class'=>[]], 'thead'=>[], 'tbody'=>[], 'tr'=>[], 'th'=>[], 'td'=>['colspan'=>[], 'rowspan'=>[], 'class'=>[]],
-      'details'=>['open'=>[]], 'summary'=>['class'=>[]],
+        return [
+      'div' => ['class' => []],
+      'h1' => ['class' => []],
+      'h2' => ['class' => []],
+      'h3' => ['class' => []],
+      'h4' => ['class' => []],
+      'h5' => ['class' => []],
+      'h6' => ['class' => []],
+      'p'  => ['class' => []],
+      'br' => [],
+      'hr' => [],
+      'ul' => ['class' => []],
+      'ol' => ['class' => []],
+      'li' => ['class' => []],
+      'strong' => [],
+      'em' => [],
+      'b' => [],
+      'i' => [],
+      'u' => [],
+      'a' => ['href' => [], 'target' => [], 'rel' => [], 'class' => []],
+      'code' => ['class' => []],
+      'pre' => ['class' => []],
+      'blockquote' => ['cite' => [], 'class' => []],
+      'span' => ['class' => []],
+      'table' => ['class' => []],
+      'thead' => [],
+      'tbody' => [],
+      'tr' => [],
+      'th' => ['class' => [], 'colspan' => [], 'rowspan' => []],
+      'td' => ['class' => [], 'colspan' => [], 'rowspan' => []],
+      'details' => ['open' => [], 'class' => []],
+      'summary' => ['class' => []],
+      'input' => ['type' => [], 'disabled' => [], 'checked' => [], 'class' => []],
     ];
   }
 }
