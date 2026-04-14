@@ -12,12 +12,12 @@ if (!defined('ABSPATH')) {
 final class SESLP_UI {
   /** Register UI hooks */
   public function register(): void {
-    add_shortcode('se_social_login', [$this, 'render_buttons_shortcode']);
+    add_shortcode('seslp_social_login', [$this, 'render_buttons_shortcode']);
     add_action('login_form', [$this, 'render_buttons_on_login']);
     add_action('register_form', [$this, 'render_buttons_on_login']);
   }
 
-  /** Shortcode: [se_social_login] */
+  /** Shortcode: [seslp_social_login] */
   public function render_buttons_shortcode(array $atts = []): string {
     return $this->render_buttons_html();
   }
@@ -56,7 +56,7 @@ final class SESLP_UI {
     }
 
     // Variables exposed to the template
-    $providers = SESLP_Providers_Registry::list();
+    $seslp_providers = SESLP_Providers_Registry::list();
     $base_url  = $plugin->url; // for image paths
 
     // Helper closure if the template wants provider-specific auth URLs
