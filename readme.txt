@@ -23,6 +23,60 @@ The plugin is built on an extensible Provider-based architecture, which allows n
 Full documentation is available on GitHub:
 https://github.com/CodingDIY/Simple-Easy-Social-Login-Plugin
 
+== External services ==
+
+This plugin connects to third-party OAuth providers to enable social login functionality. These services are only contacted when a user initiates a login action by clicking a social login button.
+
+For each provider, the plugin sends an OAuth authorization request and exchanges an authorization code for an access token. Basic profile data may be retrieved depending on the configured scopes.
+
+= Google =
+* Purpose: Allow users to sign in with Google
+* Data sent: OAuth request (client ID, redirect URI), authorization code exchange
+* Data received: email, name, profile image (depending on scopes)
+* When: Only when the user clicks the Google login button
+* Terms: https://policies.google.com/terms
+* Privacy: https://policies.google.com/privacy
+
+= Facebook =
+* Purpose: Allow users to sign in with Facebook
+* Data sent: OAuth request, authorization code exchange
+* Data received: email, name, profile data (if permitted)
+* When: Only when the user clicks the Facebook login button
+* Terms: https://www.facebook.com/legal/terms
+* Privacy: https://www.facebook.com/privacy/policy/
+
+= LinkedIn =
+* Purpose: Allow users to sign in with LinkedIn
+* Data sent: OAuth / OpenID Connect request
+* Data received: email, name, profile data
+* When: Only when the user clicks the LinkedIn login button
+* Terms: https://www.linkedin.com/legal/user-agreement
+* Privacy: https://www.linkedin.com/legal/privacy-policy
+
+= Naver =
+* Purpose: Allow users to sign in with Naver
+* Data sent: OAuth request
+* Data received: name, email (if permitted)
+* When: Only when the user clicks the Naver login button
+* Terms: https://policy.naver.com/rules/service.html
+* Privacy: https://policy.naver.com/policy/privacy.html
+
+= Kakao =
+* Purpose: Allow users to sign in with Kakao
+* Data sent: OAuth request
+* Data received: nickname, profile image, email (if permitted and verified)
+* When: Only when the user clicks the Kakao login button
+* Terms: https://www.kakao.com/policy/terms
+* Privacy: https://www.kakao.com/policy/privacy
+
+= LINE =
+* Purpose: Allow users to sign in with LINE
+* Data sent: OAuth / OpenID Connect request
+* Data received: profile data, email (if permission approved)
+* When: Only when the user clicks the LINE login button
+* Terms: https://terms.line.me/line_terms/
+* Privacy: https://privacy.line.me/line_privacy/
+
 == Features ==
 * Google Login (Free)
 * Facebook Login (Free)

@@ -43,6 +43,21 @@ The plugin is built with an **extensible provider architecture**, allowing new O
 - No unnecessary database tables created
 - Extensible provider system supporting add-on plugins for new OAuth providers
 
+## 🔗 External Services
+
+This plugin connects to third-party OAuth providers to enable social login functionality:
+
+- Google
+- Facebook
+- LinkedIn
+- Naver
+- Kakao
+- LINE
+
+Data is transmitted only when a user clicks a social login button. The plugin performs OAuth authorization and may retrieve basic profile information (such as email, name, and avatar) depending on the provider and granted scopes.
+
+For full details, including data usage and links to each provider’s Terms of Service and Privacy Policy, please refer to the WordPress `readme.txt` file.
+
 ---
 
 ## Debug Logging

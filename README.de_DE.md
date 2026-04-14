@@ -33,6 +33,21 @@ die es ermöglicht, bei Bedarf neue OAuth-Provider als separate Add-on-Plugins h
 - Keine Erstellung unnötiger Datenbanktabellen
 - Erweiterbares Provider-System zur Unterstützung neuer OAuth-Provider über Add-on-Plugins
 
+## 🔗 Externe Dienste
+
+Dieses Plugin verbindet sich mit Drittanbieter-OAuth-Diensten, um Social-Login-Funktionen bereitzustellen:
+
+- Google
+- Facebook
+- LinkedIn
+- Naver
+- Kakao
+- LINE
+
+Daten werden nur übertragen, wenn ein Benutzer aktiv auf eine Social-Login-Schaltfläche klickt. Das Plugin führt einen OAuth-Authentifizierungsprozess durch und kann grundlegende Profildaten (wie E-Mail, Name und Avatar) abrufen, abhängig vom Anbieter und den gewährten Berechtigungen.
+
+Für vollständige Details, einschließlich Datennutzung sowie Links zu den Nutzungsbedingungen und Datenschutzrichtlinien der jeweiligen Anbieter, lesen Sie bitte die WordPress-Datei `readme.txt`.
+
 ---
 
 ## 🐞 Debug-Logging

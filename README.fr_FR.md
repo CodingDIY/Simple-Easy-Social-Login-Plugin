@@ -33,6 +33,21 @@ ce qui permet d’ajouter ultérieurement de nouveaux fournisseurs OAuth sous fo
 - Aucune création inutile de tables dans la base de données
 - Système de fournisseurs extensible permettant l’ajout de nouveaux fournisseurs OAuth via des extensions Add-on
 
+## 🔗 Services externes
+
+Cette extension se connecte à des fournisseurs OAuth tiers afin de permettre la connexion sociale :
+
+- Google
+- Facebook
+- LinkedIn
+- Naver
+- Kakao
+- LINE
+
+Les données sont transmises uniquement lorsque l’utilisateur clique sur un bouton de connexion sociale. L’extension effectue le processus d’autorisation OAuth et peut récupérer des informations de profil de base (telles que l’e-mail, le nom et l’avatar), selon le fournisseur et les autorisations accordées.
+
+Pour plus de détails, y compris l’utilisation des données ainsi que les liens vers les Conditions d’utilisation et les Politiques de confidentialité de chaque fournisseur, veuillez consulter le fichier WordPress `readme.txt`.
+
 ---
 
 ## 🐞 Journal de débogage

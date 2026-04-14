@@ -278,6 +278,58 @@ Google、Facebook、LinkedIn は無料で利用できます。
 
 ---
 
+## 🌐 外部サービス
+
+本プラグインは、各ソーシャルログイン機能を提供するために、外部サービス（OAuth プロバイダー）と通信します。
+
+これらのサービスは、ユーザー認証および基本的なプロフィール情報（名前、メールアドレス、プロフィール画像など）を取得するために使用されます。
+
+### 利用される外部サービス
+
+- **Google**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://policies.google.com/terms  
+  - プライバシーポリシー: https://policies.google.com/privacy  
+
+- **Facebook (Meta)**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://www.facebook.com/legal/terms  
+  - プライバシーポリシー: https://www.facebook.com/privacy/policy  
+
+- **LinkedIn**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://www.linkedin.com/legal/user-agreement  
+  - プライバシーポリシー: https://www.linkedin.com/legal/privacy-policy  
+
+- **Naver**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://policy.naver.com/rules/service.html  
+  - プライバシーポリシー: https://policy.naver.com/rules/privacy.html  
+
+- **Kakao**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://www.kakao.com/policy/terms  
+  - プライバシーポリシー: https://www.kakao.com/policy/privacy  
+
+- **LINE**  
+  - 認証およびユーザー情報の取得  
+  - 利用規約: https://terms.line.me/line_terms/  
+  - プライバシーポリシー: https://privacy.line.me/line_privacy/  
+
+### 送信されるデータ
+
+ログイン処理中に、以下の情報が各プロバイダーへ送信される場合があります：
+
+- OAuth 認証リクエスト（Client ID、リダイレクト URI）
+- 認可コード（authorization code）およびアクセストークン取得リクエスト
+- ユーザー情報取得リクエスト
+
+これらの通信は、ユーザーがログインボタンをクリックした場合にのみ実行されます。
+
+本プラグインは、ユーザーの明示的な操作なしに外部サービスへデータを送信することはありません。
+
+---
+
 ## 📄 ライセンス
 
 GPLv2 or later  

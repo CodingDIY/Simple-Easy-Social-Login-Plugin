@@ -35,6 +35,51 @@ permitindo que novos Providers OAuth sejam adicionados posteriormente como plugi
 
 ---
 
+## 🌐 Serviços externos
+
+Este plugin conecta-se a serviços externos de terceiros para fornecer funcionalidades de login social via OAuth.
+
+### Providers OAuth suportados
+
+O plugin comunica-se com as APIs oficiais dos seguintes serviços:
+
+- Google
+- Facebook (Meta)
+- LinkedIn
+- Naver (Premium)
+- Kakao (Premium)
+- LINE (Premium)
+
+### Dados enviados
+
+Durante o processo de login OAuth, os seguintes dados podem ser transmitidos:
+
+- Código de autorização OAuth (authorization code)
+- Token de acesso (access token)
+- Informações básicas do perfil do usuário (por exemplo: ID, nome, e-mail, avatar)
+- Redirect URI e parâmetros de estado (state) para proteção CSRF
+
+Esses dados são utilizados exclusivamente para autenticação e vinculação de contas no WordPress.
+
+### Quando os dados são enviados
+
+Os dados são enviados apenas quando o usuário clica em um botão de login social e inicia o fluxo OAuth.
+
+### Termos de serviço e política de privacidade
+
+Cada provider possui seus próprios termos e políticas:
+
+- Google: https://policies.google.com/privacy
+- Facebook (Meta): https://www.facebook.com/privacy/policy/
+- LinkedIn: https://www.linkedin.com/legal/privacy-policy
+- Naver: https://policy.naver.com/policy/privacy.html
+- Kakao: https://www.kakao.com/policy/privacy
+- LINE: https://line.me/en/terms/policy/
+
+Recomendamos que você revise essas políticas antes de usar o plugin.
+
+---
+
 ## 🐞 Log de depuração
 
 O SESLP inclui um sistema de log de depuração integrado para ajudar a diagnosticar problemas de OAuth e login social.

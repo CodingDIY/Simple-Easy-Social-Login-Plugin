@@ -33,6 +33,22 @@ lo que permite añadir nuevos proveedores OAuth en el futuro como plugins Add-on
 - No se crean tablas innecesarias en la base de datos
 - Sistema de proveedores extensible que permite añadir nuevos proveedores OAuth mediante plugins Add-on
 
+
+## 🔗 Servicios externos
+
+Este plugin se conecta a proveedores OAuth de terceros para habilitar el inicio de sesión social:
+
+- Google
+- Facebook
+- LinkedIn
+- Naver
+- Kakao
+- LINE
+
+Los datos se transmiten únicamente cuando un usuario hace clic en un botón de inicio de sesión social. El plugin realiza el proceso de autorización OAuth y puede obtener información básica del perfil (como correo electrónico, nombre y avatar) dependiendo del proveedor y de los permisos concedidos.
+
+Para más detalles, incluyendo el uso de datos y enlaces a los Términos de Servicio y Políticas de Privacidad de cada proveedor, consulta el archivo `readme.txt` de WordPress.
+
 ---
 
 ## 🐞 Registro de depuración

@@ -50,6 +50,67 @@ SESLP는 OAuth 및 소셜 로그인 문제를 진단할 수 있는
 
 ---
 
+## 🌐 외부 서비스 (External Services)
+
+이 플러그인은 소셜 로그인 기능을 제공하기 위해 각 소셜 플랫폼의 OAuth 인증 API와 통신합니다.
+
+각 Provider는 로그인 요청 시 해당 플랫폼의 서버로 요청을 전송하며,  
+사용자 인증 및 프로필 정보를 받아오기 위해 최소한의 데이터가 전송됩니다.
+
+### 사용되는 외부 서비스
+
+- Google OAuth / OpenID Connect  
+  https://accounts.google.com / https://www.googleapis.com  
+  Privacy Policy: https://policies.google.com/privacy  
+  Terms: https://policies.google.com/terms  
+
+- Facebook Login  
+  https://www.facebook.com / https://graph.facebook.com  
+  Privacy Policy: https://www.facebook.com/privacy/policy/  
+  Terms: https://www.facebook.com/legal/terms  
+
+- LinkedIn OAuth / OpenID Connect  
+  https://www.linkedin.com / https://api.linkedin.com  
+  Privacy Policy: https://www.linkedin.com/legal/privacy-policy  
+  Terms: https://www.linkedin.com/legal/user-agreement  
+
+- Naver Login  
+  https://nid.naver.com / https://openapi.naver.com  
+  Privacy Policy: https://policy.naver.com/policy/privacy.html  
+  Terms: https://policy.naver.com/policy/service.html  
+
+- Kakao Login  
+  https://kauth.kakao.com / https://kapi.kakao.com  
+  Privacy Policy: https://www.kakao.com/policy/privacy  
+  Terms: https://www.kakao.com/policy/terms  
+
+- LINE Login  
+  https://access.line.me / https://api.line.me  
+  Privacy Policy: https://line.me/en/terms/policy/  
+  Terms: https://line.me/en/terms/  
+
+### 전송되는 데이터
+
+- OAuth 인증 요청 시:
+  - Client ID
+  - Redirect URI
+  - 상태(state) 값 (CSRF 보호용)
+
+- 인증 완료 후:
+  - Access Token
+  - 사용자 기본 프로필 정보 (이름, 이메일, 프로필 이미지 등 – Provider 및 사용자 동의에 따라 다름)
+
+### 전송 시점
+
+- 사용자가 소셜 로그인 버튼을 클릭할 때만 외부 서비스와 통신합니다.
+
+### 참고 사항
+
+- 이메일 정보는 사용자가 동의하지 않을 경우 제공되지 않을 수 있습니다.
+- 일부 Provider는 추가 정보(이메일 등)에 대해 별도의 승인 또는 검증을 요구할 수 있습니다.
+
+---
+
 ## 🚀 설치 방법
 
 1. 플러그인을 `/wp-content/plugins/simple-easy-social-login/` 디렉토리에 업로드합니다.
