@@ -26,12 +26,14 @@ ce qui permet d’ajouter ultérieurement de nouveaux fournisseurs OAuth sous fo
 - Association automatique des comptes WordPress existants par e-mail
 - URLs de redirection personnalisées après la connexion, la déconnexion et l’inscription
 - Interface d’administration simple et claire pour la configuration des fournisseurs
-- Prise en charge du shortcode : [se_social_login]
+- Prise en charge du shortcode : [seslp_social_login]
 - Affichage automatique sur les formulaires de connexion et d’inscription WordPress
 - Prise en charge des formulaires de connexion et d’inscription WooCommerce (optionnelle)
 - Structure légère respectant les standards de codage WordPress
 - Aucune création inutile de tables dans la base de données
 - Système de fournisseurs extensible permettant l’ajout de nouveaux fournisseurs OAuth via des extensions Add-on
+
+---
 
 ## 🔗 Services externes
 
@@ -61,6 +63,17 @@ Les fichiers de log sont générés ici :
 
 - `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (si `WP_DEBUG_LOG` est activé)
+
+---
+
+## 🔒 Création de compte et sécurité
+
+- De nouveaux comptes utilisateur sont créés **uniquement** lorsqu’aucun utilisateur WordPress existant ne correspond à l’adresse e-mail du fournisseur social.
+- La création de compte respecte entièrement :
+  - Paramètre principal de WordPress : **Réglages → Général → Tout le monde peut s’inscrire**
+  - Paramètre du plugin : **Création automatique de compte** (peut être désactivé dans les réglages d’administration)
+- Après une connexion réussie, le plugin déclenche l’action officielle WordPress `wp_login`. Cela garantit la compatibilité avec les plugins de sécurité qui surveillent les tentatives de connexion, imposent la 2FA ou journalisent les événements d’authentification.
+- Si la création automatique de compte est désactivée, seuls les utilisateurs disposant déjà d’un compte avec la même adresse e-mail peuvent se connecter via les fournisseurs sociaux.
 
 ---
 
@@ -108,7 +121,7 @@ Google, Facebook et LinkedIn sont disponibles gratuitement.
 
 ### Un shortcode est-il disponible ?
 
-Oui. Vous pouvez insérer les boutons de connexion sociale à n’importe quel endroit à l’aide du shortcode suivant : [se_social_login]
+Oui. Vous pouvez insérer les boutons de connexion sociale à n’importe quel endroit à l’aide du shortcode suivant : [seslp_social_login]
 
 ### Les avatars des utilisateurs sont-ils importés automatiquement ?
 

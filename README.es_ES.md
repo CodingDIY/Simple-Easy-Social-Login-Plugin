@@ -26,13 +26,14 @@ lo que permite añadir nuevos proveedores OAuth en el futuro como plugins Add-on
 - Vinculación automática de usuarios existentes de WordPress mediante el correo electrónico
 - URLs de redirección personalizadas después del inicio de sesión, cierre de sesión y registro
 - Interfaz de administración simple y clara para la configuración de proveedores
-- Soporte de shortcode: [se_social_login]
+- Soporte de shortcode: [seslp_social_login]
 - Visualización automática en los formularios de inicio de sesión y registro de WordPress
 - Soporte para formularios de inicio de sesión y registro de WooCommerce (opcional)
 - Estructura ligera que sigue los estándares de codificación de WordPress
 - No se crean tablas innecesarias en la base de datos
 - Sistema de proveedores extensible que permite añadir nuevos proveedores OAuth mediante plugins Add-on
 
+--- 
 
 ## 🔗 Servicios externos
 
@@ -62,6 +63,17 @@ Los archivos de registro se generan en:
 
 - `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (cuando `WP_DEBUG_LOG` está habilitado)
+
+---
+
+## 🔒 Creación de usuarios y seguridad
+
+- Las nuevas cuentas de usuario se crean **solo** cuando no existe ningún usuario de WordPress con la dirección de correo electrónico del proveedor social.
+- La creación de usuarios respeta plenamente:
+  - Configuración principal de WordPress: **Ajustes → General → Cualquiera puede registrarse**
+  - Configuración del plugin: **Creación automática de usuarios** (se puede desactivar en los ajustes de administración)
+- Tras un inicio de sesión exitoso, el plugin activa la acción oficial de WordPress `wp_login`. Esto garantiza la compatibilidad con plugins de seguridad que supervisan intentos de inicio de sesión, aplican 2FA o registran eventos de autenticación.
+- Si se desactiva la creación automática de usuarios, solo los usuarios que ya tienen una cuenta con el mismo correo electrónico pueden iniciar sesión a través de proveedores sociales.
 
 ---
 
@@ -110,7 +122,7 @@ Google, Facebook y LinkedIn están disponibles de forma gratuita.
 ### ¿Hay disponible un shortcode?
 
 Sí. Puedes insertar los botones de inicio de sesión social en cualquier lugar usando el siguiente shortcode:
-[se_social_login]
+[seslp_social_login]
 
 ### ¿Se importan automáticamente los avatares de los usuarios?
 

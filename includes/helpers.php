@@ -14,6 +14,18 @@ if (!class_exists('SESLP_Helpers')) {
     private static array $options_cache = [];
 
     /**
+     * Return default plugin options with proper structure.
+     */
+    public static function get_default_options(): array {
+      return [
+        'general' => [
+          'auto_create_user' => true,
+        ],
+        'providers' => [],
+      ];
+    }
+
+    /**
      * Return unified plugin options once per request.
      * Ensures a consistent array shape even if the option is missing or corrupted.
      */
@@ -23,7 +35,14 @@ if (!class_exists('SESLP_Helpers')) {
       }
 
       $raw = get_option(defined('SESLP_OPT_KEY') ? SESLP_OPT_KEY : 'seslp_options', []);
-      self::$options_cache = is_array($raw) ? $raw : [];
+
+      // Merging with default values
+      $defaults = self::get_default_options();
+      self::$options_cache = wp_parse_args( 
+        is_array($raw) ? $raw : [], 
+        $defaults
+      );
+      // self::$options_cache = is_array($raw) ? $raw : [];
 
       return self::$options_cache;
     }

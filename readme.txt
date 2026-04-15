@@ -18,6 +18,13 @@ It supports Google, Facebook, and LinkedIn (Free), as well as Naver, Kakao, and 
 The plugin integrates seamlessly with the WordPress login and registration pages, and also works smoothly with WooCommerce login and registration forms.
 User social profile images (avatars) can be automatically synchronized with WordPress user profiles.
 
+This plugin creates new WordPress user accounts only when a user logs in with a social provider and no matching account exists. 
+User creation strictly respects both the WordPress core setting "Anyone can register" and the plugin's own "Automatic User Creation" option (enabled by default).
+
+We fire the standard WordPress `wp_login` action after setting the auth cookie so that security plugins (such as brute-force protection, 2FA, and login logging tools) can hook into the normal login flow without being bypassed.
+
+Administrators can disable automatic user creation in the plugin settings if they prefer only existing users to log in via social providers.
+
 The plugin is built on an extensible Provider-based architecture, which allows new OAuth Providers to be added later as separate Add-on plugins if needed.
 
 Full documentation is available on GitHub:
@@ -75,7 +82,7 @@ For each provider, the plugin sends an OAuth authorization request and exchanges
 * Data received: profile data, email (if permission approved)
 * When: Only when the user clicks the LINE login button
 * Terms: https://terms.line.me/line_terms/
-* Privacy: https://privacy.line.me/line_privacy/
+* Privacy: https://terms2.line.me/LGAPP_privacy
 
 == Features ==
 * Google Login (Free)
@@ -88,12 +95,14 @@ For each provider, the plugin sends an OAuth authorization request and exchanges
 * Automatically link existing WordPress accounts by email
 * Custom redirect URLs after login, logout, and registration
 * Simple admin UI for configuring each Provider
-* Shortcode support: `[se_social_login]`
+* Shortcode support: `[seslp_social_login]`
 * Automatically displayed on WordPress login and registration forms
 * WooCommerce login and registration form support (optional)
 * Lightweight structure following WordPress coding standards
 * No unnecessary database tables are created
 * Extensible Provider architecture supporting Add-on plugins for new OAuth Providers
+* Respects WordPress "Anyone can register" setting + plugin-controlled "Automatic User Creation" option
+* Fires standard `wp_login` action for full compatibility with security plugins
 
 == Installation ==
 1. Upload the plugin to the `/wp-content/plugins/simple-easy-social-login/` directory.
@@ -130,7 +139,7 @@ Google, Facebook, and LinkedIn are available for free.
 
 = Is a shortcode available? =
 Yes. You can insert social login buttons anywhere using the shortcode:
-`[se_social_login]`
+`[seslp_social_login]`
 
 = Are user avatars imported automatically? =
 For supported Providers such as Google and Facebook, profile images are automatically imported.

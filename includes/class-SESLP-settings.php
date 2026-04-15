@@ -117,6 +117,11 @@ final class SESLP_Settings {
 
     $sanitized = $opts;
 
+    // General settings sanitize
+    if (isset($sanitized['general']) && is_array($sanitized['general'])) {
+      $sanitized['general']['auto_create_user'] = !empty($sanitized['general']['auto_create_user']);
+    }
+
     // Sanitize provider credentials.
     if (isset($sanitized['providers']) && is_array($sanitized['providers'])) {
       foreach ($sanitized['providers'] as $provider => $fields) {

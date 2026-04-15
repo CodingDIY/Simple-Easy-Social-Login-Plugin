@@ -94,6 +94,17 @@ Os arquivos de log são gerados em:
 
 ---
 
+## 🔒 Criação de usuários e segurança
+
+- Novas contas de usuário são criadas **apenas** quando não existe nenhum usuário WordPress com o endereço de e-mail do provedor social.
+- A criação de usuários respeita integralmente:
+  - Configuração principal do WordPress: **Configurações → Geral → Qualquer pessoa pode se registrar**
+  - Configuração do plugin: **Criação automática de usuários** (pode ser desativada nas configurações de administração)
+- Após o login bem-sucedido, o plugin aciona a ação oficial do WordPress `wp_login`. Isso garante compatibilidade com plugins de segurança que monitoram tentativas de login, aplicam 2FA ou registram eventos de autenticação.
+- Se a criação automática de usuários estiver desativada, apenas usuários que já possuem uma conta com o mesmo e-mail poderão fazer login via provedores sociais.
+
+---
+
 ## 🚀 Instalação
 
 1. Envie o plugin para o diretório `/wp-content/plugins/simple-easy-social-login/`.

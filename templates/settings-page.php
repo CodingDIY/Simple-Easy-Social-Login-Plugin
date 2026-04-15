@@ -179,6 +179,36 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
     </table>
 
     <br>
+    <br>
+
+    <h2 class="seslp-section-title">
+      <?php echo esc_html__('General Settings', 'simple-easy-social-login-oauth-login'); ?>
+    </h2>
+
+    <table class="form-table" role="presentation">
+      <tbody>
+        <tr>
+          <th scope="row">
+            <?php esc_html_e('Automatic User Creation', 'simple-easy-social-login-oauth-login'); ?>
+          </th>
+          <td>
+            <?php 
+              $opts = SESLP_Helpers::get_options();
+              $auto_create = (bool) ($opts['general']['auto_create_user'] ?? true);
+            ?>
+            <label>
+              <input type="checkbox" name="seslp_options[general][auto_create_user]" value="1" <?php checked($auto_create, true); ?> />
+              <?php esc_html_e('Automatically create a new user account when logging in with social provider', 'simple-easy-social-login-oauth-login'); ?>
+            </label>
+            <p class="description">
+              <?php esc_html_e('If disabled, only existing users with the same email can log in via social login. Recommended to keep enabled.', 'simple-easy-social-login-oauth-login'); ?>
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <br>
 
     <h2 class="seslp-section-title">
       <?php echo esc_html__('Post-login Redirect', 'simple-easy-social-login-oauth-login'); ?></h2>
@@ -350,7 +380,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
         <tr>
           <th scope="row"><?php echo esc_html__('Shortcode', 'simple-easy-social-login-oauth-login'); ?></th>
           <td>
-            <code>[se_social_login]</code>
+            <code>[seslp_social_login]</code>
           </td>
         </tr>
       </tbody>

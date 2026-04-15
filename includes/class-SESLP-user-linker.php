@@ -66,6 +66,25 @@ final class SESLP_User_Linker {
         ]);
         return null;
       }
+
+      $opts        = SESLP_Helpers::get_options();
+      $auto_create = (bool) ($opts['general']['auto_create_user'] ?? true);
+
+      if (!$auto_create) {
+        SESLP_Logger::warning('Linker: user creation disabled by SESLP setting', [
+          'provider' => $prov,
+          'email'    => SESLP_Logger::mask_email($email),
+        ]);
+
+        // Redirect to login page.
+        $login_url = add_query_arg([
+          'seslp_err' => 'registration_disabled_by_plugin',
+        ], wp_login_url());
+
+        wp_safe_redirect($login_url);
+        exit;
+      }
+
       $username = $this->build_unique_username($email, $prov);
 
       $uid = wp_insert_user([
@@ -132,6 +151,8 @@ final class SESLP_User_Linker {
      * @param string  $provider Provider slug.
      * @param bool    $created Whether the user was created during this request.
      */
+    do_action('wp_login', $user->user_login, $user);
+
     do_action('seslp_user_linked', $user, $prov, $created);
 
     return $user;

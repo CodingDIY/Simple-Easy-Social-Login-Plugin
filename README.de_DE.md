@@ -26,12 +26,14 @@ die es ermöglicht, bei Bedarf neue OAuth-Provider als separate Add-on-Plugins h
 - Automatische Verknüpfung bestehender WordPress-Benutzer anhand der E-Mail-Adresse
 - Benutzerdefinierte Weiterleitungs-URLs nach Login, Logout und Registrierung
 - Einfache und übersichtliche Admin-Oberfläche zur Konfiguration der Provider
-- Unterstützung für Shortcode: [se_social_login]
+- Unterstützung für Shortcode: [seslp_social_login]
 - Automatische Anzeige auf den WordPress-Anmelde- und Registrierungsformularen
 - Unterstützung für WooCommerce-Anmelde- und Registrierungsformulare (optional)
 - Leichtgewichtige Struktur gemäß den WordPress-Coding-Standards
 - Keine Erstellung unnötiger Datenbanktabellen
 - Erweiterbares Provider-System zur Unterstützung neuer OAuth-Provider über Add-on-Plugins
+
+---
 
 ## 🔗 Externe Dienste
 
@@ -61,6 +63,17 @@ Logdateien werden hier erstellt:
 
 - `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (wenn `WP_DEBUG_LOG` aktiviert ist)
+
+---
+
+## 🔒 Benutzererstellung & Sicherheit
+
+- Neue Benutzerkonten werden **nur** erstellt, wenn kein bestehender WordPress-Benutzer mit der E-Mail-Adresse des Social Providers übereinstimmt.
+- Die Benutzererstellung berücksichtigt vollständig:
+  - WordPress-Kerneinstellung: **Einstellungen → Allgemein → Jeder kann sich registrieren**
+  - Plugin-Einstellung: **Automatische Benutzererstellung** (kann in den Admin-Einstellungen deaktiviert werden)
+- Nach erfolgreichem Login löst das Plugin die offizielle WordPress `wp_login`-Aktion aus. Dies gewährleistet die Kompatibilität mit Sicherheits-Plugins, die Login-Versuche überwachen, 2FA erzwingen oder Authentifizierungsereignisse protokollieren.
+- Wenn die automatische Benutzererstellung deaktiviert ist, können nur Benutzer, die bereits ein Konto mit derselben E-Mail-Adresse haben, sich über Social Provider anmelden.
 
 ---
 
@@ -109,7 +122,7 @@ Google, Facebook und LinkedIn stehen kostenlos zur Verfügung.
 ### Gibt es einen Shortcode?
 
 Ja. Sie können die Social-Login-Buttons an beliebiger Stelle mit folgendem Shortcode einfügen:
-[se_social_login]
+[seslp_social_login]
 
 ### Werden Benutzer-Avatare automatisch importiert?
 

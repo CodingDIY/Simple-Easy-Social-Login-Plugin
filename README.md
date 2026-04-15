@@ -36,12 +36,14 @@ The plugin is built with an **extensible provider architecture**, allowing new O
 - Auto-link existing WordPress users by email
 - Custom redirect URLs after login, logout, and registration
 - Simple and clean admin UI for provider configuration
-- Shortcode support: [se_social_login]
+- Shortcode support: [seslp_social_login]
 - Automatic display on WordPress login and registration forms
 - WooCommerce login and registration form support (optional)
 - Lightweight structure following WordPress coding standards
 - No unnecessary database tables created
 - Extensible provider system supporting add-on plugins for new OAuth providers
+
+---
 
 ## 🔗 External Services
 
@@ -71,6 +73,17 @@ Log files are generated at:
 
 - `/wp-content/SESLP-debug.log`
 - `/wp-content/debug.log` (when `WP_DEBUG_LOG` is enabled)
+
+---
+
+## 🔒 User Creation & Security
+
+- New user accounts are created **only** when no existing WordPress user matches the social provider's email address.
+- User creation fully respects:
+  - WordPress core setting: **Settings → General → Anyone can register**
+  - Plugin setting: **Automatic User Creation** (can be disabled in the admin settings)
+- After successful login, the plugin triggers the official WordPress `wp_login` action. This ensures compatibility with security plugins that monitor login attempts, enforce 2FA, or log authentication events.
+- If automatic user creation is turned off, only users who already have an account with the same email can log in via social providers.
 
 ---
 
@@ -118,7 +131,7 @@ Google, Facebook, and LinkedIn are available for free.
 
 ### Is a shortcode available?
 
-Yes. You can insert social login buttons anywhere using: [se_social_login]
+Yes. You can insert social login buttons anywhere using: [seslp_social_login]
 
 ### Are user avatars imported?
 
