@@ -26,7 +26,7 @@ WooCommerce 로그인 및 회원가입 폼도 지원합니다.
 - 이메일 기반 기존 WordPress 사용자 자동 연결
 - 로그인 / 로그아웃 / 회원가입 후 리디렉션 URL 설정
 - Provider 설정을 위한 간결하고 직관적인 관리자 UI
-- 숏코드 지원: [se_social_login]
+- 숏코드 지원: [seslp_social_login]
 - WordPress 로그인 및 회원가입 폼에 자동 표시
 - WooCommerce 로그인 및 회원가입 폼 지원 (선택 사항)
 - WordPress 코딩 표준을 따르는 가벼운 구조
@@ -167,7 +167,7 @@ Google, Facebook, LinkedIn은 무료로 사용할 수 있습니다.
 ### 숏코드가 제공되나요?
 
 네. 아래 숏코드를 사용하여 원하는 위치에 소셜 로그인 버튼을 삽입할 수 있습니다.
-[se_social_login]
+[seslp_social_login]
 
 ### 사용자 아바타도 자동으로 가져오나요?
 

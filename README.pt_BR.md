@@ -26,7 +26,7 @@ permitindo que novos Providers OAuth sejam adicionados posteriormente como plugi
 - Vinculação automática de usuários WordPress existentes por e-mail
 - URLs de redirecionamento personalizadas após login, logout e registro
 - Interface administrativa simples e limpa para configuração dos Providers
-- Suporte a shortcode: [se_social_login]
+- Suporte a shortcode: [seslp_social_login]
 - Exibição automática nos formulários de login e registro do WordPress
 - Suporte aos formulários de login e registro do WooCommerce (opcional)
 - Estrutura leve que segue os padrões de codificação do WordPress
@@ -150,7 +150,7 @@ Google, Facebook e LinkedIn estão disponíveis gratuitamente.
 ### Existe um shortcode disponível?
 
 Sim. Você pode inserir os botões de login social em qualquer lugar usando o seguinte shortcode:
-[se_social_login]
+[seslp_social_login]
 
 ### Os avatares dos usuários são importados automaticamente?
 

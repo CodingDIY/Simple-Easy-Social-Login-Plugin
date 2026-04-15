@@ -210,3 +210,15 @@ msgstr ""
 
 msgid "Upgrade to PRO & Apply Coupon"
 msgstr ""
+
+msgid "General Settings"
+msgstr ""
+
+msgid "Automatic User Creation"
+msgstr ""
+
+msgid "Automatically create a new user account when logging in with social provider"
+msgstr ""
+
+msgid "If disabled, only existing users with the same email can log in via social login. Recommended to keep enabled."
+msgstr ""
