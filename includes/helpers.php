@@ -42,7 +42,6 @@ if (!class_exists('SESLP_Helpers')) {
         is_array($raw) ? $raw : [], 
         $defaults
       );
-      // self::$options_cache = is_array($raw) ? $raw : [];
 
       return self::$options_cache;
     }
@@ -96,6 +95,36 @@ if (!class_exists('SESLP_Helpers')) {
       $scopes = array_filter(array_map('sanitize_text_field', $scopes));
 
       return $scopes === [] ? $fallback : $scopes;
+    }
+
+    /**
+     * Read and validate a public SESLP error code from the current request.
+     *
+     * This is intended for read-only UI messaging such as login error notices.
+     */
+    public static function get_public_error_code(): string {
+      if (!isset($_GET['seslp_err'])) {
+        return '';
+      }
+
+      $error_code = sanitize_key(wp_unslash($_GET['seslp_err'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only display flag; validated against a strict allowlist before use.
+
+      $allowed_error_codes = [
+        'invalid_state',
+        'invalid_nonce',
+        'token_exchange_failed',
+        'oauth_exception',
+        'oauth_failed',
+        'invalid_provider',
+        'provider_not_allowed',
+        'config_missing',
+        'email_missing',
+        'email_exists',
+        'account_link_failed',
+        'registration_disabled_by_plugin',
+      ];
+
+      return in_array($error_code, $allowed_error_codes, true) ? $error_code : '';
     }
 
     /**

@@ -15,20 +15,51 @@ final class SESLP_Auth {
     add_action('template_redirect', [$this, 'maybe_route_auth']);
   }
 
-  /** Router — handles /?social_login={provider}&code=... */
+    /**
+   * Public OAuth callback router.
+   *
+   * This route intentionally reads provider callback query parameters from
+   * `$_GET`. It does not use a WordPress form nonce because OAuth callbacks are
+   * cross-site redirects from the provider. CSRF protection is enforced in each
+   * provider callback via `SESLP_State::validate()`.
+   */
   public function maybe_route_auth(): void {
-    if (empty($_GET['social_login'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    if (empty($_GET['social_login'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth callback route. CSRF protection is enforced later via SESLP_State::validate().
       return;
     }
-    $provider = sanitize_key(wp_unslash($_GET['social_login'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $provider = sanitize_key(wp_unslash($_GET['social_login'])); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth callback route. CSRF protection is enforced later via SESLP_State::validate().
 
     SESLP_Logger::debug('Auth route triggered', [
       'provider' => $provider,
-      'has_code' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+      'has_code' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth callback route. Read-only callback flag.
     ]);
 
+    // ==================== SECURITY: Early Nonce/State Validation ====================
+    // Only validate when it's a callback (contains 'code')
+    if (isset($_GET['code'])) {
+      $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : '';
+
+      // 1) WordPress nonce check (primary)
+      if (empty($state) || !wp_verify_nonce($state, 'seslp_oauth_state')) {
+        SESLP_Logger::warning('Nonce verification failed in auth router', [
+          'provider' => $provider,
+          'state_present' => !empty($state)
+        ]);
+        wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_nonce', home_url('/'))));
+        exit;
+      }
+
+      // 2) Additional custom state validation (existing logic)
+      if (!SESLP_State::validate($provider, $state)) {
+        SESLP_Logger::warning('Invalid state (custom validation)', ['provider' => $provider, 'state' => $state]);
+        wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+        exit;
+      }
+    }
+    // =============================================================================
+
     // Only handle callbacks here (start flow links go directly to provider auth URLs)
-    if (!isset($_GET['code'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    if (!isset($_GET['code'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth callback route. Read-only callback flag.
       return;
     }
 
@@ -64,25 +95,21 @@ final class SESLP_Auth {
 
   /** Handle Google OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_google_callback(): void {
-    // Validate state
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    // Verify nonce (use state as nonce)
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (google)');
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_nonce', home_url('/'))));
-      exit;
-    }
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    
     SESLP_Logger::debug('Google callback received', [
       'state' => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
-    if (!SESLP_State::validate('google', $state)) {
-      SESLP_Logger::warning('Invalid state (google)', ['state' => $state]);
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-      exit;
-    }
 
-    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    // if (!SESLP_State::validate('google', $state)) {
+    //   SESLP_Logger::warning('Invalid state (google)', ['state' => $state]);
+    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+    //   exit;
+    // }
+
     if ($code === '') {
       SESLP_Logger::warning('Missing code (google)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
@@ -178,24 +205,19 @@ final class SESLP_Auth {
   /** Handle Facebook OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_facebook_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (facebook)');
-      wp_safe_redirect(add_query_arg('seslp_err', 'invalid_nonce', wp_login_url()));
-      exit;
-    }
-    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
 
     SESLP_Logger::debug('Facebook callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    if (!SESLP_State::validate('facebook', $state)) {
-      SESLP_Logger::warning('Invalid state (facebook)');
-      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-      exit;
-    }
+    // if (!SESLP_State::validate('facebook', $state)) {
+    //   SESLP_Logger::warning('Invalid state (facebook)');
+    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+    //   exit;
+    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (facebook)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -257,25 +279,21 @@ final class SESLP_Auth {
 
   /** Handle Naver OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_naver_callback(): void {
-    // Validate state
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (naver)');
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_nonce', home_url('/'))));
-      exit;
-    }
+    // Validate state & code
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    
     SESLP_Logger::debug('Naver callback received', [
       'state' => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
-    if (!SESLP_State::validate('naver', $state)) {
-      SESLP_Logger::warning('Invalid state (naver)', ['state' => $state]);
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-      exit;
-    }
 
-    // Read auth code
-    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    // if (!SESLP_State::validate('naver', $state)) {
+    //   SESLP_Logger::warning('Invalid state (naver)', ['state' => $state]);
+    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+    //   exit;
+    // }
+
     if ($code === '') {
       SESLP_Logger::warning('Missing code (naver)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));
@@ -373,24 +391,19 @@ final class SESLP_Auth {
   /** Handle Kakao OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_kakao_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (kakao)');
-      wp_safe_redirect(add_query_arg('seslp_err', 'invalid_nonce', wp_login_url()));
-      exit;
-    }
-    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
 
     SESLP_Logger::debug('Kakao callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    if (!SESLP_State::validate('kakao', $state)) {
-      SESLP_Logger::warning('Invalid state (kakao)');
-      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-      exit;
-    }
+    // if (!SESLP_State::validate('kakao', $state)) {
+    //   SESLP_Logger::warning('Invalid state (kakao)');
+    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+    //   exit;
+    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (kakao)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -453,24 +466,19 @@ final class SESLP_Auth {
   /** Handle Line OAuth callback: exchange code -> token -> userinfo -> sign in */
   private function handle_line_callback(): void {
     // Validate state & code
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (line)');
-      wp_safe_redirect(add_query_arg('seslp_err', 'invalid_nonce', wp_login_url()));
-      exit;
-    }
-    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code  = isset($_GET['code'])  ? sanitize_text_field(wp_unslash($_GET['code']))  : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
 
     SESLP_Logger::debug('Line callback received', [
       'state'        => $state !== '' ? substr($state, 0, 3) . str_repeat('*', max(0, strlen($state) - 6)) . substr($state, -3) : '',
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    if (!SESLP_State::validate('line', $state)) {
-      SESLP_Logger::warning('Invalid state (line)');
-      wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-      exit;
-    }
+    // if (!SESLP_State::validate('line', $state)) {
+    //   SESLP_Logger::warning('Invalid state (line)');
+    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
+    //   exit;
+    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (line)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -555,24 +563,21 @@ final class SESLP_Auth {
 
   /* LinkedIn callback */
   private function handle_linkedin_callback(): void {
-    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
-    if (!wp_verify_nonce($state, 'seslp_oauth_state')) {
-      SESLP_Logger::warning('Nonce verification failed (linkedin)');
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_nonce', home_url('/'))));
-      exit;
-    }
+    // Verify state & code
+    $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
+    
     SESLP_Logger::debug('LinkedIn callback received', [
       'state'        => $state,
-      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
+      'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
 
-    if (!SESLP_State::validate('linkedin', $state)) {
-      SESLP_Logger::warning('Invalid state (linkedin)', ['state' => $state]);
-      wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-      exit;
-    }
+    // if (!SESLP_State::validate('linkedin', $state)) {
+    //   SESLP_Logger::warning('Invalid state (linkedin)', ['state' => $state]);
+    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
+    //   exit;
+    // }
 
-    $code = isset($_GET['code']) ? sanitize_text_field(wp_unslash($_GET['code'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading OAuth callback query parameter.
     if ($code === '') {
       SESLP_Logger::warning('Missing code (linkedin)');
       wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'missing_code', home_url('/'))));

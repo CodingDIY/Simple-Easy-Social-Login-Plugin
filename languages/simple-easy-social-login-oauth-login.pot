@@ -118,13 +118,31 @@ msgstr ""
 msgid "Your session has expired or the login attempt was invalid. Please try again."
 msgstr ""
 
-msgid "An unknown error occurred. Please try again."
+msgid "Failed to obtain an access token from the provider. Please try again."
 msgstr ""
 
-msgid "Failed to obtain access token from the provider. Please try again."
+msgid "A social login error occurred while communicating with the provider. Please try again."
 msgstr ""
 
-msgid "Failed to fetch your profile information from the provider. Please try again."
+msgid "Social login failed. Please try again."
+msgstr ""
+
+msgid "The requested social login provider is invalid."
+msgstr ""
+
+msgid "This social login provider is not allowed on this site."
+msgstr ""
+
+msgid "This social login provider is not configured correctly. Please contact the site administrator."
+msgstr ""
+
+msgid "We could not retrieve an email address from the provider. Please use another login method or contact the site administrator."
+msgstr ""
+
+msgid "We could not link your social account to this site. Please try again."
+msgstr ""
+
+msgid "New account creation through social login is currently disabled on this site."
 msgstr ""
 
 msgid "Need help? Follow %s"
@@ -221,4 +239,7 @@ msgid "Automatically create a new user account when logging in with social provi
 msgstr ""
 
 msgid "If disabled, only existing users with the same email can log in via social login. Recommended to keep enabled."
+msgstr ""
+
+msgid "%s Login"
 msgstr ""

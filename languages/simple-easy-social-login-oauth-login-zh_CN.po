@@ -133,22 +133,46 @@ msgid ""
 "This email is already registered on this site. Please sign in with the "
 "originally linked method (username/password or the same social provider)."
 msgstr ""
-"该邮箱已在本站注册。请使用原始关联的方法（用户名/密码或相同的社交提供方）登"
-"录。"
+"该邮箱已在本网站注册。请使用原先绑定的方式登录（用户名/密码或相同的社交登录方"
+"式）。"
 
 msgid ""
 "Your session has expired or the login attempt was invalid. Please try again."
 msgstr "您的会话已过期或登录尝试无效。请重试。"
 
-msgid "An unknown error occurred. Please try again."
-msgstr "发生未知错误。请重试。"
-
-msgid "Failed to obtain access token from the provider. Please try again."
-msgstr "未能从提供方获取访问令牌。请重试。"
+msgid "Failed to obtain an access token from the provider. Please try again."
+msgstr "无法从服务提供商获取访问令牌。请重试。"
 
 msgid ""
-"Failed to fetch your profile information from the provider. Please try again."
-msgstr "未能从提供方获取您的个人资料信息。请重试。"
+"A social login error occurred while communicating with the provider. Please "
+"try again."
+msgstr "与服务提供商通信时发生社交登录错误。请重试。"
+
+msgid "Social login failed. Please try again."
+msgstr "社交登录失败。请重试。"
+
+msgid "The requested social login provider is invalid."
+msgstr "请求的社交登录服务提供商无效。"
+
+msgid "This social login provider is not allowed on this site."
+msgstr "此社交登录服务提供商在本网站不被允许。"
+
+msgid ""
+"This social login provider is not configured correctly. Please contact the "
+"site administrator."
+msgstr "此社交登录服务提供商未正确配置。请联系网站管理员。"
+
+msgid ""
+"We could not retrieve an email address from the provider. Please use another "
+"login method or contact the site administrator."
+msgstr "无法从服务提供商获取邮箱地址。请使用其他登录方式或联系网站管理员。"
+
+msgid "We could not link your social account to this site. Please try again."
+msgstr "无法将您的社交账户与本网站关联。请重试。"
+
+msgid ""
+"New account creation through social login is currently disabled on this site."
+msgstr "当前本网站已禁用通过社交登录创建新账户。"
 
 msgid "Need help? Follow %s"
 msgstr "需要帮助吗？请查看 %s"
@@ -251,3 +275,6 @@ msgid ""
 "login. Recommended to keep enabled."
 msgstr ""
 "如果禁用，则只有拥有相同邮箱的现有用户才能通过社交登录。建议保持启用状态。"
+
+msgid "%s Login"
+msgstr "使用%s登录"

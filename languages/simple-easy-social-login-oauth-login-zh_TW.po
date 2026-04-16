@@ -133,22 +133,46 @@ msgid ""
 "This email is already registered on this site. Please sign in with the "
 "originally linked method (username/password or the same social provider)."
 msgstr ""
-"此電子郵件已在本站註冊。請使用原始關聯的方法（使用者名稱/密碼或相同的社交提供"
-"方）登入。"
+"此電子郵件已在本網站註冊。請使用原先綁定的方式登入（使用者名稱/密碼或相同的社"
+"群登入）。"
 
 msgid ""
 "Your session has expired or the login attempt was invalid. Please try again."
-msgstr "您的工作階段已過期或登入嘗試無效。請重試。"
+msgstr "您的會話已過期或登入嘗試無效。請重新嘗試。"
 
-msgid "An unknown error occurred. Please try again."
-msgstr "發生未知錯誤。請重試。"
-
-msgid "Failed to obtain access token from the provider. Please try again."
-msgstr "未能從提供方獲取訪問權杖。請重試。"
+msgid "Failed to obtain an access token from the provider. Please try again."
+msgstr "無法從服務提供者取得存取權杖。請重新嘗試。"
 
 msgid ""
-"Failed to fetch your profile information from the provider. Please try again."
-msgstr "未能從提供方獲取您的個人資料資訊。請重試。"
+"A social login error occurred while communicating with the provider. Please "
+"try again."
+msgstr "與服務提供者通訊時發生社群登入錯誤。請重新嘗試。"
+
+msgid "Social login failed. Please try again."
+msgstr "社群登入失敗。請重新嘗試。"
+
+msgid "The requested social login provider is invalid."
+msgstr "請求的社群登入服務提供者無效。"
+
+msgid "This social login provider is not allowed on this site."
+msgstr "此社群登入服務提供者在本網站不被允許。"
+
+msgid ""
+"This social login provider is not configured correctly. Please contact the "
+"site administrator."
+msgstr "此社群登入服務提供者未正確設定。請聯絡網站管理員。"
+
+msgid ""
+"We could not retrieve an email address from the provider. Please use another "
+"login method or contact the site administrator."
+msgstr "無法從服務提供者取得電子郵件地址。請使用其他登入方式或聯絡網站管理員。"
+
+msgid "We could not link your social account to this site. Please try again."
+msgstr "無法將您的社群帳號與本網站連結。請重新嘗試。"
+
+msgid ""
+"New account creation through social login is currently disabled on this site."
+msgstr "目前本網站已停用透過社群登入建立新帳號的功能。"
 
 msgid "Need help? Follow %s"
 msgstr "需要幫助嗎？請參考 %s"
@@ -252,3 +276,6 @@ msgid ""
 msgstr ""
 "如果停用，則只有擁有相同電子郵件的現有使用者才能透過社交登入。建議保持啟用狀"
 "態。"
+
+msgid "%s Login"
+msgstr "使用%s登入"
