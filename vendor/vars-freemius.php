@@ -9,25 +9,25 @@ if (!defined('ABSPATH')) {
 }
 
 // Initialize Freemius instance
-$fs = function_exists('simple_easy_social_login_freemius') ? simple_easy_social_login_freemius() : null;
+$seslp_fs = function_exists('simple_easy_social_login_freemius') ? simple_easy_social_login_freemius() : null;
 
 // Detect current plan
-$is_free = !$fs || (bool) $fs->is_free_plan();
-$is_pro  = $fs ? (bool) $fs->is_plan('pro') : false;
-$is_max  = $fs ? (bool) $fs->is_plan('max') : false;
+$seslp_is_free = !$seslp_fs || (bool) $seslp_fs->is_free_plan();
+$seslp_is_pro  = $seslp_fs ? (bool) $seslp_fs->is_plan('pro') : false;
+$seslp_is_max  = $seslp_fs ? (bool) $seslp_fs->is_plan('max') : false;
 
-$current_plan = [
-  'free' => $is_free,
-  'pro'  => $is_pro,
-  'max'  => $is_max,
+$seslp_current_plan = [
+  'free' => $seslp_is_free,
+  'pro'  => $seslp_is_pro,
+  'max'  => $seslp_is_max,
 ];
 
 // Capability flags used across settings templates
-$can_pro_features = $is_pro || $is_max; // Pro and Max plans
-$can_max_features = $is_max;            // Max plan only
+$seslp_can_pro_features = $seslp_is_pro || $seslp_is_max; // Pro and Max plans
+$seslp_can_max_features = $seslp_is_max;                  // Max plan only
 
 // Provider availability per plan
-$provider_plan = [
+$seslp_provider_plan = [
   'google'   => 'free',
   'facebook' => 'free',
   'linkedin' => 'free',
@@ -37,42 +37,43 @@ $provider_plan = [
   // 'weibo'  => 'max', (deprecated)
 ];
 
-$provider_allowed = [];
-foreach ($provider_plan as $provider => $required_plan) {
-  $required_plan = strtolower((string) $required_plan);
-  
-  switch ($required_plan) {
+$seslp_provider_allowed = [];
+foreach ($seslp_provider_plan as $seslp_provider_key => $seslp_required_plan) {
+  $seslp_required_plan = strtolower((string) $seslp_required_plan);
+
+  switch ($seslp_required_plan) {
     case 'free':
       // Allows free features when any plan is activated
-      $is_allowed = $is_free || $is_pro || $is_max;
+      $seslp_is_allowed = $seslp_is_free || $seslp_is_pro || $seslp_is_max;
       break;
 
     case 'pro':
       // Only allowed on Pro or higher
-      $is_allowed = $is_pro || $is_max;
+      $seslp_is_allowed = $seslp_is_pro || $seslp_is_max;
       break;
 
     case 'max':
       // Only allowed on max
-      $is_allowed = $is_max;
+      $seslp_is_allowed = $seslp_is_max;
       break;
 
     default:
-      $is_allowed = false;
+      $seslp_is_allowed = false;
   }
-  $provider_allowed[strtolower((string) $provider)] = $is_allowed;
+
+  $seslp_provider_allowed[strtolower((string) $seslp_provider_key)] = $seslp_is_allowed;
 }
 
-$provider_allowed = apply_filters('seslp_provider_allowed', $provider_allowed, $current_plan);
+$seslp_provider_allowed = apply_filters('seslp_provider_allowed', $seslp_provider_allowed, $seslp_current_plan);
 
 // Provider list (filtered)
-$providers = [];
+$seslp_providers = [];
 
 if (class_exists('SESLP_Providers_Registry')) {
-  $providers_all = SESLP_Providers_Registry::list();
-  $providers = array_values(array_filter($providers_all, function ($p) use ($provider_allowed) {
-    $p = strtolower((string) $p);
-    return isset($provider_allowed[$p]) && true === $provider_allowed[$p];
+  $seslp_providers_all = SESLP_Providers_Registry::list();
+  $seslp_providers = array_values(array_filter($seslp_providers_all, function ($seslp_provider_key) use ($seslp_provider_allowed) {
+    $seslp_provider_key = strtolower((string) $seslp_provider_key);
+    return isset($seslp_provider_allowed[$seslp_provider_key]) && true === $seslp_provider_allowed[$seslp_provider_key];
   }));
-  unset($providers_all);
+  unset($seslp_providers_all);
 }
