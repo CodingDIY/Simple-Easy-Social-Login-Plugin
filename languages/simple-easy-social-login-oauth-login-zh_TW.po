@@ -251,8 +251,8 @@ msgstr "顯示或隱藏密鑰"
 msgid "Launch Promotion (%s)"
 msgstr "上市優惠活動（%s）"
 
-msgid "Valid until February 2026."
-msgstr "有效期限至 2026 年 2 月。"
+msgid "Valid until %s."
+msgstr "有效期至%s。"
 
 msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
 msgstr "享有 <strong>PRO 功能 %1$s 折扣</strong>（%2$s）。"

@@ -60,9 +60,16 @@ if (function_exists('simple_easy_social_login_freemius') && function_exists('ses
 }
 
 /**
- * Main plugin bootstrap.
- * - Keeps global surface small (single class + helpers).
- * - Safe to activate with empty includes/templates.
+ * Main plugin bootstrap container.
+ *
+ * Responsible for:
+ * - storing core plugin paths and URLs,
+ * - exposing the singleton instance,
+ * - registering default options on activation,
+ * - generating provider auth URLs.
+ *
+ * This class is intentionally lightweight and delegates
+ * feature-specific logic to dedicated classes.
  */
 final class SESLP_Plugin {
   /** Singleton */
@@ -87,20 +94,36 @@ final class SESLP_Plugin {
   public string $dir;
   public string $url;
 
-  /** Construct is private; use instance() */
+  /**
+   * Create the plugin instance and initialize base paths.
+   *
+   * @return void
+   */
   private function __construct() {
     $this->file = __FILE__;
     $this->dir  = plugin_dir_path($this->file);
     $this->url  = plugin_dir_url($this->file);
   }
 
-  /** Public singleton accessor */
+  /**
+   * Return the shared plugin instance.
+   *
+   * @return SESLP_Plugin
+   */
   public static function instance(): SESLP_Plugin {
     if (!self::$instance) self::$instance = new self();
     return self::$instance;
   }
 
-  /** Activation/Deactivation */
+  /**
+   * Run plugin activation tasks.
+   *
+   * Creates the default plugin options only when they do not already exist,
+   * then stores a short-lived redirect flag so the administrator can be sent
+   * to the settings page after activation.
+   *
+   * @return void
+   */
   public static function activate(): void {
     // Reserved for future: create options, db tables, etc.
     if (!get_option('seslp_options')) {
@@ -122,11 +145,28 @@ final class SESLP_Plugin {
     // Trigger redirect to settings page after activation
     set_transient('seslp_activation_redirect', true, 30);
   }
+
+  /**
+   * Run plugin deactivation tasks.
+   *
+   * Currently this method keeps saved options intact and performs
+   * no cleanup on deactivation.
+   *
+   * @return void
+   */
   public static function deactivate(): void {
     // Keep options on deactivate; remove in uninstall.php if needed.
   }
 
-  /** Public helper for templates: returns the provider-specific auth URL */
+  /**
+   * Build the authentication URL for a given provider.
+   *
+   * Falls back to a generic query-argument based URL when the provider
+   * class is unavailable, and allows the final URL to be filtered.
+   *
+   * @param string $provider Provider slug.
+   * @return string
+   */
   public function auth_url(string $provider): string {
     $provider = sanitize_key($provider);
     $auth_url = esc_url_raw(add_query_arg(['social_login' => $provider], home_url('/')));
@@ -145,7 +185,14 @@ final class SESLP_Plugin {
   }
 }
 
-/** Bootstrap */
+/**
+ * Bootstrap the plugin after all plugins are loaded.
+ *
+ * Initializes the main plugin instance and registers
+ * settings, assets, UI hooks, and authentication handlers.
+ *
+ * @return void
+ */
 function seslp_bootstrap(): void {
   SESLP_Plugin::instance();
 
@@ -167,6 +214,14 @@ function seslp_bootstrap(): void {
 }
 add_action('plugins_loaded', 'seslp_bootstrap');
 
+/**
+ * Register the plugin admin menu items.
+ *
+ * Delegates menu registration to the guides/settings UI class
+ * when that class is available.
+ *
+ * @return void
+ */
 function seslp_register_admin_menu(): void {
   if (class_exists('SESLP_Guides')) {
     SESLP_Guides::register_menu();
@@ -174,6 +229,14 @@ function seslp_register_admin_menu(): void {
 }
 add_action('admin_menu', 'seslp_register_admin_menu', 99);
 
+/**
+ * Redirect administrators to the plugin settings page after activation.
+ *
+ * Runs only in the admin area, ignores AJAX requests,
+ * and removes the redirect transient before redirecting.
+ *
+ * @return void
+ */
 function seslp_maybe_redirect_after_activation(): void {
   if (!is_admin() || !current_user_can('manage_options')) {
     return;

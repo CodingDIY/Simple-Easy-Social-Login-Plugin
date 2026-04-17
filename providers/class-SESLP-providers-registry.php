@@ -1,9 +1,12 @@
 <?php
 /**
- * Provider registry
- * - Central place for static metadata (auth URLs, token URLs, userinfo URLs, scopes, labels).
- * - Keeps provider-specific info out of the main plugin.
- * - Extensible via filters so 3rd-party addons can register additional providers.
+ * Static provider registry.
+ *
+ * Responsible for:
+ * - defining built-in provider endpoint metadata,
+ * - normalizing provider configuration into a predictable structure,
+ * - exposing extensibility hooks for third-party providers,
+ * - centralizing provider-specific credential labels for the admin UI.
  */
 
 declare(strict_types=1);
@@ -12,6 +15,12 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Provide normalized provider metadata for the plugin.
+ *
+ * This registry keeps endpoint URLs, scopes, and admin label overrides in
+ * one place so provider implementations can stay lightweight.
+ */
 final class SESLP_Providers_Registry {
   /**
    * Cached, normalized provider registry.
@@ -28,18 +37,9 @@ final class SESLP_Providers_Registry {
   private static ?array $label_overrides = null;
 
   /**
-   * Return static configuration for all supported providers (normalized).
+   * Return normalized configuration for all registered providers.
    *
-   * The array shape is:
-   * [
-   *   'provider_slug' => [
-   *     'auth_url'     => string,
-   *     'token_url'    => string,
-   *     'userinfo_url' => string,
-   *     'scopes'       => string[],
-   *   ],
-   *   ...
-   * ]
+   * The returned array always uses provider slugs as keys.
    *
    * @return array<string, array<string, mixed>>
    */
@@ -67,7 +67,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Base provider registry defined by this plugin (pre-filter, pre-normalization).
+   * Return the built-in provider registry before filters are applied.
    *
    * @return array<string, array<string, mixed>>
    */
@@ -114,7 +114,9 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Normalize the entire registry to a safe structure.
+   * Normalize the full provider registry to a safe structure.
+   *
+   * Invalid slugs or malformed provider configs are skipped.
    *
    * @param array<string, mixed> $registry
    * @return array<string, array<string, mixed>>
@@ -148,7 +150,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Normalize a single provider config.
+   * Normalize a single provider configuration array.
    *
    * @param array<string, mixed> $config
    * @return array<string, mixed>
@@ -180,7 +182,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Normalize URL value from mixed input.
+   * Normalize a URL-like value from mixed input.
    *
    * @param mixed $url
    * @return string
@@ -196,10 +198,12 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Normalize scopes from mixed input to a unique list of non-empty strings.
+   * Normalize provider scopes into a unique list of non-empty strings.
+   *
+   * Accepts either an array or a comma/whitespace separated string.
    *
    * @param mixed $scopes
-   * @return string[]
+   * @return array<int, string>
    */
   private static function normalize_scopes($scopes): array {
     if (is_string($scopes)) {
@@ -241,7 +245,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Return config for a single provider.
+   * Return normalized configuration for a single provider.
    *
    * @param string $provider
    * @return array<string, mixed>
@@ -254,7 +258,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Base UI labels for client credentials.
+   * Return the default admin UI labels for provider credentials.
    *
    * @return array{id:string, secret:string}
    */
@@ -266,7 +270,9 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Provider-specific label overrides (only keys that differ from base).
+   * Return provider-specific admin label overrides.
+   *
+   * Only labels that differ from the defaults are included.
    *
    * @return array<string, array<string, string>>
    */
@@ -298,7 +304,7 @@ final class SESLP_Providers_Registry {
   }
 
   /**
-   * Normalize label overrides to a safe structure.
+   * Normalize provider label overrides to a safe structure.
    *
    * @param array<string, mixed> $overrides
    * @return array<string, array<string, string>>

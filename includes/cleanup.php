@@ -1,4 +1,14 @@
 <?php
+/**
+ * Uninstall cleanup helpers.
+ *
+ * Responsible for:
+ * - deciding whether uninstall cleanup is allowed,
+ * - supporting optional deep-clean removal,
+ * - deleting plugin-owned options and user meta,
+ * - removing scheduled events,
+ * - cleaning multisite installations site by site.
+ */
 
 if (!defined('ABSPATH')) {
   exit; // Exit if accessed directly
@@ -6,7 +16,11 @@ if (!defined('ABSPATH')) {
 
 if (!function_exists('seslp_should_remove_data')) {
   /**
-   * Determine if full cleanup is allowed.
+   * Determine whether uninstall data removal is enabled.
+   *
+   * Supports a hard-coded constant, a filter override, and a saved option.
+   *
+   * @return bool
    */
   function seslp_should_remove_data(): bool {
     if (defined('SESLP_UNINSTALL_REMOVE_DATA') && SESLP_UNINSTALL_REMOVE_DATA === true) {
@@ -24,7 +38,11 @@ if (!function_exists('seslp_should_remove_data')) {
 
 if (!function_exists('seslp_should_deep_clean')) {
   /**
-   * Determine if deep clean is allowed.
+   * Determine whether deep-clean uninstall removal is enabled.
+   *
+   * Supports a hard-coded constant, a filter override, and a saved option.
+   *
+   * @return bool
    */
   function seslp_should_deep_clean(): bool {
     if (defined('SESLP_UNINSTALL_DEEP_CLEAN') && SESLP_UNINSTALL_DEEP_CLEAN === true) {
@@ -42,7 +60,14 @@ if (!function_exists('seslp_should_deep_clean')) {
 
 if (!function_exists('seslp_cleanup_single_site')) {
   /**
-   * Clean plugin data for a single site.
+   * Clean plugin-owned data for a single site.
+   *
+   * Removes plugin options and scheduled events by default, and optionally
+   * removes plugin user meta and plugin-created tables when deeper cleanup
+   * is explicitly enabled.
+   *
+   * @param string $seslp_prefix
+   * @return void
    */
   function seslp_cleanup_single_site(string $seslp_prefix = 'seslp_'): void {
     global $wpdb;
@@ -93,7 +118,12 @@ if (!function_exists('seslp_cleanup_single_site')) {
 
 if (!function_exists('seslp_uninstall_cleanup')) {
   /**
-   * Run uninstall cleanup for single-site or multisite.
+   * Run uninstall cleanup for single-site or multisite installs.
+   *
+   * Iterates through each site in a multisite network so per-site plugin
+   * options and metadata are removed in the correct blog context.
+   *
+   * @return void
    */
   function seslp_uninstall_cleanup(): void {
     $seslp_prefix = 'seslp_';

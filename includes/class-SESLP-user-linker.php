@@ -1,8 +1,14 @@
 <?php
 /**
- * User Linker
- * - Centralizes linking/creation of WP users from normalized provider profile
- * - Expected profile keys: id, email, name, picture
+ * User linking and account provisioning service.
+ *
+ * Responsible for:
+ * - normalizing provider profile data,
+ * - linking users by email when the same provider is already associated,
+ * - preventing cross-provider email conflicts with a unified error flow,
+ * - creating new users when allowed and configured,
+ * - persisting provider metadata and avatar URL,
+ * - completing the WordPress sign-in process.
  */
 declare(strict_types=1);
 
@@ -10,13 +16,27 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Handle user linking/creation and sign-in after OAuth.
+ *
+ * Centralizes all account resolution logic so providers only need to
+ * supply a normalized profile.
+ */
 final class SESLP_User_Linker {
   /**
-   * Link an existing user by email or create a new subscriber when registration is allowed, then sign in.
+   * Link an existing user or create a new one, then sign in.
+   *
+   * Flow:
+   * - normalize incoming profile,
+   * - check for existing user by email,
+   * - enforce provider consistency policy,
+   * - create user if allowed and necessary,
+   * - persist provider metadata and avatar,
+   * - authenticate the user session.
    *
    * @param array<string,string> $profile {id,email,name,picture}
-   * @param string               $provider e.g. 'google', 'naver'
-   * @return WP_User|null Signed-in user or null on failure
+   * @param string               $provider Provider slug (e.g. 'google', 'naver')
+   * @return WP_User|null
    */
   public function link_or_create_and_sign_in(array $profile, string $provider): ?WP_User {
     $data    = $this->normalize_profile($profile, $provider);
@@ -159,7 +179,7 @@ final class SESLP_User_Linker {
   }
 
   /**
-   * Normalize incoming profile fields and provider.
+   * Normalize and sanitize provider profile fields.
    *
    * @param array<string,string> $profile
    * @param string               $provider
@@ -176,19 +196,16 @@ final class SESLP_User_Linker {
   }
 
   /**
-   * Migrate legacy meta keys and infer provider linkage when canonical keys are missing.
+   * Migrate legacy meta and infer provider linkage when missing.
    *
-   * - Migrates:
-   *   - social_provider -> seslp_provider
-   *   - social_id       -> seslp_provider_id
-   * - If canonical provider meta is empty, tries provider-specific clues:
-   *   - seslp_{provider}_id
-   *   - seslp_last_provider
+   * - Migrates legacy keys to canonical SESLP keys
+   * - Attempts to infer linkage from provider-specific or last-provider meta
+   * - Backfills canonical keys when inference succeeds
    *
    * @param int    $user_id
    * @param string $provider
    * @param string $pid
-   * @return string Canonical provider slug if linked, otherwise empty string.
+   * @return string Provider slug if linked, otherwise empty string
    */
   private function migrate_and_infer_provider_meta(int $user_id, string $provider, string $pid): string {
     $prov_meta = get_user_meta($user_id, 'seslp_provider', true);
@@ -248,7 +265,7 @@ final class SESLP_User_Linker {
   }
 
   /**
-   * Ensure canonical provider metadata exists for the given user.
+   * Ensure canonical and provider-specific metadata is stored.
    *
    * @param int    $user_id
    * @param string $provider
@@ -269,7 +286,10 @@ final class SESLP_User_Linker {
   }
 
   /**
-   * Build a unique username derived from email and provider.
+   * Generate a unique username from email and provider.
+   *
+   * Falls back to a safe base when email local-part is unusable,
+   * and appends an incrementing suffix to avoid collisions.
    *
    * @param string $email
    * @param string $provider

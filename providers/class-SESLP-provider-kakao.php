@@ -1,9 +1,12 @@
 <?php
 /**
- * Kakao Provider (implements SESLP_Provider_Interface)
- * - Builds auth URL
- * - Exchanges code for tokens
- * - Fetches and normalizes userinfo
+ * Kakao OAuth provider implementation.
+ *
+ * Responsible for:
+ * - building the Kakao authorization URL,
+ * - exchanging authorization codes for access tokens,
+ * - fetching user profile data from Kakao APIs,
+ * - normalizing provider-specific user data into a unified structure.
  */
 
 declare(strict_types=1);
@@ -17,6 +20,12 @@ if (!interface_exists('SESLP_Provider_Interface')) {
   return;
 }
 
+/**
+ * Kakao provider adapter.
+ *
+ * Implements the SESLP provider interface so the authentication flow
+ * can remain provider-agnostic across the plugin.
+ */
 final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
   /** Provider slug */
   private const SLUG = SESLP_KA_SLUG;
@@ -28,6 +37,14 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
   private string $client_id = '';
   private string $client_secret = '';
 
+  /**
+   * Initialize provider configuration and credentials.
+   *
+   * Loads provider configuration from the registry and retrieves
+   * stored client credentials from plugin options.
+   *
+   * @return void
+   */
   public function __construct() {
     $this->cfg = class_exists('SESLP_Providers_Registry') ? ((array) SESLP_Providers_Registry::get(self::SLUG) ?: []) : [];
     if (class_exists('SESLP_Helpers')) {
@@ -36,7 +53,14 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
     }
   }
 
-  /** Build the authorization URL for Kakao */
+  /**
+   * Build the Kakao authorization URL.
+   *
+   * Includes required OAuth parameters such as client ID, redirect URI,
+   * requested scopes, and CSRF state token.
+   *
+   * @return string
+   */
   public function get_auth_url(): string {
     if ($this->client_id === '') {
       return '#';
@@ -63,12 +87,22 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
     return add_query_arg($args, $auth_base);
   }
 
-  /** Compute the redirect/callback URI (?social_login=kakao) */
+  /**
+   * Generate the OAuth callback URL for this provider.
+   *
+   * @return string
+   */
   public function get_redirect_uri(): string {
     return esc_url_raw(add_query_arg(['social_login' => self::SLUG], home_url('/')));
   }
 
-  /** Exchange authorization code for tokens (state already validated in Auth) */
+  /**
+   * Exchange authorization code for an access token.
+   *
+   * @param string $code
+   * @param string $state
+   * @return array<string, mixed>
+   */
   public function exchange_code(string $code, string $state): array {
     if ($code === '') {
       return [];
@@ -108,7 +142,12 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
     return is_array($data) ? $data : [];
   }
 
-  /** Fetch raw userinfo using access token */
+  /**
+   * Fetch raw user profile data from Kakao.
+   *
+   * @param string $access_token
+   * @return array<string, mixed>
+   */
   public function fetch_userinfo(string $access_token): array {
     if ($access_token === '') {
       return [];
@@ -129,7 +168,12 @@ final class SESLP_Provider_Kakao implements SESLP_Provider_Interface {
     return is_array($data) ? $data : [];
   }
 
-  /** Normalize Kakao userinfo -> [id,email,name,picture] */
+  /**
+   * Normalize Kakao user data into a standard structure.
+   *
+   * @param array<string, mixed> $raw
+   * @return array{id:string,email:string,name:string,picture:string}
+   */
   public function normalize_userinfo(array $raw): array {
     // Kakao returns: id, kakao_account[email, profile[nickname, profile_image_url]]
     $id  = sanitize_text_field((string)($raw['id'] ?? ''));

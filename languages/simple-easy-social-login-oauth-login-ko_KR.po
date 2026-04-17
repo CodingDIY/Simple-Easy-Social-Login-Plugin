@@ -263,8 +263,8 @@ msgstr "시크릿 키 표시/숨기기"
 msgid "Launch Promotion (%s)"
 msgstr "런칭 기념 프로모션 (%s)"
 
-msgid "Valid until February 2026."
-msgstr "2026년 2월까지 유효합니다."
+msgid "Valid until %s."
+msgstr "%s까지 유효합니다."
 
 msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
 msgstr "<strong>PRO 기능 %1$s 할인</strong> 혜택을 받아보세요 (%2$s)."

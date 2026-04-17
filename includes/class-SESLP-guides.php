@@ -6,15 +6,26 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Admin "Guide" subpage controller.
- * - Renders localized HTML guide files via a template file: templates/guide-page.php
- * - Primary docs: /guides/{locale}.html
+ * Admin guide page controller.
+ *
+ * Responsible for:
+ * - registering the Guide submenu page,
+ * - loading localized HTML guide content,
+ * - applying placeholder replacements for site-specific values,
+ * - sanitizing guide markup before rendering,
+ * - passing prepared data into the admin guide template.
  */
 class SESLP_Guides {
   private const GUIDE_DIR_PRIMARY = 'guides';
   private const FALLBACK_LOCALE   = 'en_US';
 
-  /** Register submenu under plugin top-level if available; otherwise under Settings. */
+  /**
+   * Register the Guide submenu page.
+   *
+   * Adds the submenu under the plugin settings page when available.
+   *
+   * @return void
+   */
   public static function register_menu(): void {
     // Attach Guide under the main plugin menu
     $parent_slug = defined('SESLP_SETTINGS_SLUG') ? SESLP_SETTINGS_SLUG : 'seslp-settings';
@@ -29,7 +40,14 @@ class SESLP_Guides {
     );
   }
 
-  /** Entry point for the page. Loads template and passes data. */
+  /**
+   * Render the Guide admin page.
+   *
+   * Loads the best matching localized guide file, sanitizes the HTML,
+   * then renders it through the guide page template.
+   *
+   * @return void
+   */
   public static function render_guide_page(): void {
     if (!current_user_can('manage_options')) {
       wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'simple-easy-social-login-oauth-login'));
@@ -101,7 +119,12 @@ class SESLP_Guides {
     include $template;
   }
 
-  /** Replace guide placeholders with the current site URL and host. */
+  /**
+   * Replace guide placeholders with current site values.
+   *
+   * @param string $html
+   * @return string
+   */
   private static function replace_guide_placeholders(string $html): string {
     $site_url  = home_url('/');
     $site_url  = untrailingslashit($site_url);
@@ -119,7 +142,16 @@ class SESLP_Guides {
     return strtr($html, $replacements);
   }
 
-  /** Find the best matching HTML guide file by locale. */
+  /**
+   * Locate the best matching localized guide file.
+   *
+   * Checks full locale, language-only locale, and the configured fallback locale.
+   *
+   * @param string $root
+   * @param string $locale_full
+   * @param string $lang_only
+   * @return string|null
+   */
   private static function locate_guide_file(string $root, string $locale_full, string $lang_only): ?string {
     $candidates = [];
 
@@ -136,7 +168,11 @@ class SESLP_Guides {
     return null;
   }
 
-  /** Small info message as HTML. */
+  /**
+   * Return fallback HTML shown when no guide file is found.
+   *
+   * @return string
+   */
   private static function not_found_message_html(): string {
     return '<h3>'
          . esc_html__('Guide not found', 'simple-easy-social-login-oauth-login')
@@ -145,7 +181,11 @@ class SESLP_Guides {
          . '</p>';
   }
 
-  /** Allowed tags for admin output. */
+  /**
+   * Return the allowed HTML tags for sanitized guide output.
+   *
+   * @return array<string, array<string, array<int, string>|bool>>
+   */
   private static function kses_allowed_tags(): array {
         return [
       'div' => ['class' => []],

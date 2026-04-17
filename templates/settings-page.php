@@ -1,30 +1,35 @@
 <?php
 /**
- * Admin Settings Page Template (custom labels per provider)
+ * Admin settings page template.
  *
- * Renders provider-specific labels while keeping underlying option keys unified:
- * seslp_options[providers][{provider}][client_id|client_secret]
+ * Responsible for:
+ * - rendering provider credential fields using unified option keys,
+ * - showing feature-gated settings sections based on the current plan,
+ * - displaying redirect, debug, UI, shortcode, and uninstall settings,
+ * - outputting documentation links for each configured provider.
  *
- * @var SESLP_Plugin $this
+ * Expected variables:
+ * - SESLP_Plugin $this Main plugin instance.
  */
 if (!defined('ABSPATH')) {
   exit;
 }
 
-// Get options array (normalized)
+// Read saved settings used by this template.
 $seslp_raw_opts = get_option('seslp_options', []);
 $seslp_opts     = is_array($seslp_raw_opts) ? $seslp_raw_opts : [];
 $seslp_redir    = $seslp_opts['redirect'] ?? [];
 $seslp_mode     = isset($seslp_redir['mode']) ? (string) $seslp_redir['mode'] : 'front';
 $seslp_custom   = isset($seslp_redir['custom_url']) ? (string) $seslp_redir['custom_url'] : '';
 
-// Base labels (fallback)
+// Default credential labels used when no provider-specific override exists.
 $seslp_base_labels = array(
 	'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
 	'secret' => __( 'Client Secret', 'simple-easy-social-login-oauth-login' ),
 );
 
-// Provider-specific overrides
+
+// Provider-specific credential label overrides for the admin UI.
 $seslp_label_overrides = array(
 	'google' => array(
 		'id'     => __( 'Client ID', 'simple-easy-social-login-oauth-login' ),
@@ -56,7 +61,7 @@ $seslp_label_overrides = array(
 	),
 );
 
-// Use global Freemius plan vars
+// Read current plan and provider availability from shared Freemius globals.
 global $seslp_is_free, $seslp_is_pro, $seslp_is_max, $seslp_can_pro_features, $seslp_can_max_features, $seslp_provider_allowed, $seslp_providers;
 
 $is_free           = $seslp_is_free ?? true;
@@ -67,7 +72,7 @@ $can_max_features  = $seslp_can_max_features ?? false;
 $provider_allowed  = is_array($seslp_provider_allowed ?? null) ? $seslp_provider_allowed : array();
 $providers         = is_array($seslp_providers ?? null) ? $seslp_providers : array();
 
-// Documents site url
+// Base documentation URL used for provider-specific help links.
 $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, '/') : '';
 ?>
 
@@ -75,7 +80,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
   <h1><?php echo esc_html__('Simple Easy Social Login', 'simple-easy-social-login-oauth-login'); ?></h1>
 
   <?php
-    // Show settings updated / error messages on our custom settings page
+    // Show Settings API notices on the custom plugin settings page.
     if (isset($_GET['settings-updated'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading settings API redirect flag.
       add_settings_error(
         'seslp_messages',
@@ -89,18 +94,18 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
   <form action="options.php" method="post">
     <?php
-      // Output settings nonce/hidden fields for seslp_options
+      // Output Settings API nonce and hidden fields for seslp_options.
       settings_fields('seslp_group');
     ?>
 
     <table id="seslp-login-table" class="form-table" role="presentation">
 
       <?php foreach ($providers as $seslp_prov) { 
-        // Resolve labels with overrides, fallback to base
+        // Resolve provider credential labels with fallback to the defaults.
         $seslp_id_label     = $seslp_label_overrides[$seslp_prov]['id']     ?? $seslp_base_labels['id'];
         $seslp_secret_label = $seslp_label_overrides[$seslp_prov]['secret'] ?? $seslp_base_labels['secret'];
 
-        // Read current values via helpers to reuse option cache and normalization
+        // Read current credential values through shared helper accessors.
         $seslp_id_val     = method_exists('SESLP_Helpers', 'get_client_id')
           ? SESLP_Helpers::get_client_id($seslp_prov)
           : '';
@@ -108,7 +113,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
           ? SESLP_Helpers::get_client_secret($seslp_prov)
           : '';
 
-        // Build input names that keep the unified structure
+        // Build field names while keeping the unified options array structure.
         $seslp_name_id     = "seslp_options[providers][{$seslp_prov}][client_id]";
         $seslp_name_secret = "seslp_options[providers][{$seslp_prov}][client_secret]";
       ?>
@@ -157,10 +162,12 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
           <th scope="row"></th>
           <td>
             <?php
-              // Build provider-specific docs URL using base domain constant
+              // Build the provider-specific documentation URL from the shared docs base.
               $seslp_prov_slug = strtolower((string) $seslp_prov);
 
-              /** Allow overrides for provider-specific documentation links */
+              /**
+               * Allow provider-specific documentation URLs to be overridden.
+               */
               $seslp_doc_url = (string) apply_filters(
                 'seslp_provider_docs_url',
                 $seslp_docs_base . '/docs/plugins/se-social-login/' . $seslp_prov_slug,
@@ -284,7 +291,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
     <table id="seslp-debug-table" class="form-table" role="presentation">
       <tbody>
-        <!-- // Inside render_settings_page() table after UI section -->
+        <!-- Debug logging settings -->
         <tr>
           <th scope="row"><?php esc_html_e('Enable logging', 'simple-easy-social-login-oauth-login'); ?></th>
           <td>
@@ -402,7 +409,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
       <?php echo esc_html__('Uninstall Options', 'simple-easy-social-login-oauth-login'); ?></h2>
 
     <?php if ($can_pro_features) {
-      // Read current flags
+      // Read current uninstall cleanup flags.
       $seslp_rm  = get_option('seslp_uninstall_remove_data'); // 'yes' or ''
       $seslp_deep = get_option('seslp_uninstall_deep_clean'); // 'yes' or ''
     ?>

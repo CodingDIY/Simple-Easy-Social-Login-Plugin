@@ -1,25 +1,45 @@
 <?php
 /**
- * SESLP Logger
- * - Writes debug info to wp-content/SESLP-debug.log (when enabled)
+ * Debug logger for SESLP.
+ *
+ * Responsible for:
+ * - writing debug log entries when logging is enabled,
+ * - masking sensitive context data before persistence,
+ * - formatting timestamps in UTC, local time, or both,
+ * - using the WordPress filesystem API for safe file access.
  */
 
 declare(strict_types=1);
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+  exit;
+}
 
+/**
+ * Provide lightweight file-based debug logging for the plugin.
+ *
+ * Logging is intentionally no-op when debug mode is disabled.
+ */
 final class SESLP_Logger {
   private const FILE = 'SESLP-debug.log';
   private const OPTION_FALLBACK = 'seslp_options';
 
-  /** Cache plugin options per-request */
+  /**
+   * Cached plugin options for the current request.
+   *
+   * @var array<string, mixed>
+   */
   private static array $options_cache = [];
 
   /**
-   * Write a log entry (no-op when disabled)
+   * Write a log entry when debug logging is enabled.
    *
-   * @param string $level   error|warning|info|debug (not enforced)
-   * @param string $message human-friendly message
-   * @param array  $context optional structured context (json-encoded)
+   * Sensitive values in the structured context array are masked before
+   * being written to disk.
+   *
+   * @param string               $level   Log level label.
+   * @param string               $message Human-readable message.
+   * @param array<string, mixed> $context Optional structured context.
+   * @return void
    */
   public static function log(string $level, string $message, array $context = []): void {
     $opts  = self::options();
@@ -66,6 +86,8 @@ final class SESLP_Logger {
 
   /**
    * Initialize and return the WordPress filesystem instance.
+   *
+   * @return WP_Filesystem_Base|null
    */
   private static function filesystem() {
     global $wp_filesystem;
@@ -83,21 +105,52 @@ final class SESLP_Logger {
     return $wp_filesystem instanceof WP_Filesystem_Base ? $wp_filesystem : null;
   }
 
+  /**
+   * Write a debug-level log entry.
+   *
+   * @param string               $msg
+   * @param array<string, mixed> $ctx
+   * @return void
+   */
   public static function debug(string $msg, array $ctx = []): void {
     self::log('debug', $msg, $ctx);
   }
+  /**
+   * Write an info-level log entry.
+   *
+   * @param string               $msg
+   * @param array<string, mixed> $ctx
+   * @return void
+   */
   public static function info(string $msg, array $ctx = []): void {
     self::log('info', $msg, $ctx);
   }
+  /**
+   * Write a warning-level log entry.
+   *
+   * @param string               $msg
+   * @param array<string, mixed> $ctx
+   * @return void
+   */
   public static function warning(string $msg, array $ctx = []): void {
     self::log('warning', $msg, $ctx);
   }
+  /**
+   * Write an error-level log entry.
+   *
+   * @param string               $msg
+   * @param array<string, mixed> $ctx
+   * @return void
+   */
   public static function error(string $msg, array $ctx = []): void {
     self::log('error', $msg, $ctx);
   }
 
   /**
-   * Recursively mask sensitive values in context arrays.
+   * Recursively mask sensitive values in a log context array.
+   *
+   * @param mixed $context
+   * @return mixed
    */
   private static function safe_context($context) {
     if (!is_array($context)) return $context;
@@ -133,7 +186,15 @@ final class SESLP_Logger {
     return $out;
   }
 
-  /** Generic masker: keep N left/right chars, mask the middle */
+  /**
+   * Mask a string while preserving a configurable prefix and suffix.
+   *
+   * @param string $s
+   * @param int    $keepLeft
+   * @param int    $keepRight
+   * @param string $maskChar
+   * @return string
+   */
   public static function mask_generic(string $s, int $keepLeft = 3, int $keepRight = 2, string $maskChar = '*'): string {
     $len = strlen($s);
     if ($len <= ($keepLeft + $keepRight)) {
@@ -144,9 +205,14 @@ final class SESLP_Logger {
     return $left . str_repeat($maskChar, max(0, $len - $keepLeft - $keepRight)) . $right;
   }
 
-  /** Email masker (simple and safe):
-   * - Local part: keep first char, mask rest
-   * - Domain: keep first label's first char, mask rest, keep other labels as-is
+  /**
+   * Mask an email address in a simple, readable way.
+   *
+   * Keeps the first character of the local part and first domain label,
+   * while masking the remainder.
+   *
+   * @param string $email
+   * @return string
    */
   public static function mask_email(string $email): string {
     if (!preg_match('/^([^@]+)@(.+)$/', $email, $m)) {
@@ -171,23 +237,40 @@ final class SESLP_Logger {
     return $localMasked . '@' . $domainMasked;
   }
 
-  /** ID masker */
+  /**
+   * Mask an identifier value.
+   *
+   * @param string $id
+   * @return string
+   */
   public static function mask_id(string $id): string {
     return self::mask_generic($id, 3, 2);
   }
 
-  /** Secret masker */
+  /**
+   * Mask a secret value.
+   *
+   * @param string $s
+   * @return string
+   */
   public static function mask_secret(string $s): string {
     return self::mask_generic($s, 2, 2);
   }
 
-  /** Token masker */
+  /**
+   * Mask an access or refresh token value.
+   *
+   * @param string $s
+   * @return string
+   */
   public static function mask_token(string $s): string {
     return self::mask_generic($s, 3, 2);
   }
 
   /**
    * Load plugin options once and normalize the result.
+   *
+   * @return array<string, mixed>
    */
   private static function options(): array {
     if (self::$options_cache) {
@@ -203,7 +286,10 @@ final class SESLP_Logger {
   }
 
   /**
-   * Extract debug settings as a normalized array.
+   * Extract normalized debug settings from the full options array.
+   *
+   * @param array<string, mixed> $opts
+   * @return array<string, mixed>
    */
   private static function debug_settings(array $opts): array {
     $debug = $opts['debug'] ?? [];
@@ -212,7 +298,10 @@ final class SESLP_Logger {
   }
 
   /**
-   * Normalize timezone mode to supported values.
+   * Normalize timezone mode to one of the supported values.
+   *
+   * @param string $mode
+   * @return string
    */
   private static function normalize_timezone_mode(string $mode): string {
     $mode = sanitize_key($mode);
@@ -225,7 +314,12 @@ final class SESLP_Logger {
   }
 
   /**
-   * Build the timestamp string according to the configured mode.
+   * Format a timestamp string based on the configured timezone mode.
+   *
+   * @param string            $mode
+   * @param DateTimeImmutable $nowUtc
+   * @param DateTimeImmutable $nowLocal
+   * @return string
    */
   private static function format_timestamp(string $mode, DateTimeImmutable $nowUtc, DateTimeImmutable $nowLocal): string {
     if ($mode === 'local') {

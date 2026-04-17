@@ -1,17 +1,33 @@
 <?php
 /**
- * Redirect helper
- * - Computes the URL to send users to after social login
+ * Post-login redirect resolver.
+ *
+ * Responsible for:
+ * - determining the correct redirect destination after social login,
+ * - supporting multiple redirect modes (front, dashboard, profile, custom),
+ * - validating and sanitizing custom redirect URLs,
+ * - providing a safe fallback when invalid URLs are detected.
  */
 declare(strict_types=1);
 if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Resolve redirect URLs after successful authentication.
+ *
+ * This class centralizes redirect logic to ensure consistent behavior
+ * across all providers and login flows.
+ */
 final class SESLP_Redirect {
   /**
-   * Determine post-login redirect URL based on plugin settings.
-   * Default: front page.
+   * Determine the final redirect URL after login.
+   *
+   * Applies plugin settings, filter overrides, and WordPress validation
+   * to ensure a safe and expected redirect destination.
+   *
+   * @param WP_User|null $user
+   * @return string
    */
   public static function after_login_url(?WP_User $user = null): string {
     $opts = SESLP_Helpers::get_options();
@@ -40,11 +56,17 @@ final class SESLP_Redirect {
   }
 
   /**
-   * Compute base redirect URL for a given mode.
+   * Compute the base redirect URL based on the selected mode.
    *
-   * @param string   $mode
-   * @param array    $opts
-   * @param string   $fallback
+   * Supported modes:
+   * - front: homepage
+   * - dashboard: WordPress admin dashboard
+   * - profile: user profile page
+   * - custom: user-defined URL
+   *
+   * @param string $mode
+   * @param array  $opts
+   * @param string $fallback
    * @return string
    */
   private static function compute_mode_url(string $mode, array $opts, string $fallback): string {

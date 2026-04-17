@@ -1,9 +1,13 @@
 <?php
 /**
- * LinkedIn Provider (implements SESLP_Provider_Interface)
- * - Builds auth URL
- * - Exchanges code for tokens
- * - Fetches and normalizes userinfo (name, email, avatar)
+ * LinkedIn OAuth provider implementation.
+ *
+ * Responsible for:
+ * - building the LinkedIn authorization URL,
+ * - exchanging authorization codes for access tokens,
+ * - fetching user profile data from LinkedIn APIs,
+ * - supporting both OIDC and legacy LinkedIn profile flows,
+ * - normalizing provider-specific user data into a unified structure.
  */
 
 declare(strict_types=1);
@@ -16,6 +20,12 @@ if (!interface_exists('SESLP_Provider_Interface')) {
   return;
 }
 
+/**
+ * LinkedIn provider adapter.
+ *
+ * Implements the SESLP provider interface so the authentication flow
+ * can remain provider-agnostic across the plugin.
+ */
 final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   public const SLUG = SESLP_LK_SLUG;
 
@@ -26,6 +36,14 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
   private string $client_id = '';
   private string $client_secret = '';
 
+  /**
+   * Initialize provider configuration and credentials.
+   *
+   * Loads provider configuration from the registry and retrieves
+   * stored client credentials from plugin options.
+   *
+   * @return void
+   */
   public function __construct() {
     $this->cfg = class_exists('SESLP_Providers_Registry') ? ((array)SESLP_Providers_Registry::get(self::SLUG) ?: []) : [];
 
@@ -35,7 +53,14 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     }
   }
 
-  /** Build the authorization URL for LinkedIn */
+  /**
+   * Build the LinkedIn authorization URL.
+   *
+   * Includes required OAuth parameters such as client ID, redirect URI,
+   * requested scopes, and CSRF state token.
+   *
+   * @return string
+   */
   public function get_auth_url(): string {
     if ($this->client_id === '') {
       return '#';
@@ -65,12 +90,22 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     return add_query_arg($args, $auth_base);
   }
 
-  /** Compute the redirect/callback URI (?social_login=linkedin) */
+  /**
+   * Generate the OAuth callback URL for this provider.
+   *
+   * @return string
+   */
   public function get_redirect_uri(): string {
     return esc_url_raw(add_query_arg(['social_login' => self::SLUG], home_url('/')));
   }
 
-  /** Exchange authorization code for tokens (state already validated in Auth) */
+  /**
+   * Exchange authorization code for an access token.
+   *
+   * @param string $code
+   * @param string $state
+   * @return array<string, mixed>
+   */
   public function exchange_code(string $code, string $state): array {
     $token_url = SESLP_Helpers::get_config_string(
       $this->cfg,
@@ -126,7 +161,15 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     ];
   }
 
-  /** Fetch user info */
+  /**
+   * Fetch raw user profile data from LinkedIn.
+   *
+   * Uses the OpenID Connect userinfo endpoint when available and falls back
+   * to the legacy profile/email endpoints when necessary.
+   *
+   * @param string $access_token
+   * @return array<string, mixed>
+   */
   public function fetch_userinfo(string $access_token): array {
     // If OpenID Connect scopes are present, use the OIDC userinfo endpoint first.
     $scopes   = SESLP_Helpers::get_scopes($this->cfg, ['r_liteprofile', 'r_emailaddress']);
@@ -168,7 +211,14 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     return $this->fetch_userinfo_legacy($access_token);
   }
 
-  /** Legacy v2/me + v2/emailAddress flow (requires r_liteprofile & r_emailaddress) */
+  /**
+   * Fetch raw user data using the legacy LinkedIn v2 endpoints.
+   *
+   * Requires the r_liteprofile and r_emailaddress scopes.
+   *
+   * @param string $access_token
+   * @return array<string, mixed>
+   */
   private function fetch_userinfo_legacy(string $access_token): array {
     $me_url = SESLP_Helpers::get_config_string(
       $this->cfg,
@@ -204,7 +254,12 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     return $this->normalize_userinfo($json, is_string($email) ? $email : '');
   }
 
-  /** Fetch primary email from LinkedIn */
+  /**
+   * Fetch the primary email address from LinkedIn.
+   *
+   * @param string $access_token
+   * @return string|null
+   */
   private function fetch_email(string $access_token): ?string {
     $email_url = SESLP_Helpers::get_config_string(
       $this->cfg,
@@ -240,7 +295,13 @@ final class SESLP_Provider_Linkedin implements SESLP_Provider_Interface {
     return null;
   }
 
-  /** Normalize LinkedIn user info into our standard shape */
+  /**
+   * Normalize LinkedIn user data into a standard structure.
+   *
+   * @param array<string, mixed> $me
+   * @param string               $email
+   * @return array{id:string,email:string,name:string,picture:string}
+   */
   public function normalize_userinfo(array $me, string $email = ''): array {
     $id    = sanitize_text_field((string)($me['id'] ?? ''));
     $first = sanitize_text_field((string)($me['localizedFirstName'] ?? ''));

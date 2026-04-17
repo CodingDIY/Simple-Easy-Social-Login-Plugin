@@ -1,7 +1,11 @@
 <?php
 /**
- * Front-end assets module
- * - Registers & enqueues public CSS/JS with cache-busting
+ * Front-end assets manager.
+ *
+ * Responsible for:
+ * - registering CSS/JS assets with cache-busting (filemtime),
+ * - conditionally enqueueing assets on front-end and login screens,
+ * - exposing minimal data to JavaScript.
  */
 
 declare(strict_types=1);
@@ -11,14 +15,24 @@ final class SESLP_Assets {
   private const STYLE_HANDLE = 'seslp-front';
   private const SCRIPT_HANDLE = 'seslp-front';
 
-  /** Hook registrations */
+  /**
+   * Register WordPress hooks for asset handling.
+   *
+   * @return void
+   */
   public function register(): void {
     add_action('init', [$this, 'register_assets']);
     add_action('wp_enqueue_scripts', [$this, 'enqueue_front']);
     add_action('login_enqueue_scripts', [$this, 'enqueue_front']);
   }
 
-  /** Register styles/scripts (filemtime versioning) */
+  /**
+   * Register styles and scripts using filemtime-based versioning.
+   *
+   * Falls back to plugin version when files are not found.
+   *
+   * @return void
+   */
   public function register_assets(): void {
     $plugin   = SESLP_Plugin::instance();
     $css_rel  = 'assets/css/style.css';
@@ -40,7 +54,14 @@ final class SESLP_Assets {
     ]);
   }
 
-  /** Enqueue on front/login */
+  /**
+   * Conditionally enqueue front-end assets.
+   *
+   * Assets are loaded only when at least one provider is active,
+   * unless overridden via filter.
+   *
+   * @return void
+   */
   public function enqueue_front(): void {
     $has_active_provider = $this->has_active_provider();
 
@@ -55,7 +76,14 @@ final class SESLP_Assets {
     wp_enqueue_script(self::SCRIPT_HANDLE);
   }
 
-  /** Check if at least one provider has client_id + client_secret configured */
+  /**
+   * Determine whether at least one provider is properly configured.
+   *
+   * A provider is considered active when both client_id and client_secret exist.
+   * If the providers registry is unavailable, assets are loaded by default.
+   *
+   * @return bool
+   */
   private function has_active_provider(): bool {
     if (!class_exists('SESLP_Providers_Registry')) {
       return true;

@@ -277,8 +277,8 @@ msgstr "Geheimnis anzeigen/ausblenden"
 msgid "Launch Promotion (%s)"
 msgstr "Einführungsaktion (%s)"
 
-msgid "Valid until February 2026."
-msgstr "Gültig bis Februar 2026."
+msgid "Valid until %s."
+msgstr "Gültig bis %s."
 
 msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
 msgstr "Erhalten Sie <strong>%1$s Rabatt auf PRO-Funktionen</strong> (%2$s)."

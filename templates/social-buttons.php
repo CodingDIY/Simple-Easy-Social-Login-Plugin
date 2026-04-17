@@ -1,19 +1,24 @@
 <?php
 /**
- * Social Login Buttons Template
+ * Social login buttons template.
  *
- * Displays social login buttons with logo + text.
+ * Responsible for:
+ * - rendering social login buttons for all configured providers,
+ * - displaying inline error messages based on public error codes,
+ * - conditionally hiding providers that are not properly configured,
+ * - supporting multiple UI layouts (list / icons).
  *
- * @var SESLP_Plugin $this
+ * Expected variables:
+ * - SESLP_Plugin $this Main plugin instance.
  */
 if (!defined('ABSPATH')) {
   exit;
 }
 
-// Providers
+// Retrieve all registered provider slugs.
 $seslp_providers = SESLP_Providers_Registry::list();
 
-// Plugin base URL
+// Base URL used for loading provider logo assets.
 $seslp_base_url = SESLP_Plugin::instance()->url;
 
 $seslp_opts = get_option('seslp_options', []);
@@ -22,7 +27,7 @@ $seslp_layout = isset($seslp_opts['ui']['layout']) && is_string($seslp_opts['ui'
     ? sanitize_key($seslp_opts['ui']['layout'])
     : 'list';
 
-// Local helper: check if provider credentials exist (uses cached helpers first, legacy fallback second).
+// Helper: determine if a provider is fully configured (supports legacy option fallback).
 $seslp_is_configured = static function (string $seslp_prov): bool {
   $seslp_prov = sanitize_key($seslp_prov);
 
@@ -44,7 +49,7 @@ $seslp_is_configured = static function (string $seslp_prov): bool {
   <p><strong><?php esc_html_e('Social Login with:', 'simple-easy-social-login-oauth-login'); ?></strong></p>
 
   <?php
-  // Inline error: map an allowed seslp_err query flag to a friendly message.
+  // Map allowed public error codes to user-friendly inline messages.
   $seslp_friendly_map = [
     'email_exists'                   => __('This email is already registered on this site. Please sign in with the originally linked method (username/password or the same social provider).', 'simple-easy-social-login-oauth-login'),
     'invalid_state'                  => __('Your session has expired or the login attempt was invalid. Please try again.', 'simple-easy-social-login-oauth-login'),
@@ -74,24 +79,24 @@ $seslp_is_configured = static function (string $seslp_prov): bool {
 
   <div class="seslp-buttons layout-<?php echo esc_attr($seslp_layout); ?>">
     <?php foreach ($seslp_providers as $seslp_prov) {
-      // Decide if provider is configured before asking for an auth URL
+      // Check if provider is configured and class is available before rendering.
       $seslp_configured = $seslp_is_configured($seslp_prov) && class_exists('SESLP_Provider_' . ucfirst($seslp_prov));
 
-      // If not configured (or provider class missing), do not render this provider at all.
+      // Skip providers that are not configured or missing their implementation.
       if (!$seslp_configured) {
         continue;
       }
 
-      // Build URL and UI pieces
+      // Build authentication URL and UI elements for rendering.
       $seslp_raw_url = (string) SESLP_Plugin::instance()->auth_url($seslp_prov);
+      // Safety guard: skip rendering if URL is invalid or empty.
       if ($seslp_raw_url === '' || $seslp_raw_url === '#') {
-        // Safety: if an unexpected empty URL sneaks in, skip rendering
         continue;
       }
       $seslp_href     = $seslp_raw_url;
       $seslp_img_url  = $seslp_base_url . 'assets/images/img-logo-' . $seslp_prov . '.png';
       $seslp_label    = sprintf(
-        /* translators: %s: Provider name. */
+        /* translators: %s: Social provider name (e.g., Google, Facebook). */
         esc_html__('%s Login', 'simple-easy-social-login-oauth-login'),
         ucfirst($seslp_prov)
       );

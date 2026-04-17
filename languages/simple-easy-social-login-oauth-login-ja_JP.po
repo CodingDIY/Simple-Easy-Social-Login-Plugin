@@ -272,8 +272,8 @@ msgstr "シークレットを表示/非表示"
 msgid "Launch Promotion (%s)"
 msgstr "リリース記念キャンペーン（%s）"
 
-msgid "Valid until February 2026."
-msgstr "2026年2月まで有効です。"
+msgid "Valid until %s."
+msgstr "%sまで有効です。"
 
 msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."
 msgstr "<strong>PRO機能が%1$sオフ</strong>になります（%2$s）。"

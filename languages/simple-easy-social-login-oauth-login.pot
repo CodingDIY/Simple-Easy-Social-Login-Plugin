@@ -220,7 +220,7 @@ msgstr ""
 msgid "Launch Promotion (%s)"
 msgstr ""
 
-msgid "Valid until February 2026."
+msgid "Valid until %s."
 msgstr ""
 
 msgid "Get <strong>%1$s OFF PRO features</strong> (%2$s)."

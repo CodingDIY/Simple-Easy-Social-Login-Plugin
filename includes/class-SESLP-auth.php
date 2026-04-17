@@ -1,7 +1,12 @@
 <?php
 /**
- * Auth router & callbacks
- * - Moves start/callback routing out of main plugin class
+ * Authentication router and OAuth callback handler.
+ *
+ * Responsible for:
+ * - routing public social login callback requests,
+ * - validating callback state before provider handling,
+ * - dispatching provider-specific OAuth callback handlers,
+ * - completing sign-in after profile retrieval.
  */
 
 declare(strict_types=1);
@@ -9,19 +14,32 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Handle public OAuth callback routing for supported providers.
+ *
+ * This class keeps callback flow logic separate from the main plugin
+ * bootstrap so provider authentication handling remains isolated.
+ */
 final class SESLP_Auth {
-  /** Register front-end router */
+  /**
+   * Register the public authentication router hook.
+   *
+   * @return void
+   */
   public function register(): void {
     add_action('template_redirect', [$this, 'maybe_route_auth']);
   }
 
-    /**
-   * Public OAuth callback router.
+  /**
+   * Route incoming OAuth callback requests to the correct provider handler.
    *
-   * This route intentionally reads provider callback query parameters from
-   * `$_GET`. It does not use a WordPress form nonce because OAuth callbacks are
-   * cross-site redirects from the provider. CSRF protection is enforced in each
-   * provider callback via `SESLP_State::validate()`.
+   * This method intentionally reads callback query parameters from `$_GET`
+   * because OAuth providers redirect back to WordPress with read-only query
+   * values. A standard WordPress form nonce is not used for this cross-site
+   * redirect flow. Callback integrity is enforced through the provider state
+   * validation layer before any login action is completed.
+   *
+   * @return void
    */
   public function maybe_route_auth(): void {
     if (empty($_GET['social_login'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public OAuth callback route. CSRF protection is enforced later via SESLP_State::validate().
@@ -73,7 +91,11 @@ final class SESLP_Auth {
     SESLP_Logger::warning('Unknown provider callback ignored', ['provider' => $provider]);
   }
 
-  /** Map provider keys to callback handlers */
+  /**
+   * Return the map of provider slugs to callback handlers.
+   *
+   * @return array<string, callable>
+   */
   private function get_callback_handlers(): array {
     $handlers = [
       'google'   => [$this, 'handle_google_callback'],
@@ -93,7 +115,14 @@ final class SESLP_Auth {
     return apply_filters('seslp_auth_callback_handlers', $handlers);
   }
 
-  /** Handle Google OAuth callback: exchange code -> token -> userinfo -> sign in */
+  /**
+   * Handle the Google OAuth callback flow.
+   *
+   * Exchanges the authorization code for an access token, fetches the user
+   * profile, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_google_callback(): void {
     // Validate state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -103,12 +132,6 @@ final class SESLP_Auth {
       'state' => $state,
       'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
-
-    // if (!SESLP_State::validate('google', $state)) {
-    //   SESLP_Logger::warning('Invalid state (google)', ['state' => $state]);
-    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-    //   exit;
-    // }
 
     if ($code === '') {
       SESLP_Logger::warning('Missing code (google)');
@@ -202,7 +225,14 @@ final class SESLP_Auth {
     exit;
   }
   
-  /** Handle Facebook OAuth callback: exchange code -> token -> userinfo -> sign in */
+  /**
+   * Handle the Facebook OAuth callback flow.
+   *
+   * Delegates token exchange and profile normalization to the Facebook
+   * provider class, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_facebook_callback(): void {
     // Validate state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -213,11 +243,6 @@ final class SESLP_Auth {
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    // if (!SESLP_State::validate('facebook', $state)) {
-    //   SESLP_Logger::warning('Invalid state (facebook)');
-    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-    //   exit;
-    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (facebook)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -277,7 +302,14 @@ final class SESLP_Auth {
     exit;
   }
 
-  /** Handle Naver OAuth callback: exchange code -> token -> userinfo -> sign in */
+  /**
+   * Handle the Naver OAuth callback flow.
+   *
+   * Exchanges the authorization code for an access token, fetches the user
+   * profile, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_naver_callback(): void {
     // Validate state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -287,12 +319,6 @@ final class SESLP_Auth {
       'state' => $state,
       'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
-
-    // if (!SESLP_State::validate('naver', $state)) {
-    //   SESLP_Logger::warning('Invalid state (naver)', ['state' => $state]);
-    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-    //   exit;
-    // }
 
     if ($code === '') {
       SESLP_Logger::warning('Missing code (naver)');
@@ -388,7 +414,14 @@ final class SESLP_Auth {
     exit;
   }
 
-  /** Handle Kakao OAuth callback: exchange code -> token -> userinfo -> sign in */
+  /**
+   * Handle the Kakao OAuth callback flow.
+   *
+   * Delegates token exchange and profile normalization to the Kakao provider
+   * class, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_kakao_callback(): void {
     // Validate state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -399,11 +432,6 @@ final class SESLP_Auth {
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    // if (!SESLP_State::validate('kakao', $state)) {
-    //   SESLP_Logger::warning('Invalid state (kakao)');
-    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-    //   exit;
-    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (kakao)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -463,7 +491,14 @@ final class SESLP_Auth {
     exit;
   }
 
-  /** Handle Line OAuth callback: exchange code -> token -> userinfo -> sign in */
+  /**
+   * Handle the LINE OAuth callback flow.
+   *
+   * Delegates token exchange and profile normalization to the LINE provider
+   * class, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_line_callback(): void {
     // Validate state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -474,11 +509,6 @@ final class SESLP_Auth {
       'code_present' => $code !== '' ? 1 : 0,
     ]);
 
-    // if (!SESLP_State::validate('line', $state)) {
-    //   SESLP_Logger::warning('Invalid state (line)');
-    //   wp_safe_redirect( add_query_arg('seslp_err', 'invalid_state', wp_login_url()) );
-    //   exit;
-    // }
     if ($code === '') {
       SESLP_Logger::warning('Missing code (line)');
       wp_safe_redirect( add_query_arg('seslp_err', 'missing_code', wp_login_url()) );
@@ -543,7 +573,14 @@ final class SESLP_Auth {
     exit;
   }
 
-  /* Replace the entire Weibo callback with a safe no-op redirect */
+  /**
+   * Handle legacy Weibo callback requests safely.
+   *
+   * The Weibo provider has been removed, so this method redirects old or
+   * bookmarked callback URLs back to the login screen with a friendly notice.
+   *
+   * @return void
+   */
   private function handle_weibo_callback(): void {
     // Weibo provider has been deprecated/removed due to ICP constraints.
     // If this legacy path is reached (old bookmarks/links), redirect safely with a friendly flag.
@@ -561,7 +598,14 @@ final class SESLP_Auth {
     exit;
   }
 
-  /* LinkedIn callback */
+  /**
+   * Handle the LinkedIn OAuth callback flow.
+   *
+   * Delegates token exchange and profile retrieval to the LinkedIn provider
+   * class, then links or signs in the matching WordPress user.
+   *
+   * @return void
+   */
   private function handle_linkedin_callback(): void {
     // Verify state & code
     $state = isset($_GET['state']) ? sanitize_text_field(wp_unslash($_GET['state'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
@@ -571,12 +615,6 @@ final class SESLP_Auth {
       'state'        => $state,
       'code_present' => isset($_GET['code']) ? 1 : 0, // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- OAuth provider callback parameter. State validation is enforced below.
     ]);
-
-    // if (!SESLP_State::validate('linkedin', $state)) {
-    //   SESLP_Logger::warning('Invalid state (linkedin)', ['state' => $state]);
-    //   wp_safe_redirect(wp_login_url(add_query_arg('seslp_err', 'invalid_state', home_url('/'))));
-    //   exit;
-    // }
 
     if ($code === '') {
       SESLP_Logger::warning('Missing code (linkedin)');

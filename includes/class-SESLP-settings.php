@@ -1,7 +1,13 @@
 <?php
 /**
- * Admin Settings module
- * - Extracted from main plugin class for clarity
+ * Admin settings controller.
+ *
+ * Responsible for:
+ * - registering the plugin settings menu and submenu,
+ * - registering settings, sections, and provider credential fields,
+ * - sanitizing option values before persistence,
+ * - enqueueing admin assets for plugin settings screens,
+ * - rendering the settings page template.
  */
 
 declare(strict_types=1);
@@ -11,7 +17,18 @@ if (!defined('ABSPATH')) {
 
 require_once plugin_dir_path(__DIR__) . 'includes/launch-banner.php';
 
+/**
+ * Manage the SESLP admin settings experience.
+ *
+ * This class handles WordPress Settings API registration and keeps
+ * settings-page responsibilities separate from the main plugin bootstrap.
+ */
 final class SESLP_Settings {
+  /**
+   * Register admin-only hooks for the settings module.
+   *
+   * @return void
+   */
   public static function init(): void {
     if (!is_admin()) {
       return;
@@ -22,10 +39,17 @@ final class SESLP_Settings {
     add_action('admin_enqueue_scripts', [self::class, 'enqueue_admin_assets']);
   }
 
+  /**
+   * Register the top-level admin menu and settings submenu.
+   *
+   * Replaces the default duplicated first submenu with a clearer label.
+   *
+   * @return void
+   */
   public static function add_settings_menu(): void {
     $settings_slug = defined('SESLP_SETTINGS_SLUG') ? SESLP_SETTINGS_SLUG : 'seslp-settings';
 
-    // 1) Top-level menu
+    // Top-level menu
     add_menu_page(
       __( 'Simple Easy Social Login', 'simple-easy-social-login-oauth-login' ),  // Page title
       __( 'SE Social Login', 'simple-easy-social-login-oauth-login' ),           // Menu title (top-level label)
@@ -50,6 +74,11 @@ final class SESLP_Settings {
     );
   }
 
+  /**
+   * Register plugin settings, sections, and provider credential fields.
+   *
+   * @return void
+   */
   public static function register_settings(): void {
     register_setting('seslp_group', 'seslp_options', [
       'type'              => 'array',
@@ -105,11 +134,22 @@ final class SESLP_Settings {
     }
   }
 
+  /**
+   * Sanitize a yes/no style checkbox value.
+   *
+   * @param mixed $val
+   * @return string
+   */
   public static function sanitize_yes_no($val): string {
     return (is_string($val) && strtolower($val) === 'yes') ? 'yes' : '';
   }
 
-  // Sanitize seslp_options before saving to the database.
+  /**
+   * Sanitize the full SESLP options array before saving.
+   *
+   * @param mixed $opts
+   * @return array
+   */
   public static function sanitize_options($opts): array {
     if (!is_array($opts)) {
       return [];
@@ -151,6 +191,14 @@ final class SESLP_Settings {
     return $sanitized;
   }
 
+  /**
+   * Render a provider credential input field.
+   *
+   * @param string $provider
+   * @param string $key
+   * @param bool   $password
+   * @return void
+   */
   private static function render_input(string $provider, string $key, bool $password = false): void {
     $opts = SESLP_Helpers::get_options();
 
@@ -166,6 +214,12 @@ final class SESLP_Settings {
     );
   }
 
+  /**
+   * Enqueue CSS and JavaScript for SESLP admin pages.
+   *
+   * @param string $hook
+   * @return void
+   */
   public static function enqueue_admin_assets(string $hook): void {
     // Load on all SESLP admin pages: settings, pricing, account, etc.
     if (!isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading current admin page slug.
@@ -223,6 +277,13 @@ final class SESLP_Settings {
     return apply_filters('seslp_settings_providers', $providers);
   }
 
+  /**
+   * Render the settings page template.
+   *
+   * Allows a theme override before falling back to the bundled plugin template.
+   *
+   * @return void
+   */
   public static function render_settings_page(): void {
     // Theme override: /your-theme/seslp/settings-page.php
     $theme_tpl = function_exists('locate_template') ? locate_template('seslp/settings-page.php', false, false) : '';

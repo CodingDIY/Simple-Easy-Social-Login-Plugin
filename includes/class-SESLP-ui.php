@@ -1,7 +1,12 @@
 <?php
 /**
- * UI module
- * - Shortcode and Login/Register buttons rendering
+ * Front-end UI renderer.
+ *
+ * Responsible for:
+ * - rendering social login buttons via shortcode and core auth screens,
+ * - conditionally displaying UI elements based on plugin settings,
+ * - loading a customizable template for button output,
+ * - exposing provider data and helper functions to the template.
  */
 
 declare(strict_types=1);
@@ -9,20 +14,41 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Handle rendering of social login UI components.
+ *
+ * This class centralizes button rendering logic for both shortcode usage
+ * and WordPress core login/register forms.
+ */
 final class SESLP_UI {
-  /** Register UI hooks */
+  /**
+   * Register UI-related hooks.
+   *
+   * @return void
+   */
   public function register(): void {
     add_shortcode('seslp_social_login', [$this, 'render_buttons_shortcode']);
     add_action('login_form', [$this, 'render_buttons_on_login']);
     add_action('register_form', [$this, 'render_buttons_on_login']);
   }
 
-  /** Shortcode: [seslp_social_login] */
+  /**
+   * Render social login buttons via shortcode.
+   *
+   * @param array $atts
+   * @return string
+   */
   public function render_buttons_shortcode(array $atts = []): string {
     return $this->render_buttons_html();
   }
 
-  /** Output on core login/register screens (conditioned by option) */
+  /**
+   * Output social login buttons on WordPress login/register screens.
+   *
+   * Visibility is controlled by plugin options and filters.
+   *
+   * @return void
+   */
   public function render_buttons_on_login(): void {
     $opts         = SESLP_Helpers::get_options();
     $should_show  = (bool) ($opts['ui']['show_on_login'] ?? 1);
@@ -35,7 +61,14 @@ final class SESLP_UI {
     }
   }
 
-  /** Shared renderer that loads the template */
+  /**
+   * Generate social login buttons HTML.
+   *
+   * Loads the template file, applies overrides, and exposes variables
+   * required for rendering provider buttons.
+   *
+   * @return string
+   */
   private function render_buttons_html(): string {
     $plugin = SESLP_Plugin::instance();
 

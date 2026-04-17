@@ -1,8 +1,12 @@
 <?php
 /**
- * State manager
- * - Creates and validates per-provider OAuth state tokens
- * - Uses WP transients for temporary storage (10 minutes default)
+ * OAuth state token manager.
+ *
+ * Responsible for:
+ * - generating per-provider CSRF state tokens,
+ * - storing tokens using WordPress transients,
+ * - validating tokens on callback (one-time use),
+ * - providing configurable expiration via filters.
  */
 
 declare(strict_types=1);
@@ -10,12 +14,18 @@ if (!defined('ABSPATH')) {
   exit;
 }
 
+/**
+ * Handle creation and validation of OAuth2 state tokens.
+ *
+ * Ensures CSRF protection for cross-site OAuth redirects by issuing
+ * short-lived, single-use tokens tied to a provider.
+ */
 final class SESLP_State {
   private const KEY_PREFIX   = 'seslp_state_';
   private const DEFAULT_TTL  = 10 * MINUTE_IN_SECONDS;
 
   /**
-   * Create and store a state token for a given provider.
+   * Create and persist a new state token for a provider.
    *
    * @param string $provider
    * @return string Generated state token
@@ -36,7 +46,9 @@ final class SESLP_State {
   }
 
   /**
-   * Validate a state token for a given provider.
+   * Validate a state token for a provider.
+   *
+   * Tokens are single-use and removed upon successful validation.
    *
    * @param string $provider
    * @param string $state
@@ -71,9 +83,9 @@ final class SESLP_State {
   }
 
   /**
-   * Generate and persist an OAuth2 CSRF state token.
+   * Backward-compatible alias for create().
    *
-   * @deprecated Use SESLP_State::create() instead. This method remains for backward compatibility.
+   * @deprecated Use SESLP_State::create() instead.
    *
    * @param string $provider
    * @return string
@@ -83,18 +95,19 @@ final class SESLP_State {
   }
 
   /**
-   * Store a state token as a transient.
+   * Store a state token using a transient key.
    *
    * @param string $provider
    * @param string $state
    * @param int    $ttl
+   * @return void
    */
   private static function store(string $provider, string $state, int $ttl): void {
     set_transient(self::build_key($provider, $state), time(), $ttl);
   }
 
   /**
-   * Build the transient key for a provider/state pair.
+   * Build a unique transient key for the provider/state pair.
    *
    * @param string $provider
    * @param string $state
@@ -105,7 +118,7 @@ final class SESLP_State {
   }
 
   /**
-   * Generate the raw state token string.
+   * Generate a URL-safe random token string.
    *
    * @return string
    */
@@ -115,8 +128,9 @@ final class SESLP_State {
   }
 
   /**
-   * Get TTL (in seconds) for a given provider.
-   * Allows customization via `seslp_state_ttl` filter.
+   * Get token time-to-live (TTL) in seconds.
+   *
+   * Allows customization via the `seslp_state_ttl` filter.
    *
    * @param string $provider
    * @return int

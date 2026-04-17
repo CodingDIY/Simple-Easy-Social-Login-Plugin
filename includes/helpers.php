@@ -1,7 +1,14 @@
 <?php
- /*
-  * Shared helper utilities for SESLP
-  */
+/**
+ * Shared helper utilities for SESLP.
+ *
+ * Responsible for:
+ * - returning normalized plugin options,
+ * - reading provider-specific configuration values,
+ * - sanitizing common config inputs,
+ * - exposing validated public error codes for UI notices,
+ * - building Freemius upgrade URLs with optional coupon support.
+ */
 
 declare(strict_types=1); 
 if (!defined('ABSPATH')) {
@@ -9,12 +16,24 @@ if (!defined('ABSPATH')) {
 }
 
 if (!class_exists('SESLP_Helpers')) {
+  /**
+   * Provide shared static helper methods used across the plugin.
+   *
+   * This class centralizes lightweight utility logic so other modules can
+   * reuse consistent option access, sanitization, and URL helper behavior.
+   */
   final class SESLP_Helpers {
-    /** Cached options to avoid repeated lookups */
+    /**
+     * Cached plugin options for the current request.
+     *
+     * @var array<string, mixed>
+     */
     private static array $options_cache = [];
 
     /**
-     * Return default plugin options with proper structure.
+     * Return the default plugin options structure.
+     *
+     * @return array<string, mixed>
      */
     public static function get_default_options(): array {
       return [
@@ -26,8 +45,12 @@ if (!class_exists('SESLP_Helpers')) {
     }
 
     /**
-     * Return unified plugin options once per request.
-     * Ensures a consistent array shape even if the option is missing or corrupted.
+     * Return normalized plugin options, cached per request.
+     *
+     * Ensures a consistent array shape even when the saved option is missing
+     * or malformed.
+     *
+     * @return array<string, mixed>
      */
     private static function options(): array {
       if (self::$options_cache) {
@@ -46,12 +69,23 @@ if (!class_exists('SESLP_Helpers')) {
       return self::$options_cache;
     }
 
-    /** Public accessor for plugin options (cached per-request) */
+    /**
+     * Return plugin options through the shared cached accessor.
+     *
+     * @return array<string, mixed>
+     */
     public static function get_options(): array {
       return self::options();
     }
 
-    /** Read any provider option from unified options array */
+    /**
+     * Return a provider-specific option value from the unified options array.
+     *
+     * @param string $provider
+     * @param string $key
+     * @param string $default
+     * @return string
+     */
     public static function get_provider_option(string $provider, string $key, string $default = ''): string {
       $provider = sanitize_key($provider);
       $key      = sanitize_key($key);
@@ -66,17 +100,34 @@ if (!class_exists('SESLP_Helpers')) {
       return (string) apply_filters('seslp_provider_option', $val, $provider, $key, $default, $opts);
     }
 
-    /** Convenience: get provider client_id */
+    /**
+     * Return the configured client ID for a provider.
+     *
+     * @param string $provider
+     * @return string
+     */
     public static function get_client_id(string $provider): string {
       return self::get_provider_option($provider, 'client_id', '');
     }
 
-    /** Convenience: get provider client_secret */
+    /**
+     * Return the configured client secret for a provider.
+     *
+     * @param string $provider
+     * @return string
+     */
     public static function get_client_secret(string $provider): string {
       return self::get_provider_option($provider, 'client_secret', '');
     }
 
-    /** Get a sanitized config value from a provider config array */
+    /**
+     * Return a sanitized string value from a provider config array.
+     *
+     * @param array<string, mixed> $config
+     * @param string               $key
+     * @param string               $default
+     * @return string
+     */
     public static function get_config_string(array $config, string $key, string $default): string {
       $value = $config[$key] ?? $default;
       $value = is_string($value) ? $value : (string) $value;
@@ -84,7 +135,13 @@ if (!class_exists('SESLP_Helpers')) {
       return sanitize_text_field($value);
     }
 
-    /** Retrieve and sanitize scopes with a safe fallback */
+    /**
+     * Return sanitized OAuth scopes with a safe fallback.
+     *
+     * @param array<string, mixed> $config
+     * @param array<int, string>   $fallback
+     * @return array<int, string>
+     */
     public static function get_scopes(array $config, array $fallback): array {
       $scopes = $config['scopes'] ?? $fallback;
 
@@ -100,7 +157,10 @@ if (!class_exists('SESLP_Helpers')) {
     /**
      * Read and validate a public SESLP error code from the current request.
      *
-     * This is intended for read-only UI messaging such as login error notices.
+     * Intended only for read-only UI messaging such as login error notices.
+     * The returned value is restricted to a known allowlist.
+     *
+     * @return string
      */
     public static function get_public_error_code(): string {
       if (!isset($_GET['seslp_err'])) {
