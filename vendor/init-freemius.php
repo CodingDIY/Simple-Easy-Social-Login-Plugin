@@ -13,13 +13,18 @@ if (!function_exists('seslp_freemius_config')) {
    * @return array<string, mixed>
    */
   function seslp_freemius_config() {
+    $plugin_slug         = 'simple-easy-social-login';
+    $premium_plugin_slug = 'simple-easy-social-login-paid';
+    $current_build_slug  = basename(dirname(__DIR__));
+    $is_premium_build    = ($current_build_slug === $premium_plugin_slug);
+
     $config = array(
       'id'                  => '19985',
-      'slug'                => 'simple-easy-social-login',
-      'premium_slug'        => 'simple-easy-social-login-paid',
+      'slug'                => $plugin_slug,
+      'premium_slug'        => $premium_plugin_slug,
       'type'                => 'plugin',
       'public_key'          => 'pk_174a0fc7fb0d51d8b4b61397a31b3',
-      'is_premium'          => true,
+      'is_premium'          => $is_premium_build,
       'premium_suffix'      => 'Paid',
       'has_premium_version' => true,
       'has_addons'          => false,

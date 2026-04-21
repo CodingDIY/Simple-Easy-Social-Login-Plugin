@@ -134,6 +134,7 @@ final class SESLP_Plugin {
           'naver'    => ['client_id' => '', 'client_secret' => ''],
           'kakao'    => ['client_id' => '', 'client_secret' => ''],
           'line'     => ['client_id' => '', 'client_secret' => ''],
+          'linkedin' => ['client_id' => '', 'client_secret' => ''],
           // 'weibo'    => ['client_id' => '', 'client_secret' => ''],
         ],
         'ui' => [
