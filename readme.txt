@@ -147,15 +147,15 @@ For supported Providers such as Google and Facebook, profile images are automati
 == Screenshots ==
 1. Social login buttons displayed on the WordPress login page (list layout).
 2. Icon-only social login buttons layout on the login screen.
-3. Post-login redirect options (dashboard, profile, front page, or custom URL).
-4. Debug logging, UI layout options, shortcode, and uninstall settings.
-5. Built-in setup guide explaining OAuth redirect rules and common requirements.
-6. Step-by-step Google OAuth consent screen and client setup guide.
-7. Admin settings for Google, Facebook, and LinkedIn login credentials.
-8. Admin settings for Naver, Kakao, and LINE login providers.
-9. Unified redirect URI rules used across all supported providers.
-10. Debug log location and troubleshooting overview.
-11. Common OAuth errors, solutions, and debug log locations for troubleshooting.
+3. Admin settings for Google, Facebook, and LinkedIn login credentials.
+4. Admin settings for Naver, Kakao, and LINE login providers.
+5. Post-login redirect options, debug logging, UI layout, and shortcode settings.
+6. Debug logging, UI layout options, shortcode, and uninstall settings.
+7. Built-in setup guide explaining OAuth redirect URI rules and common requirements.
+8. Setup guide overview with debug log location and troubleshooting section.
+9. Debug log format and OAuth flow log examples for troubleshooting.
+10. Step-by-step Google OAuth consent screen and client setup guide.
+11. Step-by-step LINE Login channel setup guide.
 
 == Changelog ==
 
