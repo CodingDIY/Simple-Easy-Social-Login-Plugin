@@ -183,7 +183,7 @@
 		 * @return bool
 		 */
 		function is__premium_only() {
-			return $this->is_premium();
+			return false;
 		}
 
 		/**
@@ -195,7 +195,7 @@
 		 *
 		 */
 		function is_paying__premium_only() {
-			return ( $this->is__premium_only() && $this->is_paying() );
+			return false;
 		}
 
 		/**
@@ -209,7 +209,7 @@
 		 * @return bool
 		 */
 		function is_plan__premium_only( $plan, $exact = false ) {
-			return ( $this->is_premium() && $this->is_plan( $plan, $exact ) );
+			return false;
 		}
 
 		/**
@@ -225,7 +225,7 @@
 		 * @return bool
 		 */
 		function is_plan_or_trial__premium_only( $plan, $exact = false ) {
-			return ( $this->is_premium() && $this->is_plan_or_trial( $plan, $exact ) );
+			return false;
 		}
 
 		/**
@@ -238,7 +238,7 @@
 		 * @return bool
 		 */
 		function is_paying_or_trial__premium_only() {
-			return $this->is_premium() && $this->is_paying_or_trial();
+			return false;
 		}
 
 		/**
@@ -252,7 +252,7 @@
 		 * @using      Alias to is_paying__premium_only()
 		 */
 		function is_paying__fs__() {
-			return $this->is_paying__premium_only();
+			return false;
 		}
 
 		/**
@@ -266,7 +266,7 @@
 		 * @return bool
 		 */
 		function can_use_premium_code__premium_only() {
-			return $this->is_premium() && $this->can_use_premium_code();
+			return false;
 		}
 
 		#endregion

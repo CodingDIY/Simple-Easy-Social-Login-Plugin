@@ -51,12 +51,12 @@ foreach ([
 unset($seslp_rel, $seslp_p, $seslp_dir);
 
 /** Freemius bootstrap (externalized) */
-if (function_exists('simple_easy_social_login_freemius')) {
-  simple_easy_social_login_freemius()->set_basename(true, __FILE__);
+if (function_exists('seslp')) {
+  seslp()->set_basename(true, __FILE__);
 }
 
-if (function_exists('simple_easy_social_login_freemius') && function_exists('seslp_uninstall_cleanup')) {
-  simple_easy_social_login_freemius()->add_action('after_uninstall', 'seslp_uninstall_cleanup');
+if (function_exists('seslp') && function_exists('seslp_uninstall_cleanup')) {
+  seslp()->add_action('after_uninstall', 'seslp_uninstall_cleanup');
 }
 
 /**

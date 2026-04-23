@@ -62,13 +62,8 @@ $seslp_label_overrides = array(
 );
 
 // Read current plan and provider availability from shared Freemius globals.
-global $seslp_is_free, $seslp_is_pro, $seslp_is_max, $seslp_can_pro_features, $seslp_can_max_features, $seslp_provider_allowed, $seslp_providers;
+global $seslp_provider_allowed, $seslp_providers;
 
-$is_free           = $seslp_is_free ?? true;
-$is_pro            = $seslp_is_pro ?? false;
-$is_max            = $seslp_is_max ?? false;
-$can_pro_features  = $seslp_can_pro_features ?? false;
-$can_max_features  = $seslp_can_max_features ?? false;
 $provider_allowed  = is_array($seslp_provider_allowed ?? null) ? $seslp_provider_allowed : array();
 $providers         = is_array($seslp_providers ?? null) ? $seslp_providers : array();
 
@@ -228,7 +223,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
     <h2 class="seslp-section-title">
       <?php echo esc_html__('Post-login Redirect', 'simple-easy-social-login-oauth-login'); ?></h2>
 
-    <?php if ($can_pro_features) { ?>
+    <?php if (( function_exists('seslp') && seslp()->is_plan('pro') )) { ?>
 
     <table id="seslp-redirect-table" class="form-table" role="presentation">
       <tbody>
@@ -341,7 +336,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
 
     <h2 class="seslp-section-title"><?php echo esc_html__('UI', 'simple-easy-social-login-oauth-login'); ?></h2>
 
-    <?php if ($can_pro_features) { ?>
+    <?php if (( function_exists('seslp') && seslp()->is_plan('pro') )) { ?>
 
     <table id="seslp-ui-table" class="form-table" role="presentation">
       <tbody>
@@ -408,7 +403,7 @@ $seslp_docs_base = defined('SESLP_DOCS_BASE') ? rtrim((string) SESLP_DOCS_BASE, 
     <h2 class="seslp-section-title">
       <?php echo esc_html__('Uninstall Options', 'simple-easy-social-login-oauth-login'); ?></h2>
 
-    <?php if ($can_pro_features) {
+    <?php if (( function_exists('seslp') && seslp()->is_plan('pro') )) {
       // Read current uninstall cleanup flags.
       $seslp_rm  = get_option('seslp_uninstall_remove_data'); // 'yes' or ''
       $seslp_deep = get_option('seslp_uninstall_deep_clean'); // 'yes' or ''

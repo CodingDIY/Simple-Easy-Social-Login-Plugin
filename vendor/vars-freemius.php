@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Initialize Freemius instance
-$seslp_fs = function_exists('simple_easy_social_login_freemius') ? simple_easy_social_login_freemius() : null;
+$seslp_fs = function_exists('seslp') ? seslp() : null;
 
 // Detect current plan
 $seslp_is_free = !$seslp_fs || (bool) $seslp_fs->is_free_plan();

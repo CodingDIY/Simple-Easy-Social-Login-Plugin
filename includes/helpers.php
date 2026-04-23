@@ -196,8 +196,8 @@ if (!class_exists('SESLP_Helpers')) {
     public static function get_upgrade_url(string $coupon_code = 'SESLP30'): string {
       $url = '';
 
-      if (function_exists('simple_easy_social_login_freemius')) {
-        $fs = simple_easy_social_login_freemius();
+      if (function_exists('seslp')) {
+        $fs = seslp();
 
         if (is_object($fs) && method_exists($fs, 'get_upgrade_url')) {
           // get_upgrade_url() is an alias to pricing_url() in the Freemius SDK.
