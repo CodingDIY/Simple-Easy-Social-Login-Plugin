@@ -46,7 +46,7 @@ if (!function_exists('seslp')) {
         'has_premium_version' => true,
         'has_addons'          => false,
         'has_paid_plans'      => true,
-        'wp_org_gatekeeper'   => 'OA7#BoRiBNqdf52FvzEf!!074aRLPs8fspif$7K1#4u4Csys1fQlCecVcUTOs2mcpeVHi#C2j9d09fOTvbC0HloPT7fFee5WdS3G',
+        'wp_org_gatekeeper'   => '%%WP_ORG_GATEKEEPER%%',
         'menu'                => array(
           'slug'       => 'seslp-settings',
           'first-path' => 'admin.php?page=seslp-settings',
